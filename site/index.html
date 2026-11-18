@@ -48,6 +48,29 @@ h1 em{font-style:normal;color:var(--accent)}
 .steps li+li::before{content:"";width:28px;height:1px;background:var(--line);margin-right:2px}
 .grid{display:grid;grid-template-columns:minmax(270px,1fr) minmax(320px,1.4fr) minmax(300px,1fr);gap:16px;align-items:start}
 @media (max-width:1100px){.grid{grid-template-columns:1fr}}
+.work{display:grid;grid-template-columns:minmax(220px,.75fr) minmax(300px,1.35fr) minmax(340px,1fr);gap:14px;align-items:start}
+.ctlcol{display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 188px);min-height:420px}
+.ctlcol .prevbox{margin-bottom:0}
+.ctlcol #preview{width:auto;height:min(29vh,300px);max-width:100%}
+.ctlcol .timeline{width:min(100%,280px);margin-top:6px}
+.prevbox.big #iPrev{width:auto;height:min(calc(100vh - 330px),640px);max-width:100%}
+.prevbox.big .timeline{width:min(100%,320px)}
+.ptabs{display:flex;gap:3px;background:var(--field);padding:3px;border-radius:11px;border:1px solid var(--line)}
+.ptab{flex:1;border:0;background:none;padding:7px 2px;border-radius:8px;font-weight:700;font-size:12.5px;color:var(--muted);cursor:pointer}
+.ptab:hover{color:var(--ink)}
+.ptab.on{background:var(--ink);color:var(--bg)}
+.panes{overflow:auto;flex:1 1 auto;min-height:140px;padding:2px 4px 6px 2px}
+.pane{display:none}.pane.on{display:block}
+.exportbar{border-top:1px solid var(--line);padding-top:10px}
+.exportbar .status{margin-top:6px}
+.files .thumbs{margin-bottom:14px}
+#iFocus{width:auto!important;height:min(30vh,260px)!important;max-width:100%}
+@media (max-width:1100px){.work{grid-template-columns:1fr}.ctlcol{max-height:none}.ctlcol #preview,.prevbox.big #iPrev{height:auto;width:min(100%,280px)}}
+/* compact header so the working area is on screen straight away */
+.hero{padding:10px 0 8px}
+.hero .eyebrow,.hero .sub,.steps{display:none}
+h1{font-size:clamp(22px,3vw,30px);margin:0}
+.tabs{margin-bottom:12px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
 .panel h2{font-family:var(--display);font-size:18px;margin:0;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
 .count{font-family:var(--body);font-size:12px;font-weight:700;background:var(--field);border:1px solid var(--line);border-radius:999px;padding:1px 9px;color:var(--muted)}
@@ -133,118 +156,112 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
   </div>
 
   <div id="modeShirt">
-  <ol class="steps">
-    <li><b>1</b>Add blanks &amp; designs</li>
-    <li><b>2</b>Place the print</li>
-    <li><b>3</b>Choose the motion &amp; export</li>
-  </ol>
-
-  <main class="grid">
-    <!-- 1 FILES -->
-    <section class="panel" aria-labelledby="h-files">
+  <main class="work">
+    <aside class="panel files" aria-labelledby="h-files">
       <h2 id="h-files">Blank shirts <span class="count" id="cntB">0</span></h2>
       <p class="hint">Photos of plain shirts. JPG, PNG or WebP.</p>
       <label class="drop" id="dropB"><strong>Add blank shirts</strong><span>Drop files or click to browse</span><input id="fileB" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
       <div class="thumbs" id="listB"></div>
-
       <h2 id="h-des">PNG designs <span class="count" id="cntD">0</span></h2>
-      <p class="hint">Transparent PNGs. Each design is placed on every blank.</p>
+      <p class="hint">Transparent PNGs. Each design goes on every blank.</p>
       <label class="drop" id="dropD"><strong>Add transparent PNGs</strong><span>Drop files or click to browse</span><input id="fileD" type="file" accept="image/png,image/webp" multiple></label>
       <div class="thumbs" id="listD"></div>
+    </aside>
 
-      <h2 id="s-h-mus" style="margin-top:22px">Music <span class="count">optional</span></h2>
-      <p class="hint">MP3, WAV, M4A or OGG. It plays under the 10 second video.</p>
-      <div class="ctl hide" id="sNasBox" style="margin-bottom:10px"><label for="sNas">Music library on the NAS</label><select id="sNas"><option value="">Choose a song…</option></select></div>
-      <label class="drop" id="sDrop"><strong>Add music</strong><span>Drop a file or click to browse</span><input id="sFile" type="file" accept="audio/*"></label>
-      <div id="sCtl" class="hide">
-        <div class="fname" id="sInfo"></div>
-        <div class="ctl"><label for="sStart">Start at <output id="sStartO">0:00</output></label><input id="sStart" type="range" min="0" max="0" step="0.1" value="0"></div>
-        <div class="ctl"><label for="sVol">Volume <output id="sVolO">80%</output></label><input id="sVol" type="range" min="0" max="100" value="80"></div>
-        <label class="check"><input type="checkbox" id="sFade" checked> Fade in and out</label>
-        <div class="row" style="margin-top:12px"><button class="btn" id="sPrev" type="button">Play music with preview</button><button class="btn" id="sClear" type="button">Remove music</button><button class="btn hide" id="sToNas" type="button">Add to NAS library</button></div>
-      </div>
-      <p class="note">Facebook and Instagram can mute or block popular copyrighted songs. Use music you own or have a licence for.</p>
-    </section>
-
-    <!-- 2 PLACE (stays in view while you adjust) -->
     <section class="panel sticky" aria-labelledby="h-place">
       <h2 id="h-place">Place the print</h2>
-      <p class="hint">Drag the design to move it. Drag the corner dot to resize. The sliders are on the right.</p>
+      <p class="hint">Drag the design to move it. Drag the corner dot to resize.</p>
       <div class="stage"><canvas id="editor" width="760" height="560" aria-label="Print placement editor"></canvas></div>
       <div class="row" style="margin-top:12px"><button class="btn" id="centerBtn" type="button">Center on chest</button><button class="btn" id="autoFitBtn" type="button" title="Finds the shirt in each photo and places the print on the chest">Auto-fit to every shirt</button></div>
     </section>
 
-    <div class="col">
-    <section class="panel" aria-labelledby="h-adj">
-      <h2 id="h-adj">Adjust the print</h2>
-      <div class="ctl" style="margin-top:6px"><label for="size">Size <output id="sizeO">30%</output></label><input id="size" type="range" min="5" max="95" value="30"></div>
-      <div class="ctl"><label for="rot">Rotation <output id="rotO">0°</output></label><input id="rot" type="range" min="-45" max="45" value="0"></div>
-      <label class="check"><input type="checkbox" id="fabric" checked> Follow shirt folds <small style="color:var(--muted)">(realistic wrinkles)</small></label>
-      <div class="ctl"><label for="shade">Fold shading <output id="shadeO">65%</output></label><input id="shade" type="range" min="0" max="100" value="65"></div>
-      <div class="ctl"><label for="warp">Fold distortion <output id="warpO">50%</output></label><input id="warp" type="range" min="0" max="100" value="50"></div>
-      <label class="check"><input type="checkbox" id="guides" checked> Show guides</label>
-      <label class="check"><input type="checkbox" id="blend"> Multiply blend <small style="color:var(--muted)">(flat mode, light shirts only)</small></label>
-      <label class="check"><input type="checkbox" id="applyAll" checked> Use this placement on every blank</label>
-    </section>
-
-    <!-- 3 MOTION -->
-    <section class="panel" aria-labelledby="h-motion">
-      <h2 id="h-motion">Make it move</h2>
-      <p class="hint">Live preview of the 10 second video.</p>
+    <section class="panel ctlcol sticky" aria-label="Video settings">
       <div class="prevbox"><canvas id="preview" width="540" height="960" aria-label="Video preview"></canvas>
         <div class="timeline"><button class="btn" id="playBtn" type="button">Pause</button><input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Timeline"><span id="timeLbl">0.0 / 10.0s</span></div>
       </div>
-      <div class="sub2">Presets</div>
-      <div id="pBoxS"></div>
-      <div class="sub2">Mockup in the video frame</div>
-      <div class="ctl"><label for="mscale">Mockup size <output id="mscaleO">100%</output></label><input id="mscale" type="range" min="40" max="250" value="100"></div>
-      <div class="two ctl">
-        <div><label for="mx">Left / right <output id="mxO">0</output></label><input id="mx" type="range" min="-50" max="50" value="0"></div>
-        <div><label for="my">Up / down <output id="myO">0</output></label><input id="my" type="range" min="-50" max="50" value="0"></div>
+      <div class="ptabs" role="tablist">
+        <button class="ptab on" type="button" data-pane="sp-print">Print</button>
+        <button class="ptab" type="button" data-pane="sp-frame">Frame</button>
+        <button class="ptab" type="button" data-pane="sp-motion">Motion</button>
+        <button class="ptab" type="button" data-pane="sp-text">Text</button>
+        <button class="ptab" type="button" data-pane="sp-music">Music</button>
+        <button class="ptab" type="button" data-pane="sp-save">Save</button>
       </div>
-      <div class="row" style="margin-top:10px"><button class="btn" id="mreset" type="button" style="padding:4px 12px">Reset mockup</button></div>
-      <div class="sub2">Text &amp; logo on the video</div>
-      <div id="oBoxS"></div>
-      <div id="cBoxS" style="margin-top:14px"></div>
-      <div class="sub2">Camera</div>
-
-      <div class="ctl" style="margin-top:6px"><label for="motion">Camera movement</label>
-        <select id="motion">
-          <option value="studio">Studio reveal (push in, hold, return)</option>
-          <option value="push">Slow push in</option>
-          <option value="pull">Slow pull back</option>
-          <option value="breathe">Breathe (smooth loop)</option>
-          <option value="drift">Drift across the design</option>
-          <option value="hand">Hand sweep (flat-lay mockups)</option>
-        </select></div>
-      <div class="ctl"><label for="zoom">Zoom intensity <output id="zoomO">1.6×</output></label><input id="zoom" type="range" min="1.1" max="3" step="0.05" value="1.6"></div>
-      <div class="ctl hide" id="hstyleCtl"><label for="hstyle">Hand style</label><select id="hstyle"><option value="open">Open hand — smooths the print</option><option value="point1">Pointing hand — light skin</option><option value="point2">Pointing hand — dark skin</option><option value="mix">Mix (change per video)</option></select></div>
-      <div class="ctl hide" id="handCtl"><label for="hsize">Hand size <output id="hsizeO">100%</output></label><input id="hsize" type="range" min="60" max="150" value="100"></div>
-      <div class="two ctl">
-        <div><label for="focus">Zoom target</label><select id="focus"><option value="design">The design</option><option value="center">Center of photo</option></select></div>
-        <div><label for="fit">Frame</label><select id="fit"><option value="blur">Fit + blurred fill</option><option value="solid">Fit + solid color</option><option value="cover">Fill (crop)</option></select></div>
+      <div class="panes">
+        <div class="pane on" id="sp-print">
+          <div class="ctl" style="margin-top:0"><label for="size">Size <output id="sizeO">30%</output></label><input id="size" type="range" min="5" max="95" value="30"></div>
+          <div class="ctl"><label for="rot">Rotation <output id="rotO">0°</output></label><input id="rot" type="range" min="-45" max="45" value="0"></div>
+          <label class="check"><input type="checkbox" id="fabric" checked> Follow shirt folds <small style="color:var(--muted)">(realistic wrinkles)</small></label>
+          <div class="ctl"><label for="shade">Fold shading <output id="shadeO">65%</output></label><input id="shade" type="range" min="0" max="100" value="65"></div>
+          <div class="ctl"><label for="warp">Fold distortion <output id="warpO">50%</output></label><input id="warp" type="range" min="0" max="100" value="50"></div>
+          <label class="check"><input type="checkbox" id="guides" checked> Show guides</label>
+          <label class="check"><input type="checkbox" id="blend"> Multiply blend <small style="color:var(--muted)">(flat mode, light shirts only)</small></label>
+          <label class="check"><input type="checkbox" id="applyAll" checked> Use this placement on every blank</label>
+        </div>
+        <div class="pane" id="sp-frame">
+          <div class="two ctl" style="margin-top:0">
+            <div><label for="asp">Format</label><select id="asp"><option value="916">9:16 · Reels / Stories</option><option value="45">4:5 · Feed</option><option value="11">1:1 · Square</option></select></div>
+            <div><label for="res">Quality</label><select id="res"><option value="1080">1080 × 1920</option><option value="720">720 × 1280</option></select></div>
+          </div>
+          <div class="ctl"><label for="mscale">Mockup size <output id="mscaleO">100%</output></label><input id="mscale" type="range" min="40" max="250" value="100"></div>
+          <div class="two ctl">
+            <div><label for="mx">Left / right <output id="mxO">0</output></label><input id="mx" type="range" min="-50" max="50" value="0"></div>
+            <div><label for="my">Up / down <output id="myO">0</output></label><input id="my" type="range" min="-50" max="50" value="0"></div>
+          </div>
+          <div class="row" style="margin-top:10px"><button class="btn" id="mreset" type="button" style="padding:4px 12px">Reset mockup</button></div>
+          <div class="ctl"><label for="fit">Background around the mockup</label><select id="fit"><option value="blur">Fit + blurred fill</option><option value="solid">Fit + solid color</option><option value="cover">Fill (crop)</option></select></div>
+          <div id="bgWrap" class="ctl hide"><label for="bgc">Color</label><input id="bgc" type="color" value="#efefef" style="width:100%;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--field)"></div>
+        </div>
+        <div class="pane" id="sp-motion">
+          <div class="ctl" style="margin-top:0"><label for="motion">Camera movement</label>
+            <select id="motion">
+              <option value="studio">Studio reveal (push in, hold, return)</option>
+              <option value="push">Slow push in</option>
+              <option value="pull">Slow pull back</option>
+              <option value="breathe">Breathe (smooth loop)</option>
+              <option value="drift">Drift across the design</option>
+              <option value="hand">Hand sweep (flat-lay mockups)</option>
+            </select></div>
+          <div class="ctl"><label for="zoom">Zoom intensity <output id="zoomO">1.6×</output></label><input id="zoom" type="range" min="1.1" max="3" step="0.05" value="1.6"></div>
+          <div class="ctl"><label for="focus">Zoom target</label><select id="focus"><option value="design">The design</option><option value="center">Center of photo</option></select></div>
+          <div class="ctl hide" id="hstyleCtl"><label for="hstyle">Hand style</label><select id="hstyle"><option value="open">Open hand — smooths the print</option><option value="point1">Pointing hand — light skin</option><option value="point2">Pointing hand — dark skin</option><option value="mix">Mix (change per video)</option></select></div>
+          <div class="ctl hide" id="handCtl"><label for="hsize">Hand size <output id="hsizeO">100%</output></label><input id="hsize" type="range" min="60" max="150" value="100"></div>
+        </div>
+        <div class="pane" id="sp-text">
+          <div id="oBoxS"></div>
+          <div id="cBoxS" style="margin-top:14px"></div>
+        </div>
+        <div class="pane" id="sp-music">
+          <p class="hint" style="margin-top:0">It plays under the 10 second video.</p>
+          <div class="ctl hide" id="sNasBox" style="margin-top:0;margin-bottom:10px"><label for="sNas">Music library on the NAS</label><select id="sNas"><option value="">Choose a song…</option></select></div>
+          <label class="drop" id="sDrop"><strong>Add music</strong><span>Drop a file or click to browse · MP3, WAV, M4A, OGG</span><input id="sFile" type="file" accept="audio/*"></label>
+          <div id="sCtl" class="hide">
+            <div class="fname" id="sInfo"></div>
+            <div class="ctl"><label for="sStart">Start at <output id="sStartO">0:00</output></label><input id="sStart" type="range" min="0" max="0" step="0.1" value="0"></div>
+            <div class="ctl"><label for="sVol">Volume <output id="sVolO">80%</output></label><input id="sVol" type="range" min="0" max="100" value="80"></div>
+            <label class="check"><input type="checkbox" id="sFade" checked> Fade in and out</label>
+            <div class="row" style="margin-top:12px"><button class="btn" id="sPrev" type="button">Play music with preview</button><button class="btn" id="sClear" type="button">Remove music</button><button class="btn hide" id="sToNas" type="button">Add to NAS library</button></div>
+          </div>
+          <p class="note">Facebook and Instagram can mute or block popular copyrighted songs. Use music you own or have a licence for.</p>
+        </div>
+        <div class="pane" id="sp-save">
+          <div id="pBoxS"></div>
+          <div class="sub2">When making videos</div>
+          <label class="check"><input type="checkbox" id="fastS" checked> Fast render <small style="color:var(--muted)" id="fastSN"></small></label>
+          <label class="check hide" id="nasWrapS"><input type="checkbox" id="nasS" checked> Also save every video to the office NAS <small style="color:var(--muted)">(Office / ShirtReels / videos)</small></label>
+          <label class="check"><input type="checkbox" id="autoZipS" checked> Download all as one ZIP when "Make all" finishes</label>
+        </div>
       </div>
-      <div class="two ctl">
-        <div><label for="res">Quality</label><select id="res"><option value="1080">1080 × 1920</option><option value="720">720 × 1280</option></select></div>
-        <div><label for="asp">Format</label><select id="asp"><option value="916">9:16 · Reels / Stories</option><option value="45">4:5 · Feed</option><option value="11">1:1 · Square</option></select></div>
+      <div class="exportbar">
+        <div class="row">
+          <button class="btn primary" id="expOne" type="button" disabled>Make this video</button>
+          <button class="btn" id="expAll" type="button" disabled>Make all (0)</button>
+          <button class="btn hide" id="cancelBtn" type="button">Cancel</button>
+        </div>
+        <div class="bar" id="bar"><i id="barI"></i></div>
+        <div class="status" id="status" aria-live="polite"></div>
       </div>
-      <div class="two ctl">
-        <div id="bgWrap" class="hide"><label for="bgc">Color</label><input id="bgc" type="color" value="#efefef" style="width:100%;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--field)"></div>
-      </div>
-
-      <div class="row" style="margin-top:16px">
-        <button class="btn primary" id="expOne" type="button" disabled>Make this video</button>
-        <button class="btn" id="expAll" type="button" disabled>Make all (0)</button>
-        <button class="btn hide" id="cancelBtn" type="button">Cancel</button>
-      </div>
-      <label class="check"><input type="checkbox" id="fastS" checked> Fast render <small style="color:var(--muted)" id="fastSN"></small></label>
-      <label class="check hide" id="nasWrapS"><input type="checkbox" id="nasS" checked> Also save every video to the office NAS <small style="color:var(--muted)">(Office / ShirtReels / videos)</small></label>
-      <label class="check"><input type="checkbox" id="autoZipS" checked> Download all as one ZIP when "Make all" finishes</label>
-      <div class="bar" id="bar"><i id="barI"></i></div>
-      <div class="status" id="status" aria-live="polite"></div>
-      <p class="note">The video is recorded in real time, so each one takes 10 seconds. Keep this tab open and in front while it records.</p>
     </section>
-    </div>
   </main>
 
   <section class="panel" id="results" aria-labelledby="h-res">
@@ -256,89 +273,99 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
   </div>
 
   <div id="modeImage" class="hide">
-    <ol class="steps">
-      <li><b>1</b>Add one image</li>
-      <li><b>2</b>Pick the focus &amp; motion</li>
-      <li><b>3</b>Add music &amp; export</li>
-    </ol>
-    <main class="grid">
-      <section class="panel" aria-labelledby="h-img">
+    <main class="work">
+      <aside class="panel files" aria-labelledby="h-img">
         <h2 id="h-img">Your images <span class="count" id="iCntImg">0</span></h2>
-        <p class="hint">Add as many photos or finished mockups as you like. Each one becomes its own video.</p>
+        <p class="hint">Each photo or finished mockup becomes its own video.</p>
         <label class="drop" id="iDrop"><strong>Add images</strong><span>Drop files or click to browse · JPG, PNG or WebP</span><input id="iFile" type="file" accept="image/*" multiple></label>
         <div class="thumbs" id="iList"></div>
         <div class="fname" id="iName" style="margin-top:0"></div>
         <div class="lbl" style="margin-top:14px"><span>Zoom target</span><span class="row" style="gap:6px"><button class="btn" id="iApplyAll" type="button" style="padding:3px 10px">Apply to all</button><button class="btn" id="iCenter" type="button" style="padding:3px 10px">Center</button></span></div>
         <div class="prevbox"><canvas id="iFocus" class="focuscv" width="270" height="480" aria-label="Pick the zoom target"></canvas></div>
-        <p class="hint" style="margin-bottom:18px">Click or drag on the image to choose where the camera zooms.</p>
+        <p class="hint" style="margin-bottom:0">Click or drag on the image to choose where the camera zooms.</p>
+      </aside>
 
-        <h2 id="h-mus">Music <span class="count">optional</span></h2>
-        <p class="hint">MP3, WAV, M4A or OGG. It plays under the 10 second video.</p>
-        <div class="ctl hide" id="aNasBox" style="margin-bottom:10px"><label for="aNas">Music library on the NAS</label><select id="aNas"><option value="">Choose a song…</option></select></div>
-      <label class="drop" id="aDrop"><strong>Add music</strong><span>Drop a file or click to browse</span><input id="aFile" type="file" accept="audio/*"></label>
-        <div id="aCtl" class="hide">
-          <div class="fname" id="aInfo"></div>
-          <div class="ctl"><label for="aStart">Start at <output id="aStartO">0:00</output></label><input id="aStart" type="range" min="0" max="0" step="0.1" value="0"></div>
-          <div class="ctl"><label for="aVol">Volume <output id="aVolO">80%</output></label><input id="aVol" type="range" min="0" max="100" value="80"></div>
-          <label class="check"><input type="checkbox" id="aFade" checked> Fade in and out</label>
-          <div class="row" style="margin-top:12px"><button class="btn" id="aPrev" type="button">Play music with preview</button><button class="btn" id="aClear" type="button">Remove music</button><button class="btn hide" id="aToNas" type="button">Add to NAS library</button></div>
-        </div>
-        <p class="note">Facebook and Instagram can mute or block popular copyrighted songs. Use music you own or have a licence for.</p>
-      </section>
-
-      <section class="panel" aria-labelledby="h-ipv">
+      <section class="panel sticky" aria-labelledby="h-ipv">
         <h2 id="h-ipv">Live preview</h2>
-        <p class="hint">This is the 10 second video, 9:16.</p>
-        <div class="prevbox"><canvas id="iPrev" width="540" height="960" aria-label="Video preview"></canvas>
+        <p class="hint">This is the 10 second video.</p>
+        <div class="prevbox big"><canvas id="iPrev" width="540" height="960" aria-label="Video preview"></canvas>
           <div class="timeline"><button class="btn" id="iPlay" type="button">Pause</button><input id="iScrub" type="range" min="0" max="1000" value="0" aria-label="Timeline"><span id="iTime">0.0 / 10.0s</span></div>
         </div>
       </section>
 
-      <section class="panel" aria-labelledby="h-imo">
-        <h2 id="h-imo">Make it move</h2>
-        <p class="hint">Camera movement for the whole video.</p>
-        <div id="pBoxI" style="margin-top:6px"></div>
-        <div class="ctl" style="margin-top:6px"><label for="iMotion">Camera movement</label>
-          <select id="iMotion">
-            <option value="studio">Studio reveal (push in, hold, return)</option>
-            <option value="push">Slow push in</option>
-            <option value="pull">Slow pull back</option>
-            <option value="breathe">Breathe (smooth loop)</option>
-            <option value="drift">Drift across the target</option>
-            <option value="panx">Pan left to right</option>
-            <option value="pany">Pan top to bottom</option>
-            <option value="hand">Hand sweep (flat-lay mockups)</option>
-          </select></div>
-        <div class="ctl"><label for="iZoom">Zoom intensity <output id="iZoomO">1.5×</output></label><input id="iZoom" type="range" min="1.1" max="3" step="0.05" value="1.5"></div>
-        <div class="ctl"><label for="imscale">Image size <output id="imscaleO">100%</output></label><input id="imscale" type="range" min="40" max="250" value="100"></div>
-        <div class="two ctl">
-          <div><label for="imx">Left / right <output id="imxO">0</output></label><input id="imx" type="range" min="-50" max="50" value="0"></div>
-          <div><label for="imy">Up / down <output id="imyO">0</output></label><input id="imy" type="range" min="-50" max="50" value="0"></div>
+      <section class="panel ctlcol sticky" aria-label="Video settings">
+        <div class="ptabs" role="tablist">
+          <button class="ptab on" type="button" data-pane="ip-motion">Motion</button>
+          <button class="ptab" type="button" data-pane="ip-frame">Frame</button>
+          <button class="ptab" type="button" data-pane="ip-text">Text</button>
+          <button class="ptab" type="button" data-pane="ip-music">Music</button>
+          <button class="ptab" type="button" data-pane="ip-save">Save</button>
         </div>
-        <div class="sub2" style="margin-top:18px">Text &amp; logo on the video</div>
-        <div id="oBoxI"></div>
-        <div id="cBoxI" style="margin-top:14px"></div>
-        <div class="ctl hide" id="ihstyleCtl"><label for="ihstyle">Hand style</label><select id="ihstyle"><option value="open">Open hand — smooths the print</option><option value="point1">Pointing hand — light skin</option><option value="point2">Pointing hand — dark skin</option><option value="mix">Mix (change per video)</option></select></div>
-      <div class="ctl hide" id="iHandCtl"><label for="ihsize">Hand size <output id="ihsizeO">100%</output></label><input id="ihsize" type="range" min="60" max="150" value="100"></div>
-        <p class="hint hide" id="iHandHint" style="margin-top:8px">The hand sweeps around the zoom target. Click the print's center in the small image on the left.</p>
-        <div class="two ctl">
-          <div><label for="iFit">Frame</label><select id="iFit"><option value="blur">Fit + blurred fill</option><option value="solid">Fit + solid color</option><option value="cover">Fill (crop)</option></select></div>
-          <div><label for="iRes">Quality</label><select id="iRes"><option value="1080">1080 × 1920</option><option value="720">720 × 1280</option></select></div>
-          <div><label for="iAsp">Format</label><select id="iAsp"><option value="916">9:16 · Reels / Stories</option><option value="45">4:5 · Feed</option><option value="11">1:1 · Square</option></select></div>
+        <div class="panes">
+          <div class="pane on" id="ip-motion">
+            <div class="ctl" style="margin-top:0"><label for="iMotion">Camera movement</label>
+              <select id="iMotion">
+                <option value="studio">Studio reveal (push in, hold, return)</option>
+                <option value="push">Slow push in</option>
+                <option value="pull">Slow pull back</option>
+                <option value="breathe">Breathe (smooth loop)</option>
+                <option value="drift">Drift across the target</option>
+                <option value="panx">Pan left to right</option>
+                <option value="pany">Pan top to bottom</option>
+                <option value="hand">Hand sweep (flat-lay mockups)</option>
+              </select></div>
+            <div class="ctl"><label for="iZoom">Zoom intensity <output id="iZoomO">1.5×</output></label><input id="iZoom" type="range" min="1.1" max="3" step="0.05" value="1.5"></div>
+            <div class="ctl hide" id="ihstyleCtl"><label for="ihstyle">Hand style</label><select id="ihstyle"><option value="open">Open hand — smooths the print</option><option value="point1">Pointing hand — light skin</option><option value="point2">Pointing hand — dark skin</option><option value="mix">Mix (change per video)</option></select></div>
+            <div class="ctl hide" id="iHandCtl"><label for="ihsize">Hand size <output id="ihsizeO">100%</output></label><input id="ihsize" type="range" min="60" max="150" value="100"></div>
+            <p class="hint hide" id="iHandHint" style="margin-top:8px">The hand sweeps around the zoom target. Click the print's center in the small image on the left.</p>
+          </div>
+          <div class="pane" id="ip-frame">
+            <div class="two ctl" style="margin-top:0">
+              <div><label for="iAsp">Format</label><select id="iAsp"><option value="916">9:16 · Reels / Stories</option><option value="45">4:5 · Feed</option><option value="11">1:1 · Square</option></select></div>
+              <div><label for="iRes">Quality</label><select id="iRes"><option value="1080">1080 × 1920</option><option value="720">720 × 1280</option></select></div>
+            </div>
+            <div class="ctl"><label for="imscale">Image size <output id="imscaleO">100%</output></label><input id="imscale" type="range" min="40" max="250" value="100"></div>
+            <div class="two ctl">
+              <div><label for="imx">Left / right <output id="imxO">0</output></label><input id="imx" type="range" min="-50" max="50" value="0"></div>
+              <div><label for="imy">Up / down <output id="imyO">0</output></label><input id="imy" type="range" min="-50" max="50" value="0"></div>
+            </div>
+            <div class="ctl"><label for="iFit">Background around the image</label><select id="iFit"><option value="blur">Fit + blurred fill</option><option value="solid">Fit + solid color</option><option value="cover">Fill (crop)</option></select></div>
+            <div class="ctl hide" id="iBgWrap"><label for="iBgc">Frame color</label><input id="iBgc" type="color" value="#111111" style="width:100%;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--field)"></div>
+          </div>
+          <div class="pane" id="ip-text">
+            <div id="oBoxI"></div>
+            <div id="cBoxI" style="margin-top:14px"></div>
+          </div>
+          <div class="pane" id="ip-music">
+            <p class="hint" style="margin-top:0">It plays under the 10 second video.</p>
+            <div class="ctl hide" id="aNasBox" style="margin-top:0;margin-bottom:10px"><label for="aNas">Music library on the NAS</label><select id="aNas"><option value="">Choose a song…</option></select></div>
+          <label class="drop" id="aDrop"><strong>Add music</strong><span>Drop a file or click to browse · MP3, WAV, M4A, OGG</span><input id="aFile" type="file" accept="audio/*"></label>
+          <div id="aCtl" class="hide">
+            <div class="fname" id="aInfo"></div>
+            <div class="ctl"><label for="aStart">Start at <output id="aStartO">0:00</output></label><input id="aStart" type="range" min="0" max="0" step="0.1" value="0"></div>
+            <div class="ctl"><label for="aVol">Volume <output id="aVolO">80%</output></label><input id="aVol" type="range" min="0" max="100" value="80"></div>
+            <label class="check"><input type="checkbox" id="aFade" checked> Fade in and out</label>
+            <div class="row" style="margin-top:12px"><button class="btn" id="aPrev" type="button">Play music with preview</button><button class="btn" id="aClear" type="button">Remove music</button><button class="btn hide" id="aToNas" type="button">Add to NAS library</button></div>
+          </div>
+          <p class="note">Facebook and Instagram can mute or block popular copyrighted songs. Use music you own or have a licence for.</p>
+          </div>
+          <div class="pane" id="ip-save">
+            <div id="pBoxI"></div>
+            <div class="sub2">When making videos</div>
+            <label class="check"><input type="checkbox" id="fastI" checked> Fast render <small style="color:var(--muted)" id="fastIN"></small></label>
+            <label class="check hide" id="nasWrapI"><input type="checkbox" id="nasI" checked> Also save every video to the office NAS <small style="color:var(--muted)">(Office / ShirtReels / videos)</small></label>
+            <label class="check"><input type="checkbox" id="autoZipI" checked> Download all as one ZIP when "Make all" finishes</label>
+          </div>
         </div>
-        <div class="ctl hide" id="iBgWrap"><label for="iBgc">Frame color</label><input id="iBgc" type="color" value="#111111" style="width:100%;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--field)"></div>
-
-        <div class="row" style="margin-top:16px">
-          <button class="btn primary" id="iExp" type="button" disabled>Make this video</button>
-          <button class="btn" id="iExpAll" type="button" disabled>Make all (0)</button>
-          <button class="btn hide" id="iCancel" type="button">Cancel</button>
+        <div class="exportbar">
+          <div class="row">
+            <button class="btn primary" id="iExp" type="button" disabled>Make this video</button>
+            <button class="btn" id="iExpAll" type="button" disabled>Make all (0)</button>
+            <button class="btn hide" id="iCancel" type="button">Cancel</button>
+          </div>
+          <div class="bar" id="iBar"><i id="iBarI"></i></div>
+          <div class="status" id="iStatus" aria-live="polite"></div>
         </div>
-        <label class="check"><input type="checkbox" id="fastI" checked> Fast render <small style="color:var(--muted)" id="fastIN"></small></label>
-      <label class="check hide" id="nasWrapI"><input type="checkbox" id="nasI" checked> Also save every video to the office NAS <small style="color:var(--muted)">(Office / ShirtReels / videos)</small></label>
-      <label class="check"><input type="checkbox" id="autoZipI" checked> Download all as one ZIP when "Make all" finishes</label>
-        <div class="bar" id="iBar"><i id="iBarI"></i></div>
-        <div class="status" id="iStatus" aria-live="polite"></div>
-        <p class="note">The video is recorded in real time, so it takes 10 seconds. Keep this tab open and in front while it records. Music is mixed into the file.</p>
       </section>
     </main>
 
@@ -1521,6 +1548,18 @@ async function nasPresetsSync(){
     var tn;MP.forEach(function(p){tn=$(p+"ToNas");if(tn&&AUD&&AUD.file&&!AUD.file._fromNas)tn.classList.remove("hide")});
   }catch(e){}
 })();
+
+
+/* ---------- settings tabs (Print / Frame / Motion / ...) ---------- */
+document.querySelectorAll(".ptabs").forEach(function(bar){
+  var col=bar.parentNode;
+  bar.querySelectorAll(".ptab").forEach(function(b){
+    b.onclick=function(){
+      bar.querySelectorAll(".ptab").forEach(function(x){x.classList.toggle("on",x===b)});
+      col.querySelectorAll(".pane").forEach(function(p){p.classList.toggle("on",p.id===b.getAttribute("data-pane"))});
+    };
+  });
+});
 
 /* ---------- ZIP: many videos, one save ---------- */
 var CRC_T=null;
