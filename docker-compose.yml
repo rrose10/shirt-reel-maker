@@ -3,8 +3,17 @@ services:
     image: nginx:alpine
     container_name: shirt-reel-maker
     restart: unless-stopped
+    entrypoint: ["/bin/sh", "/entry.sh"]
+    environment:
+      # IPs the https certificate should be valid for (space separated)
+      CERT_IPS: "192.168.0.50 192.168.10.154"
     ports:
-      - "8089:80"
+      - "8089:80"     # normal link  (http://NAS-IP:8089)
+      - "8443:443"    # secure link  (https://NAS-IP:8443)  -> fast video mode
     volumes:
       - ./site:/usr/share/nginx/html:ro
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./entry.sh:/entry.sh:ro
+      - ./certs:/certs
+      # finished videos, music library and shared presets are stored in the office share:
+      - /srv/dev-disk-by-uuid-07745e93-67d6-4171-93e2-f78f05f3f77e/Office/ShirtReels:/data

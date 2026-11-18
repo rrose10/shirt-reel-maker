@@ -154,13 +154,14 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
 
       <h2 id="s-h-mus" style="margin-top:22px">Music <span class="count">optional</span></h2>
       <p class="hint">MP3, WAV, M4A or OGG. It plays under the 10 second video.</p>
+      <div class="ctl hide" id="sNasBox" style="margin-bottom:10px"><label for="sNas">Music library on the NAS</label><select id="sNas"><option value="">Choose a song…</option></select></div>
       <label class="drop" id="sDrop"><strong>Add music</strong><span>Drop a file or click to browse</span><input id="sFile" type="file" accept="audio/*"></label>
       <div id="sCtl" class="hide">
         <div class="fname" id="sInfo"></div>
         <div class="ctl"><label for="sStart">Start at <output id="sStartO">0:00</output></label><input id="sStart" type="range" min="0" max="0" step="0.1" value="0"></div>
         <div class="ctl"><label for="sVol">Volume <output id="sVolO">80%</output></label><input id="sVol" type="range" min="0" max="100" value="80"></div>
         <label class="check"><input type="checkbox" id="sFade" checked> Fade in and out</label>
-        <div class="row" style="margin-top:12px"><button class="btn" id="sPrev" type="button">Play music with preview</button><button class="btn" id="sClear" type="button">Remove music</button></div>
+        <div class="row" style="margin-top:12px"><button class="btn" id="sPrev" type="button">Play music with preview</button><button class="btn" id="sClear" type="button">Remove music</button><button class="btn hide" id="sToNas" type="button">Add to NAS library</button></div>
       </div>
       <p class="note">Facebook and Instagram can mute or block popular copyrighted songs. Use music you own or have a licence for.</p>
     </section>
@@ -170,7 +171,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       <h2 id="h-place">Place the print</h2>
       <p class="hint">Drag the design to move it. Drag the corner dot to resize. The sliders are on the right.</p>
       <div class="stage"><canvas id="editor" width="760" height="560" aria-label="Print placement editor"></canvas></div>
-      <div class="row" style="margin-top:12px"><button class="btn" id="centerBtn" type="button">Center on chest</button></div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="centerBtn" type="button">Center on chest</button><button class="btn" id="autoFitBtn" type="button" title="Finds the shirt in each photo and places the print on the chest">Auto-fit to every shirt</button></div>
     </section>
 
     <div class="col">
@@ -193,6 +194,8 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       <div class="prevbox"><canvas id="preview" width="540" height="960" aria-label="Video preview"></canvas>
         <div class="timeline"><button class="btn" id="playBtn" type="button">Pause</button><input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Timeline"><span id="timeLbl">0.0 / 10.0s</span></div>
       </div>
+      <div class="sub2">Presets</div>
+      <div id="pBoxS"></div>
       <div class="sub2">Mockup in the video frame</div>
       <div class="ctl"><label for="mscale">Mockup size <output id="mscaleO">100%</output></label><input id="mscale" type="range" min="40" max="250" value="100"></div>
       <div class="two ctl">
@@ -200,6 +203,9 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
         <div><label for="my">Up / down <output id="myO">0</output></label><input id="my" type="range" min="-50" max="50" value="0"></div>
       </div>
       <div class="row" style="margin-top:10px"><button class="btn" id="mreset" type="button" style="padding:4px 12px">Reset mockup</button></div>
+      <div class="sub2">Text &amp; logo on the video</div>
+      <div id="oBoxS"></div>
+      <div id="cBoxS" style="margin-top:14px"></div>
       <div class="sub2">Camera</div>
 
       <div class="ctl" style="margin-top:6px"><label for="motion">Camera movement</label>
@@ -220,6 +226,9 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       </div>
       <div class="two ctl">
         <div><label for="res">Quality</label><select id="res"><option value="1080">1080 × 1920</option><option value="720">720 × 1280</option></select></div>
+        <div><label for="asp">Format</label><select id="asp"><option value="916">9:16 · Reels / Stories</option><option value="45">4:5 · Feed</option><option value="11">1:1 · Square</option></select></div>
+      </div>
+      <div class="two ctl">
         <div id="bgWrap" class="hide"><label for="bgc">Color</label><input id="bgc" type="color" value="#efefef" style="width:100%;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--field)"></div>
       </div>
 
@@ -228,6 +237,8 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
         <button class="btn" id="expAll" type="button" disabled>Make all (0)</button>
         <button class="btn hide" id="cancelBtn" type="button">Cancel</button>
       </div>
+      <label class="check"><input type="checkbox" id="fastS" checked> Fast render <small style="color:var(--muted)" id="fastSN"></small></label>
+      <label class="check hide" id="nasWrapS"><input type="checkbox" id="nasS" checked> Also save every video to the office NAS <small style="color:var(--muted)">(Office / ShirtReels / videos)</small></label>
       <label class="check"><input type="checkbox" id="autoZipS" checked> Download all as one ZIP when "Make all" finishes</label>
       <div class="bar" id="bar"><i id="barI"></i></div>
       <div class="status" id="status" aria-live="polite"></div>
@@ -263,13 +274,14 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
 
         <h2 id="h-mus">Music <span class="count">optional</span></h2>
         <p class="hint">MP3, WAV, M4A or OGG. It plays under the 10 second video.</p>
-        <label class="drop" id="aDrop"><strong>Add music</strong><span>Drop a file or click to browse</span><input id="aFile" type="file" accept="audio/*"></label>
+        <div class="ctl hide" id="aNasBox" style="margin-bottom:10px"><label for="aNas">Music library on the NAS</label><select id="aNas"><option value="">Choose a song…</option></select></div>
+      <label class="drop" id="aDrop"><strong>Add music</strong><span>Drop a file or click to browse</span><input id="aFile" type="file" accept="audio/*"></label>
         <div id="aCtl" class="hide">
           <div class="fname" id="aInfo"></div>
           <div class="ctl"><label for="aStart">Start at <output id="aStartO">0:00</output></label><input id="aStart" type="range" min="0" max="0" step="0.1" value="0"></div>
           <div class="ctl"><label for="aVol">Volume <output id="aVolO">80%</output></label><input id="aVol" type="range" min="0" max="100" value="80"></div>
           <label class="check"><input type="checkbox" id="aFade" checked> Fade in and out</label>
-          <div class="row" style="margin-top:12px"><button class="btn" id="aPrev" type="button">Play music with preview</button><button class="btn" id="aClear" type="button">Remove music</button></div>
+          <div class="row" style="margin-top:12px"><button class="btn" id="aPrev" type="button">Play music with preview</button><button class="btn" id="aClear" type="button">Remove music</button><button class="btn hide" id="aToNas" type="button">Add to NAS library</button></div>
         </div>
         <p class="note">Facebook and Instagram can mute or block popular copyrighted songs. Use music you own or have a licence for.</p>
       </section>
@@ -285,6 +297,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       <section class="panel" aria-labelledby="h-imo">
         <h2 id="h-imo">Make it move</h2>
         <p class="hint">Camera movement for the whole video.</p>
+        <div id="pBoxI" style="margin-top:6px"></div>
         <div class="ctl" style="margin-top:6px"><label for="iMotion">Camera movement</label>
           <select id="iMotion">
             <option value="studio">Studio reveal (push in, hold, return)</option>
@@ -302,12 +315,16 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
           <div><label for="imx">Left / right <output id="imxO">0</output></label><input id="imx" type="range" min="-50" max="50" value="0"></div>
           <div><label for="imy">Up / down <output id="imyO">0</output></label><input id="imy" type="range" min="-50" max="50" value="0"></div>
         </div>
+        <div class="sub2" style="margin-top:18px">Text &amp; logo on the video</div>
+        <div id="oBoxI"></div>
+        <div id="cBoxI" style="margin-top:14px"></div>
         <div class="ctl hide" id="ihstyleCtl"><label for="ihstyle">Hand style</label><select id="ihstyle"><option value="open">Open hand — smooths the print</option><option value="point1">Pointing hand — light skin</option><option value="point2">Pointing hand — dark skin</option><option value="mix">Mix (change per video)</option></select></div>
       <div class="ctl hide" id="iHandCtl"><label for="ihsize">Hand size <output id="ihsizeO">100%</output></label><input id="ihsize" type="range" min="60" max="150" value="100"></div>
         <p class="hint hide" id="iHandHint" style="margin-top:8px">The hand sweeps around the zoom target. Click the print's center in the small image on the left.</p>
         <div class="two ctl">
           <div><label for="iFit">Frame</label><select id="iFit"><option value="blur">Fit + blurred fill</option><option value="solid">Fit + solid color</option><option value="cover">Fill (crop)</option></select></div>
           <div><label for="iRes">Quality</label><select id="iRes"><option value="1080">1080 × 1920</option><option value="720">720 × 1280</option></select></div>
+          <div><label for="iAsp">Format</label><select id="iAsp"><option value="916">9:16 · Reels / Stories</option><option value="45">4:5 · Feed</option><option value="11">1:1 · Square</option></select></div>
         </div>
         <div class="ctl hide" id="iBgWrap"><label for="iBgc">Frame color</label><input id="iBgc" type="color" value="#111111" style="width:100%;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--field)"></div>
 
@@ -316,7 +333,9 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
           <button class="btn" id="iExpAll" type="button" disabled>Make all (0)</button>
           <button class="btn hide" id="iCancel" type="button">Cancel</button>
         </div>
-        <label class="check"><input type="checkbox" id="autoZipI" checked> Download all as one ZIP when "Make all" finishes</label>
+        <label class="check"><input type="checkbox" id="fastI" checked> Fast render <small style="color:var(--muted)" id="fastIN"></small></label>
+      <label class="check hide" id="nasWrapI"><input type="checkbox" id="nasI" checked> Also save every video to the office NAS <small style="color:var(--muted)">(Office / ShirtReels / videos)</small></label>
+      <label class="check"><input type="checkbox" id="autoZipI" checked> Download all as one ZIP when "Make all" finishes</label>
         <div class="bar" id="iBar"><i id="iBarI"></i></div>
         <div class="status" id="iStatus" aria-live="polite"></div>
         <p class="note">The video is recorded in real time, so it takes 10 seconds. Keep this tab open and in front while it records. Music is mixed into the file.</p>
@@ -338,7 +357,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
 "use strict";
 var DUR=10;
 var $=function(id){return document.getElementById(id)};
-var S={motion:"studio",zoom:1.6,focus:"design",fit:"blur",bg:"#efefef",res:1080,applyAll:true,guides:true,fabric:true,shade:.65,warp:.5,hsize:1,hstyle:"open",ms:1,mx:0,my:0};
+var S={motion:"studio",zoom:1.6,focus:"design",fit:"blur",bg:"#efefef",res:1080,applyAll:true,guides:true,fabric:true,shade:.65,warp:.5,hsize:1,hstyle:"open",ms:1,mx:0,my:0,asp:"916"};
 
 /* ---------- fabric folds: shade + warp the print using the shirt photo's own light and shadow ---------- */
 var fabCache=[],interacting=false,intTimer=0,fabBroken=false;
@@ -555,6 +574,7 @@ function drawScene(ctx,W,H,b,d,t){
   else drawDesign(ctx,d,dx,dy,dw,dh,pl.rot,b.blend);
   if(S.motion==="hand")drawHand(ctx,t,dx,dy,Math.max(dw,r.w*.5),S.hsize,s,handStyleFor(S.hstyle,b));
   ctx.restore();
+  drawOverlay(ctx,W,H,t);
 }
 
 /* ---------- placement editor ---------- */
@@ -628,7 +648,7 @@ function wireMock(P,O,ids){
   x.oninput=function(){O.mx=this.value/100;$(ids[1]+"O").textContent=this.value};
   y.oninput=function(){O.my=this.value/100;$(ids[2]+"O").textContent=this.value};
 }
-wireMock(0,S,["mscale","mx","my"]);wireMock(0,M,["imscale","imx","imy"]);
+wireMock(0,S,["mscale","mx","my"]);
 $("mreset").onclick=function(){S.ms=1;S.mx=0;S.my=0;$("mscale").value=100;$("mx").value=0;$("my").value=0;$("mscaleO").textContent="100%";$("mxO").textContent="0";$("myO").textContent="0"};
 $("hstyle").onchange=function(){S.hstyle=this.value};
 $("ihstyle").onchange=function(){M.hstyle=this.value};
@@ -638,11 +658,15 @@ $("focus").onchange=function(){S.focus=this.value};
 $("fit").onchange=function(){S.fit=this.value;$("bgWrap").classList.toggle("hide",this.value!=="solid")};
 $("bgc").oninput=function(){S.bg=this.value};
 $("res").onchange=function(){S.res=+this.value};
+$("asp").onchange=function(){S.asp=this.value;setPrevAspect(pv,this.value)};
+function aspRatio(a){return a==="45"?1.25:a==="11"?1:16/9}
+function outSize(res,a){var W=res,H=Math.round(res*aspRatio(a)/2)*2;return {W:W,H:H}}
+function setPrevAspect(cv,a){var h=Math.round(540*aspRatio(a));cv.height=h;cv.style.aspectRatio="540/"+h}
 
 /* ---------- preview loop ---------- */
 var pv=$("preview"),pc=pv.getContext("2d"),T=0,playing=true,last=0,scrubbing=false;
 function pvEmpty(){
-  var g=pc.createLinearGradient(0,0,0,960);g.addColorStop(0,"#1b1e24");g.addColorStop(1,"#0c0d10");pc.fillStyle=g;pc.fillRect(0,0,540,960);
+  var g=pc.createLinearGradient(0,0,0,pv.height);g.addColorStop(0,"#1b1e24");g.addColorStop(1,"#0c0d10");pc.fillStyle=g;pc.fillRect(0,0,540,pv.height);
   pc.fillStyle="#8a93a0";pc.font="700 24px 'DM Sans',sans-serif";pc.textAlign="center";pc.fillText("Add a blank shirt",270,470);
   pc.font="400 16px 'DM Sans',sans-serif";pc.fillText("and a design to see the motion",270,500);
 }
@@ -650,7 +674,7 @@ function frame(ts){
   if(mode!=="shirt"){last=0;requestAnimationFrame(frame);return}
   if(!last)last=ts;var dt=(ts-last)/1000;last=ts;
   if(playing&&!scrubbing){T+=dt;if(T>=DUR){T-=DUR;restartMusic()}}
-  if(curB&&curD)drawScene(pc,540,960,curB,curD,T);else pvEmpty();
+  if(curB&&curD)drawScene(pc,540,pv.height,curB,curD,T);else pvEmpty();
   if(!scrubbing)$("scrub").value=Math.round(T/DUR*1000);
   $("timeLbl").textContent=T.toFixed(1)+" / "+DUR.toFixed(1)+"s";
   requestAnimationFrame(frame);
@@ -707,22 +731,22 @@ async function runQueue(pairs){
   if(AUD&&Ctx){try{ac=new Ctx();ac.resume()}catch(e){ac=null}}
   stopMusic();cancelFlag=false;lock(true);var done=0,failed=false;interacting=false;
   if(S.motion==="hand")await loadHands();
-  var W=S.res,H=Math.round(S.res*16/9),withAudio=!!(AUD&&ac);
+  var SZ=outSize(S.res,S.asp),W=SZ.W,H=SZ.H,withAudio=!!(AUD&&ac);
   for(var i=0;i<pairs.length;i++){
     if(cancelFlag)break;
     var b=pairs[i][0],d=pairs[i][1];
     var label=(i+1)+" of "+pairs.length;
     try{
-      var out=await recordGeneric(function(ctx,w,h,t){drawScene(ctx,w,h,b,d,t)},W,H,
+      var out=await recordAny(function(ctx,w,h,t){drawScene(ctx,w,h,b,d,t)},W,H,
         withAudio?{ac:ac,buffer:AUD.buffer,offset:AU.start,vol:AU.vol,fade:AU.fade}:null,
-        function(f){$("barI").style.width=Math.round(f*100)+"%";setStatus("Recording "+label+" · "+(f*DUR).toFixed(1)+" / "+DUR+"s")});
+        function(f){$("barI").style.width=Math.round(f*100)+"%";setStatus((lastFast?"Rendering ":"Recording ")+label+" · "+Math.round(f*100)+"%")});
       if(out){out.audio=withAudio;addResult(b,d,out);done++}
     }catch(err){setStatus(err.message||"Recording failed.");failed=true;break}
   }
   if(ac){try{ac.close()}catch(e){}}
   var wasCancelled=cancelFlag;
   lock(false);$("barI").style.width="0";
-  if(cancelFlag)setStatus("Cancelled. "+done+" finished.");else if(done&&!failed)setStatus(done+" video"+(done>1?"s":"")+" ready below.");
+  if(cancelFlag)setStatus("Cancelled. "+done+" finished.");else if(done&&!failed){await Promise.all(nasP.splice(0));setStatus(done+" video"+(done>1?"s":"")+" ready below."+nasNote(results.slice(0,done)))}
   cancelFlag=false;
   if(pairs.length>1&&done>0&&!wasCancelled&&!failed&&$("autoZipS").checked)saveZip(results.slice(0,done).reverse(),"shirt-reels-"+stamp()+".zip",sayS,$("zipS"));
 }
@@ -732,8 +756,9 @@ $("cancelBtn").onclick=function(){cancelFlag=true};
 
 function fmtSize(n){return n>1048576?(n/1048576).toFixed(1)+" MB":Math.round(n/1024)+" KB"}
 function addResult(b,d,out){
-  var r={name:b.name+"__"+d.name+"__reel"+(out.audio?"-music":"")+"."+out.ext,url:URL.createObjectURL(out.blob),blob:out.blob,ext:out.ext,audio:!!out.audio};
+  var r={name:b.name+"__"+d.name+"__reel"+(out.audio?"-music":"")+"."+out.ext,url:URL.createObjectURL(out.blob),blob:out.blob,ext:out.ext,audio:!!out.audio,design:d.name,shirt:b.name};
   results.unshift(r);renderResults();
+  if(NAS.ok&&$("nasS").checked)nasP.push(nasSaveVideo(r,sayS));
 }
 function renderResults(){
   var box=$("vids");box.textContent="";$("results").style.display=results.length?"block":"none";$("cntR").textContent=results.length;$("zipS").textContent="Download all ("+results.length+") as ZIP";
@@ -747,6 +772,7 @@ function cardFor(r){
   var m=document.createElement("div");m.className="meta";m.textContent=r.ext.toUpperCase()+" · "+fmtSize(r.blob.size)+" · 10 s"+(r.audio?" · with music":"");c.appendChild(m);
   var bt=document.createElement("button");bt.className="btn primary";bt.type="button";bt.textContent="Download";
   bt.onclick=function(){download(r,bt)};c.appendChild(bt);
+  if(r.design){var cb=document.createElement("button");cb.className="btn";cb.type="button";cb.style.marginTop="6px";cb.textContent="Copy caption";cb.onclick=function(){copyText(capFor(r)).then(function(){cb.textContent="Copied";setTimeout(function(){cb.textContent="Copy caption"},1500)},function(){cb.textContent="Copy failed"})};c.appendChild(cb)}
   return c;
 }
 async function download(r,btn){
@@ -787,7 +813,7 @@ $("tabShirt").onclick=function(){setMode("shirt")};
 $("tabImage").onclick=function(){setMode("image")};
 
 /* ---------- single image + music ---------- */
-var I=null,M={motion:"studio",zoom:1.5,fit:"blur",bg:"#111111",res:1080,hsize:1,hstyle:"open",ms:1,mx:0,my:0};
+var I=null,M={motion:"studio",zoom:1.5,fit:"blur",bg:"#111111",res:1080,hsize:1,hstyle:"open",ms:1,mx:0,my:0,asp:"916"};
 var AUD=null,AU={start:0,vol:.8,fade:true},audEl=new Audio(),musicOn=false,results2=[];
 audEl.preload="auto";
 var FW=270,FH=480,fcv=$("iFocus"),fcx=fcv.getContext("2d");
@@ -880,6 +906,7 @@ function drawImgScene(ctx,W,H,im,t){
   ctx.drawImage(im.img,r.x,r.y,r.w,r.h);
   if(M.motion==="hand")drawHand(ctx,t,fx,fy,r.w*.68,M.hsize,s,handStyleFor(M.hstyle,im));
   ctx.restore();
+  drawOverlay(ctx,W,H,t);
 }
 
 /* music (shared by both tabs) */
@@ -894,12 +921,13 @@ async function setAudio(file){
     var dec=await new Promise(function(res,rej){c.decodeAudioData(buf.slice(0),res,rej)});
     try{c.close()}catch(e){}
     stopMusic();if(AUD)URL.revokeObjectURL(AUD.url);
-    AUD={name:file.name,buffer:dec,dur:dec.duration,url:URL.createObjectURL(file)};
+    AUD={name:file.name,buffer:dec,dur:dec.duration,url:URL.createObjectURL(file),file:file};
     audEl.src=AUD.url;AU.start=0;
     MP.forEach(function(p){
       $(p+"Info").textContent=file.name+" · "+fmtT(dec.duration);
       var st=$(p+"Start");st.max=Math.max(0,Math.floor((dec.duration-1)*10)/10);st.value=0;$(p+"StartO").textContent="0:00";
       $(p+"Ctl").classList.remove("hide");
+      var tn=$(p+"ToNas");if(tn)tn.classList.toggle("hide",!NAS.ok||!!file._fromNas);
     });
     sayMusic("");
   }catch(e){sayMusic("Could not read this audio file. Try an MP3 or WAV file.")}
@@ -936,6 +964,8 @@ $("iZoom").oninput=function(){M.zoom=+this.value;$("iZoomO").textContent=(+this.
 $("iFit").onchange=function(){M.fit=this.value;$("iBgWrap").classList.toggle("hide",this.value!=="solid");drawFocus()};
 $("iBgc").oninput=function(){M.bg=this.value;drawFocus()};
 $("iRes").onchange=function(){M.res=+this.value};
+wireMock(0,M,["imscale","imx","imy"]);
+$("iAsp").onchange=function(){M.asp=this.value;setPrevAspect(ip,this.value)};
 
 /* preview loop */
 var ip=$("iPrev"),ipc=ip.getContext("2d"),T2=0,play2=true,last2=0,scrub2=false;
@@ -943,9 +973,9 @@ function frame2(ts){
   if(mode!=="image"){last2=0;requestAnimationFrame(frame2);return}
   if(!last2)last2=ts;var dt=(ts-last2)/1000;last2=ts;
   if(play2&&!scrub2){T2+=dt;if(T2>=DUR){T2-=DUR;restartMusic()}}
-  if(I)drawImgScene(ipc,540,960,I,T2);
+  if(I)drawImgScene(ipc,540,ip.height,I,T2);
   else{
-    var g=ipc.createLinearGradient(0,0,0,960);g.addColorStop(0,"#1b1e24");g.addColorStop(1,"#0c0d10");ipc.fillStyle=g;ipc.fillRect(0,0,540,960);
+    var g=ipc.createLinearGradient(0,0,0,ip.height);g.addColorStop(0,"#1b1e24");g.addColorStop(1,"#0c0d10");ipc.fillStyle=g;ipc.fillRect(0,0,540,ip.height);
     ipc.fillStyle="#8a93a0";ipc.font="700 24px 'DM Sans',sans-serif";ipc.textAlign="center";ipc.fillText("Add an image",270,470);
     ipc.font="400 16px 'DM Sans',sans-serif";ipc.fillText("to see the motion",270,500);
   }
@@ -957,6 +987,104 @@ $("iPlay").onclick=function(){play2=!play2;this.textContent=play2?"Pause":"Play"
 $("iScrub").oninput=function(){scrub2=true;T2=this.value/1000*DUR};
 $("iScrub").onchange=function(){scrub2=false;restartMusic()};
 $("iScrub").addEventListener("pointerup",function(){scrub2=false;restartMusic()});
+
+/* ---------- fast render: WebCodecs, frame by frame (no 10 s wait) ---------- */
+var FPS=30,FAST=true,FAST_BAD=false,lastFast=false;
+function fastSupported(){return !!(window.VideoEncoder&&window.VideoFrame&&window.Mp4Muxer&&window.isSecureContext&&!FAST_BAD)}
+function yieldNow(){return new Promise(function(r){var c=new MessageChannel();c.port1.onmessage=function(){r()};c.port2.postMessage(0)})}
+async function pickVideoCodec(W,H,bps){
+  var big=W*H>1500000,list=big?["avc1.640028","avc1.4D0028","avc1.640033"]:["avc1.64001F","avc1.4D001F","avc1.640028","avc1.42E01F"];
+  for(var i=0;i<list.length;i++){
+    try{var r=await VideoEncoder.isConfigSupported({codec:list[i],width:W,height:H,bitrate:bps,framerate:FPS});if(r.supported)return list[i]}catch(e){}
+  }
+  return null;
+}
+async function mixAudioFast(audio){
+  var SR=48000,oc=new OfflineAudioContext(2,SR*DUR,SR),src=oc.createBufferSource(),g=oc.createGain();
+  src.buffer=audio.buffer;var dur=audio.buffer.duration,off=Math.min(audio.offset,Math.max(0,dur-.2));
+  if(dur-off<DUR+.1){src.loop=true;src.loopStart=off;src.loopEnd=dur}
+  src.connect(g);g.connect(oc.destination);
+  g.gain.setValueAtTime(audio.fade?0:audio.vol,0);
+  if(audio.fade){g.gain.linearRampToValueAtTime(audio.vol,1);g.gain.setValueAtTime(audio.vol,DUR-1.2);g.gain.linearRampToValueAtTime(0,DUR-.05)}
+  src.start(0,off);
+  return await oc.startRendering();
+}
+async function renderFast(drawFn,W,H,audio,onProg){
+  if(!fastSupported())throw new Error("nofast");
+  var bps=W*H>1500000?9e6:6e6,vc=await pickVideoCodec(W,H,bps);
+  if(!vc)throw new Error("no h264");
+  var abuf=null,acodec=null;
+  if(audio&&window.AudioEncoder&&window.AudioData){
+    try{
+      abuf=await mixAudioFast(audio);
+      var cands=["mp4a.40.2","opus"];
+      for(var i=0;i<cands.length&&!acodec;i++){
+        var sp=await AudioEncoder.isConfigSupported({codec:cands[i],sampleRate:48000,numberOfChannels:2,bitrate:192000});
+        if(sp.supported)acodec=cands[i];
+      }
+      if(!acodec)abuf=null;
+    }catch(e){abuf=null;acodec=null}
+  }
+  if(audio&&!abuf)throw new Error("no audio encoder");
+  var muxer=new Mp4Muxer.Muxer({target:new Mp4Muxer.ArrayBufferTarget(),video:{codec:"avc",width:W,height:H,frameRate:FPS},
+    audio:abuf?{codec:acodec==="opus"?"opus":"aac",numberOfChannels:2,sampleRate:48000}:undefined,fastStart:"in-memory",firstTimestampBehavior:"offset"});
+  var err=null,venc=new VideoEncoder({output:function(c,m){muxer.addVideoChunk(c,m)},error:function(e){err=e}});
+  venc.configure({codec:vc,width:W,height:H,bitrate:bps,framerate:FPS,latencyMode:"quality",avc:{format:"avc"}});
+  var cv=document.createElement("canvas");cv.width=W;cv.height=H;var ctx=cv.getContext("2d");
+  var N=Math.round(DUR*FPS),i2;
+  for(i2=0;i2<N;i2++){
+    if(cancelFlag){try{venc.close()}catch(e){}return null}
+    if(err)throw err;
+    drawFn(ctx,W,H,i2/FPS);
+    var vf=new VideoFrame(cv,{timestamp:Math.round(i2*1e6/FPS),duration:Math.round(1e6/FPS)});
+    venc.encode(vf,{keyFrame:i2%60===0});vf.close();
+    while(venc.encodeQueueSize>5){await yieldNow();if(err)throw err}
+    if(i2%4===0){onProg(i2/N);await yieldNow()}
+  }
+  await venc.flush();if(err)throw err;venc.close();
+  if(abuf){
+    var aenc=new AudioEncoder({output:function(c,m){muxer.addAudioChunk(c,m)},error:function(e){err=e}});
+    aenc.configure({codec:acodec,sampleRate:48000,numberOfChannels:2,bitrate:192000});
+    var L=abuf.getChannelData(0),R=abuf.numberOfChannels>1?abuf.getChannelData(1):L,total=abuf.length,step=4800;
+    for(var s0=0;s0<total;s0+=step){
+      var n=Math.min(step,total-s0),d=new Float32Array(n*2);d.set(L.subarray(s0,s0+n),0);d.set(R.subarray(s0,s0+n),n);
+      var ad=new AudioData({format:"f32-planar",sampleRate:48000,numberOfFrames:n,numberOfChannels:2,timestamp:Math.round(s0/48000*1e6),data:d});
+      aenc.encode(ad);ad.close();
+      while(aenc.encodeQueueSize>20)await yieldNow();
+    }
+    await aenc.flush();if(err)throw err;aenc.close();
+  }
+  muxer.finalize();onProg(1);
+  return {blob:new Blob([muxer.target.buffer],{type:"video/mp4"}),ext:"mp4"};
+}
+async function recordAny(drawFn,W,H,audio,onProg){
+  lastFast=false;
+  if(FAST&&fastSupported()){
+    try{
+      lastFast=true;
+      var o=await renderFast(drawFn,W,H,audio,onProg);
+      return o;
+    }catch(e){
+      lastFast=false;
+      if(cancelFlag)return null;
+      FAST_BAD=true;fastNotes();
+      try{console.warn("fast render failed, using normal recording:",e)}catch(x){}
+    }
+  }
+  return recordGeneric(drawFn,W,H,audio,onProg);
+}
+function fastNotes(){
+  var msg;
+  if(!window.VideoEncoder||!window.Mp4Muxer)msg="(this browser has no fast mode, using normal 10 s recording)";
+  else if(!window.isSecureContext)msg="(needs the secure link <a href=\"https://"+location.hostname+":8443\">https://"+location.hostname+":8443</a>. Using normal 10 s recording for now)";
+  else if(FAST_BAD)msg="(failed here, using normal 10 s recording)";
+  else msg="(faster, keeps working in a background tab)";
+  ["fastSN","fastIN"].forEach(function(id){var e=$(id);if(e)e.innerHTML=msg});
+  ["fastS","fastI"].forEach(function(id){var e=$(id);if(e){e.disabled=!fastSupported();if(!fastSupported())e.checked=false}});
+}
+["fastS","fastI"].forEach(function(id){$(id).onchange=function(){FAST=this.checked;["fastS","fastI"].forEach(function(o){$(o).checked=FAST})}});
+fastNotes();
+window.__T={get b(){return curB},get d(){return curD},drawScene:drawScene,renderFast:renderFast,recordAny:recordAny,buildZip:buildZip,captionsFile:captionsFile,get results(){return results},get results2(){return results2}};
 
 /* recording with optional audio */
 function pickMimeA(audio){
@@ -1022,17 +1150,18 @@ async function runImgExport(items){
   if(AUD&&Ctx){try{ac=new Ctx();ac.resume()}catch(e){ac=null}}
   stopMusic();cancelFlag=false;lockImg(true);
   if(M.motion==="hand")await loadHands();
-  var W=M.res,H=Math.round(M.res*16/9),withAudio=!!(AUD&&ac),done=0,errMsg="";
+  var SZ=outSize(M.res,M.asp),W=SZ.W,H=SZ.H,withAudio=!!(AUD&&ac),done=0,errMsg="";
   for(var k=0;k<items.length;k++){
     if(cancelFlag)break;
     var it=items[k],label=(k+1)+" of "+items.length;
     try{
-      var out=await recordGeneric(function(ctx,w,h,t){drawImgScene(ctx,w,h,it,t)},W,H,
+      var out=await recordAny(function(ctx,w,h,t){drawImgScene(ctx,w,h,it,t)},W,H,
         withAudio?{ac:ac,buffer:AUD.buffer,offset:AU.start,vol:AU.vol,fade:AU.fade}:null,
-        function(f){$("iBarI").style.width=Math.round(f*100)+"%";istatus("Recording "+label+" · "+(f*DUR).toFixed(1)+" / "+DUR+"s")});
+        function(f){$("iBarI").style.width=Math.round(f*100)+"%";istatus((lastFast?"Rendering ":"Recording ")+label+" · "+Math.round(f*100)+"%")});
       if(out){
-        results2.unshift({name:it.name+"__reel"+(withAudio?"-music":"")+"."+out.ext,url:URL.createObjectURL(out.blob),blob:out.blob,ext:out.ext,audio:withAudio});
+        results2.unshift({name:it.name+"__reel"+(withAudio?"-music":"")+"."+out.ext,url:URL.createObjectURL(out.blob),blob:out.blob,ext:out.ext,audio:withAudio,design:it.name});
         done++;renderResults2();
+        if(NAS.ok&&$("nasI").checked)nasP.push(nasSaveVideo(results2[0],sayI));
       }
     }catch(err){errMsg=err.message||"Recording failed.";break}
   }
@@ -1041,7 +1170,7 @@ async function runImgExport(items){
   lockImg(false);$("iBarI").style.width="0";cancelFlag=false;
   if(errMsg)istatus(errMsg);
   else if(wasCancelled)istatus("Cancelled. "+done+" finished.");
-  else istatus(done+" video"+(done>1?"s":"")+" ready below.");
+  else{await Promise.all(nasP.splice(0));istatus(done+" video"+(done>1?"s":"")+" ready below."+nasNote(results2.slice(0,done)))}
   if(items.length>1&&done>0&&!errMsg&&!wasCancelled&&$("autoZipI").checked)saveZip(results2.slice(0,done).reverse(),"image-reels-"+stamp()+".zip",sayI,$("zipI"));
 }
 function renderResults2(){
@@ -1128,6 +1257,266 @@ function drawHand(ctx,t,cx,cy,pw,size,zs,style){
   ctx.restore();
 }
 
+
+/* ---------- auto-fit: find the shirt, place the print on the chest ---------- */
+function detectChest(b){
+  var W=120,H=Math.max(40,Math.round(120*b.h/b.w)),c=document.createElement("canvas");c.width=W;c.height=H;
+  var x=c.getContext("2d",{willReadFrequently:true});x.drawImage(b.img,0,0,W,H);
+  var d=x.getImageData(0,0,W,H).data;
+  function px(i,j){var o=(j*W+i)*4;return [d[o],d[o+1],d[o+2]]}
+  var ring=[],k;for(k=0;k<W;k++){ring.push(px(k,0),px(k,H-1))}for(k=0;k<H;k++){ring.push(px(0,k),px(W-1,k))}
+  var bg=[0,1,2].map(function(ch){var a=ring.map(function(p){return p[ch]}).sort(function(m,n){return m-n});return a[a.length>>1]});
+  var mask=new Uint8Array(W*H),minx=W,maxx=0,miny=H,maxy=0,cnt=0;
+  for(var j=0;j<H;j++)for(var i=0;i<W;i++){
+    var p=px(i,j),dist=Math.abs(p[0]-bg[0])+Math.abs(p[1]-bg[1])+Math.abs(p[2]-bg[2]);
+    if(dist>60){mask[j*W+i]=1;cnt++;if(i<minx)minx=i;if(i>maxx)maxx=i;if(j<miny)miny=j;if(j>maxy)maxy=j}
+  }
+  if(cnt<W*H*.08||cnt>W*H*.97)return null;
+  var cy=miny+(maxy-miny)*.36,row=Math.round(cy),l=W,r=0;
+  for(var i2=0;i2<W;i2++)if(mask[row*W+i2]){if(i2<l)l=i2;if(i2>r)r=i2}
+  if(r<=l)return null;
+  var wFrac=(r-l+1)/W;
+  return {x:(l+r+1)/2/W,y:(cy+.5)/H,w:Math.min(.6,Math.max(.12,wFrac*.45)),rot:0};
+}
+$("autoFitBtn").onclick=function(){
+  var n=0;blanks.forEach(function(b){var p=detectChest(b);if(p){b.place=p;n++}});
+  if(n){S.applyAll=false;$("applyAll").checked=false;touch();syncControls();drawEditor();setStatus("Placed the print on "+n+" of "+blanks.length+" shirt"+(blanks.length>1?"s":"")+". Drag to fine-tune each one.")}
+  else setStatus("Could not find the shirt outline. Place the print by hand.");
+};
+
+/* ---------- presets + remembering the last settings ---------- */
+var PS_MAP={
+  shirt:{motion:["motion","change"],zoom:["zoom","input"],focus:["focus","change"],fit:["fit","change"],bg:["bgc","input"],res:["res","change"],asp:["asp","change"],fabric:["fabric","change"],shade:["shade","input",100],warp:["warp","input",100],hsize:["hsize","input",100],hstyle:["hstyle","change"],ms:["mscale","input",100],mx:["mx","input",100],my:["my","input",100]},
+  image:{motion:["iMotion","change"],zoom:["iZoom","input"],fit:["iFit","change"],bg:["iBgc","input"],res:["iRes","change"],asp:["iAsp","change"],hsize:["ihsize","input",100],hstyle:["ihstyle","change"],ms:["imscale","input",100],mx:["imx","input",100],my:["imy","input",100]}
+};
+var PS_ORDER=["motion","fit","bg","res","asp","focus","fabric","shade","warp","hstyle","hsize","zoom","ms","mx","my"];
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}
+function psCapture(kind){
+  var O=kind==="shirt"?S:M,o={};
+  Object.keys(PS_MAP[kind]).forEach(function(k){if(O[k]!==undefined)o[k]=O[k]});
+  if(kind==="shirt"&&curB)o.place={x:curB.place.x,y:curB.place.y,w:curB.place.w,rot:curB.place.rot};
+  return o;
+}
+function psApply(kind,o,withPlace){
+  if(!o)return;
+  var map=PS_MAP[kind];
+  PS_ORDER.forEach(function(k){
+    if(o[k]===undefined||!map[k])return;
+    var m=map[k],e=$(m[0]);if(!e)return;
+    var v=o[k];if(m[2])v=Math.round(v*m[2]);
+    if(e.type==="checkbox")e.checked=!!v;else e.value=v;
+    e.dispatchEvent(new Event(m[1],{bubbles:true}));
+  });
+  if(withPlace&&kind==="shirt"&&o.place&&curB)setPlace(o.place);
+}
+function psBuild(kind,boxId){
+  var key="srm.presets."+kind,box=$(boxId);
+  box.innerHTML='<div class="ctl" style="margin-top:0"><label for="'+boxId+'Sel">Saved presets</label><select id="'+boxId+'Sel"></select></div>'+
+    '<div class="row" style="margin-top:8px"><input id="'+boxId+'Nm" type="text" placeholder="Preset name" style="flex:1;min-width:120px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);font:inherit">'+
+    '<button class="btn" id="'+boxId+'Sv" type="button">Save</button><button class="btn" id="'+boxId+'Dl" type="button">Delete</button></div>'+
+    '<p class="hint" id="'+boxId+'Hn" style="margin-top:6px">A preset keeps the camera, hand, mockup size, format and print placement. Pick one to apply it.</p>';
+  var sel=$(boxId+"Sel");
+  function list(){return lsGet(key)||{}}
+  function fill(cur){
+    var L=list(),names=Object.keys(L);sel.textContent="";
+    var o0=document.createElement("option");o0.value="";o0.textContent=names.length?"Choose a preset…":"No presets yet";sel.appendChild(o0);
+    names.forEach(function(n){var o=document.createElement("option");o.value=n;o.textContent=n;sel.appendChild(o)});
+    if(cur)sel.value=cur;
+  }
+  sel.onchange=function(){var L=list();if(sel.value&&L[sel.value]){psApply(kind,L[sel.value],true);$(boxId+"Nm").value=sel.value;$(boxId+"Hn").textContent="Applied “"+sel.value+"”."}};
+  $(boxId+"Sv").onclick=function(){
+    var n=$(boxId+"Nm").value.trim();if(!n){$(boxId+"Hn").textContent="Type a name first.";return}
+    var L=list();L[n]=psCapture(kind);
+    if(lsSet(key,L)){fill(n);$(boxId+"Hn").textContent="Saved “"+n+"”.";if(NAS.ok)nasSavePresets(kind,L)}
+    else $(boxId+"Hn").textContent="This browser cannot store presets here."
+  };
+  $(boxId+"Dl").onclick=function(){
+    var n=sel.value;if(!n)return;var L=list();delete L[n];lsSet(key,L);fill();$(boxId+"Hn").textContent="Deleted “"+n+"”.";if(NAS.ok)nasSavePresets(kind,L)
+  };
+  fill();
+  return {fill:fill};
+}
+var PSB={shirt:psBuild("shirt","pBoxS"),image:psBuild("image","pBoxI")};
+/* restore what was used last time, and keep saving it */
+(function(){
+  ["shirt","image"].forEach(function(k){
+    var o=lsGet("srm.last."+k);
+    if(o){try{psApply(k,o,false)}catch(e){}}
+  });
+  var prev={};
+  setInterval(function(){
+    ["shirt","image"].forEach(function(k){
+      var j=JSON.stringify(psCapture(k));
+      if(j!==prev[k]){prev[k]=j;var o=JSON.parse(j);delete o.place;lsSet("srm.last."+k,o)}
+    });
+  },1500);
+})();
+
+
+/* ---------- text + logo overlay (CTA at the end of the video) ---------- */
+var OV={text:"",pos:"bottom",from:7,color:"#ff4a2b",logo:null,logoData:"",lpos:"tr",lsize:18,logoAlways:true};
+(function(){var o=lsGet("srm.ov");if(o){for(var k in o)if(k!=="logo")OV[k]=o[k];if(OV.logoData){var im=new Image();im.onload=function(){OV.logo=im};im.src=OV.logoData}}})();
+function ovSave(){var o={};for(var k in OV)if(k!=="logo")o[k]=OV[k];lsSet("srm.ov",o)}
+function rrect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function drawOverlay(ctx,W,H,t){
+  ctx.setTransform(1,0,0,1,0,0);
+  if(OV.logo&&OV.logo.naturalWidth){
+    var lw=W*OV.lsize/100,lh=lw*OV.logo.naturalHeight/OV.logo.naturalWidth,m=W*.045;
+    var lx=OV.lpos.indexOf("l")>=0?m:W-lw-m,ly=OV.lpos.indexOf("t")>=0?m+H*.04:H-lh-m-H*.1;
+    ctx.save();ctx.globalAlpha=Math.min(1,t/.4);ctx.drawImage(OV.logo,lx,ly,lw,lh);ctx.restore();
+  }
+  if(OV.text&&t>=OV.from){
+    var a=sm((t-OV.from)/.5),txt=OV.text,fs=W*.056;
+    ctx.save();ctx.globalAlpha=a;
+    var fam="800 "+fs+"px 'DM Sans',Arial,sans-serif";ctx.font=fam;
+    var maxw=W*.84,tw=ctx.measureText(txt).width;
+    if(tw>maxw){fs=fs*maxw/tw;ctx.font="800 "+fs+"px 'DM Sans',Arial,sans-serif";tw=ctx.measureText(txt).width}
+    var pw=tw+fs*1.5,ph=fs*2.1,pulse=1+.018*Math.sin((t-OV.from)*6);
+    var cy=OV.pos==="top"?H*.13:H*.8,slide=(1-a)*fs*1.2;
+    ctx.translate(W/2,cy+slide);ctx.scale(pulse,pulse);
+    ctx.shadowColor="rgba(0,0,0,.35)";ctx.shadowBlur=fs*.5;ctx.shadowOffsetY=fs*.18;
+    ctx.fillStyle=OV.color;rrect(ctx,-pw/2,-ph/2,pw,ph,ph/2);ctx.fill();
+    ctx.shadowColor="transparent";ctx.fillStyle="#fff";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(txt,0,fs*.04);
+    ctx.restore();
+  }
+}
+function ovBuild(boxId){
+  var b=$(boxId),I=function(n){return boxId+n};
+  b.innerHTML='<div class="ctl" style="margin-top:0"><label for="'+I("T")+'">Text on the video <small style="text-transform:none;letter-spacing:0;font-weight:500">(e.g. Shop now)</small></label><input id="'+I("T")+'" type="text" maxlength="60" placeholder="Leave empty for no text" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);font:inherit"></div>'+
+   '<div class="two ctl"><div><label for="'+I("P")+'">Text position</label><select id="'+I("P")+'"><option value="bottom">Bottom</option><option value="top">Top</option></select></div>'+
+   '<div><label for="'+I("C")+'">Button color</label><input id="'+I("C")+'" type="color" value="#ff4a2b" style="width:100%;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--field)"></div></div>'+
+   '<div class="ctl"><label for="'+I("F")+'">Show text from <output id="'+I("FO")+'">7.0s</output></label><input id="'+I("F")+'" type="range" min="0" max="9" step="0.5" value="7"></div>'+
+   '<label class="drop" style="margin-top:12px;padding:12px"><strong>Add logo (optional)</strong><span>Transparent PNG works best</span><input id="'+I("L")+'" type="file" accept="image/png,image/webp,image/jpeg"></label>'+
+   '<div id="'+I("LC")+'" class="hide"><div class="two ctl"><div><label for="'+I("LP")+'">Logo corner</label><select id="'+I("LP")+'"><option value="tr">Top right</option><option value="tl">Top left</option><option value="br">Bottom right</option><option value="bl">Bottom left</option></select></div>'+
+   '<div><label for="'+I("LS")+'">Logo size <output id="'+I("LSO")+'">18%</output></label><input id="'+I("LS")+'" type="range" min="6" max="40" value="18"></div></div>'+
+   '<div class="row" style="margin-top:8px"><button class="btn" id="'+I("LX")+'" type="button" style="padding:4px 12px">Remove logo</button></div></div>';
+  function sync(){
+    $(I("T")).value=OV.text;$(I("P")).value=OV.pos;$(I("C")).value=OV.color;$(I("F")).value=OV.from;$(I("FO")).textContent=OV.from.toFixed(1)+"s";
+    $(I("LP")).value=OV.lpos;$(I("LS")).value=OV.lsize;$(I("LSO")).textContent=OV.lsize+"%";$(I("LC")).classList.toggle("hide",!OV.logoData);
+  }
+  OVS.push(sync);
+  $(I("T")).oninput=function(){OV.text=this.value;ovSave();OVS.forEach(function(f){if(f!==sync)f()})};
+  $(I("P")).onchange=function(){OV.pos=this.value;ovSave();OVS.forEach(function(f){f()})};
+  $(I("C")).oninput=function(){OV.color=this.value;ovSave();OVS.forEach(function(f){f()})};
+  $(I("F")).oninput=function(){OV.from=+this.value;ovSave();OVS.forEach(function(f){f()})};
+  $(I("LP")).onchange=function(){OV.lpos=this.value;ovSave();OVS.forEach(function(f){f()})};
+  $(I("LS")).oninput=function(){OV.lsize=+this.value;ovSave();OVS.forEach(function(f){f()})};
+  $(I("LX")).onclick=function(){OV.logo=null;OV.logoData="";ovSave();OVS.forEach(function(f){f()})};
+  $(I("L")).onchange=function(){
+    var f=this.files&&this.files[0];if(!f)return;
+    var rd=new FileReader();rd.onload=function(){
+      var im=new Image();im.onload=function(){
+        /* keep stored logo small */
+        var sc=Math.min(1,600/im.naturalWidth),c=document.createElement("canvas");c.width=Math.round(im.naturalWidth*sc);c.height=Math.round(im.naturalHeight*sc);
+        c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+        OV.logoData=c.toDataURL("image/png");var im2=new Image();im2.onload=function(){OV.logo=im2;ovSave();OVS.forEach(function(g){g()})};im2.src=OV.logoData;
+      };im.src=rd.result};
+    rd.readAsDataURL(f);
+  };
+  sync();
+}
+var OVS=[];
+ovBuild("oBoxS");ovBuild("oBoxI");
+
+/* ---------- captions + hashtags for every video ---------- */
+var CAP={tpl:"🔥 {design}\nGet yours 👉 {link}\n\n{tags}",link:"",tags:"#tshirt #giftideas #newdesign"};
+(function(){var o=lsGet("srm.cap");if(o)for(var k in o)CAP[k]=o[k]})();
+function prettyName(n){return String(n||"").replace(/\.[a-z0-9]+$/i,"").replace(/[_-]+/g," ").replace(/\s+/g," ").trim()}
+function capFor(r){
+  return CAP.tpl.replace(/\{design\}/g,prettyName(r.design)).replace(/\{shirt\}/g,prettyName(r.shirt)).replace(/\{link\}/g,CAP.link||"").replace(/\{tags\}/g,CAP.tags||"").replace(/[ \t]+\n/g,"\n").trim();
+}
+function captionsFile(list){
+  var withCap=list.filter(function(r){return r.design});if(!withCap.length)return null;
+  var txt=withCap.map(function(r){return r.name+"\n"+capFor(r)}).join("\n\n----------\n\n");
+  return {name:"captions.txt",blob:new Blob([txt],{type:"text/plain"})};
+}
+function copyText(t){
+  if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(t);
+  return new Promise(function(res,rej){try{var a=document.createElement("textarea");a.value=t;a.style.cssText="position:fixed;left:-9999px";document.body.appendChild(a);a.select();var ok=document.execCommand("copy");a.remove();ok?res():rej()}catch(e){rej(e)}});
+}
+function capBuild(boxId){
+  var b=$(boxId),I=function(n){return boxId+n};
+  b.innerHTML='<details class="capbox"><summary style="cursor:pointer;font-weight:700;font-size:13.5px">Caption &amp; hashtags <span style="color:var(--muted);font-weight:500">(copy button on every video, captions.txt inside the ZIP)</span></summary>'+
+   '<div class="ctl"><label for="'+I("Tp")+'">Caption template <small style="text-transform:none;letter-spacing:0;font-weight:500">use {design} {shirt} {link} {tags}</small></label><textarea id="'+I("Tp")+'" rows="4" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);font:inherit;resize:vertical"></textarea></div>'+
+   '<div class="two ctl"><div><label for="'+I("Lk")+'">Shop link</label><input id="'+I("Lk")+'" type="text" placeholder="https://…" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);font:inherit"></div>'+
+   '<div><label for="'+I("Tg")+'">Hashtags</label><input id="'+I("Tg")+'" type="text" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);font:inherit"></div></div></details>';
+  function sync(){$(I("Tp")).value=CAP.tpl;$(I("Lk")).value=CAP.link;$(I("Tg")).value=CAP.tags}
+  CAPS.push(sync);
+  function put(k,v){CAP[k]=v;lsSet("srm.cap",CAP);CAPS.forEach(function(f){if(f!==sync)f()})}
+  $(I("Tp")).oninput=function(){put("tpl",this.value)};
+  $(I("Lk")).oninput=function(){put("link",this.value)};
+  $(I("Tg")).oninput=function(){put("tags",this.value)};
+  sync();
+}
+var CAPS=[];
+capBuild("cBoxS");capBuild("cBoxI");
+
+
+/* ---------- office NAS: save videos, shared music + presets (only when served by the NAS) ---------- */
+var NAS={ok:false};
+function nasUrl(p){return "nas/"+p}
+async function nasPut(path,blob,type){
+  var r=await fetch(nasUrl(path),{method:"PUT",body:blob,headers:{"Content-Type":type||"application/octet-stream"}});
+  if(!r.ok)throw new Error("NAS said "+r.status);
+}
+function nasSavePresets(kind,L){nasPut("presets/"+kind+".json",new Blob([JSON.stringify(L)],{type:"application/json"}),"application/json").catch(function(){})}
+var nasPending=0,nasP=[];
+function nasNote(list){var n=list.filter(function(r){return r.nas}).length;return n?" Saved to the NAS: "+n+" (Office / ShirtReels / videos).":""}
+function nasSaveVideo(r,sayFn){
+  var d=new Date(),day=d.toISOString().slice(0,10),hh=("0"+d.getHours()).slice(-2)+("0"+d.getMinutes()).slice(-2)+("0"+d.getSeconds()).slice(-2);
+  var nm=r.name.replace(/(\.[a-z0-9]+)$/i,"-"+hh+"$1").replace(/[^\w.\-]+/g,"_");
+  nasPending++;
+  return nasPut("videos/"+day+"/"+nm,r.blob,r.blob.type).then(function(){r.nas=day+"/"+nm;sayFn("Saved to NAS: Office / ShirtReels / videos / "+day+" / "+nm)},function(e){sayFn("Could not save to the NAS ("+(e.message||"error")+"). Use Download instead.")}).then(function(){nasPending--});
+}
+async function nasMusicList(){
+  try{
+    var r=await fetch(nasUrl("music/"),{cache:"no-store"});if(!r.ok)return;
+    var L=await r.json(),songs=L.filter(function(f){return f.type==="file"&&/\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(f.name)}).map(function(f){return f.name}).sort();
+    MP.forEach(function(p){
+      var sel=$(p+"Nas"),box=$(p+"NasBox");sel.textContent="";
+      var o0=document.createElement("option");o0.value="";o0.textContent=songs.length?"Choose a song…":"No songs yet. Add one with “Add to NAS library”.";sel.appendChild(o0);
+      songs.forEach(function(n){var o=document.createElement("option");o.value=n;o.textContent=n.replace(/\.[a-z0-9]+$/i,"");sel.appendChild(o)});
+      box.classList.remove("hide");
+    });
+  }catch(e){}
+}
+MP.forEach(function(p){
+  $(p+"Nas").onchange=async function(){
+    var n=this.value;if(!n)return;
+    sayMusic("Loading “"+n+"” from the NAS…");
+    try{
+      var r=await fetch(nasUrl("music/"+encodeURIComponent(n)));if(!r.ok)throw 0;
+      var bl=await r.blob(),f=new File([bl],n,{type:bl.type||"audio/mpeg"});f._fromNas=true;await setAudio(f);
+    }catch(e){sayMusic("Could not load that song from the NAS.")}
+  };
+  $(p+"ToNas").onclick=async function(){
+    if(!AUD||!AUD.file)return;var btn=this;btn.disabled=true;
+    try{await nasPut("music/"+encodeURIComponent(AUD.name),AUD.file,AUD.file.type||"audio/mpeg");sayMusic("Added “"+AUD.name+"” to the NAS music library.");await nasMusicList()}
+    catch(e){sayMusic("Could not add it to the NAS.")}
+    btn.disabled=false;
+  };
+});
+async function nasPresetsSync(){
+  for(var k of ["shirt","image"]){
+    try{
+      var r=await fetch(nasUrl("presets/"+k+".json"),{cache:"no-store"});if(!r.ok)continue;
+      var remote=await r.json(),local=lsGet("srm.presets."+k)||{},merged=Object.assign({},local,remote);
+      lsSet("srm.presets."+k,merged);PSB[k].fill();
+    }catch(e){}
+  }
+}
+(async function(){
+  if(!/^https?:$/.test(location.protocol))return;
+  try{
+    var r=await fetch(nasUrl("ping"),{cache:"no-store"});
+    if(!r.ok||(await r.text()).trim()!=="ok")return;
+    NAS.ok=true;["nasWrapS","nasWrapI"].forEach(function(id){$(id).classList.remove("hide")});
+    nasMusicList();nasPresetsSync();
+    var tn;MP.forEach(function(p){tn=$(p+"ToNas");if(tn&&AUD&&AUD.file&&!AUD.file._fromNas)tn.classList.remove("hide")});
+  }catch(e){}
+})();
+
 /* ---------- ZIP: many videos, one save ---------- */
 var CRC_T=null;
 function crc32(u8){
@@ -1173,7 +1562,8 @@ async function saveZip(list,zipName,say,btn){
   zipBusy=true;btn.disabled=true;
   try{
     say("Packing "+list.length+" videos…");
-    var blob=await buildZip(list,function(i,n){say("Packing "+i+" of "+n+"…")});
+    var cf=captionsFile(list),all=cf?list.concat([cf]):list;
+    var blob=await buildZip(all,function(i,n){say("Packing "+i+" of "+n+"…")});
     var cap=null;try{cap=window.claude&&await window.claude.use("downloads")}catch(e){}
     if(cap){
       say("Confirm the save in the prompt to download "+list.length+" videos.");
