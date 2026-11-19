@@ -259,7 +259,8 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
             </select></div>
           <div class="ctl"><label for="zoom">Zoom intensity <output id="zoomO">1.6×</output></label><input id="zoom" type="range" min="1.1" max="3" step="0.05" value="1.6"></div>
           <div class="ctl"><label for="focus">Zoom target</label><select id="focus"><option value="design">The design</option><option value="center">Center of photo</option></select></div>
-          <div class="ctl hide" id="hstyleCtl"><label for="hstyle">Hand style</label><select id="hstyle"><option value="open">Open hand — smooths the print</option><option value="point1">Pointing hand — light skin</option><option value="point2">Pointing hand — dark skin</option><option value="mix">Mix (change per video)</option></select></div>
+          <div class="ctl hide" id="hactBox"><label>Hand motion</label><div class="chips" id="hactS"><select id="hact" class="hide"><option value="smooth">Smooth the print</option><option value="wipe">Zigzag wipe</option><option value="rest">Rest on the print</option><option value="tap">Tap tap</option><option value="trace">Trace the design</option><option value="circle">Circle it</option><option value="mix">Mix (changes per video)</option></select></div></div>
+          <div class="ctl hide" id="hstyleCtl"><label for="hstyle">Skin tone</label><select id="hstyle"><option value="point1">Light skin</option><option value="point2">Dark skin</option><option value="mix">Mix (changes per video)</option></select></div>
           <div class="ctl hide" id="handCtl"><label for="hsize">Hand size <output id="hsizeO">100%</output></label><input id="hsize" type="range" min="60" max="150" value="100"></div>
         </div>
         <div class="pane" id="sp-text">
@@ -352,7 +353,8 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
                 <option value="hand">Hand sweep (flat-lay mockups)</option>
               </select></div>
             <div class="ctl"><label for="iZoom">Zoom intensity <output id="iZoomO">1.5×</output></label><input id="iZoom" type="range" min="1.1" max="3" step="0.05" value="1.5"></div>
-            <div class="ctl hide" id="ihstyleCtl"><label for="ihstyle">Hand style</label><select id="ihstyle"><option value="open">Open hand — smooths the print</option><option value="point1">Pointing hand — light skin</option><option value="point2">Pointing hand — dark skin</option><option value="mix">Mix (change per video)</option></select></div>
+            <div class="ctl hide" id="ihactBox"><label>Hand motion</label><div class="chips" id="ihactS"><select id="ihact" class="hide"><option value="smooth">Smooth the print</option><option value="wipe">Zigzag wipe</option><option value="rest">Rest on the print</option><option value="tap">Tap tap</option><option value="trace">Trace the design</option><option value="circle">Circle it</option><option value="mix">Mix (changes per video)</option></select></div></div>
+            <div class="ctl hide" id="ihstyleCtl"><label for="ihstyle">Skin tone</label><select id="ihstyle"><option value="point1">Light skin</option><option value="point2">Dark skin</option><option value="mix">Mix (changes per video)</option></select></div>
             <div class="ctl hide" id="iHandCtl"><label for="ihsize">Hand size <output id="ihsizeO">100%</output></label><input id="ihsize" type="range" min="60" max="150" value="100"></div>
             <p class="hint hide" id="iHandHint" style="margin-top:8px">The hand sweeps around the zoom target. Click the print's center in the small image on the left.</p>
           </div>
@@ -430,7 +432,7 @@ If you want to offset all timestamps of a track such that the first one is zero,
 var DUR=10;
 var $=function(id){return document.getElementById(id)};
 if(window.LOGO_MARK){$("brandMark").src=window.LOGO_MARK;var fi=document.createElement("link");fi.rel="icon";fi.type="image/png";fi.href=window.LOGO_ICON;document.head.appendChild(fi)}
-var S={motion:"studio",zoom:1.6,focus:"design",fit:"blur",bg:"#efefef",res:1080,applyAll:true,guides:true,fabric:true,shade:.65,warp:.5,dCurve:0,dWave:0,dPersH:0,dPersV:0,dSkew:0,hsize:1,hstyle:"open",ms:1,mx:0,my:0,asp:"916"};
+var S={motion:"studio",zoom:1.6,focus:"design",fit:"blur",bg:"#efefef",res:1080,applyAll:true,guides:true,fabric:true,shade:.65,warp:.5,dCurve:0,dWave:0,dPersH:0,dPersV:0,dSkew:0,hsize:1,hstyle:"point1",hact:"smooth",ms:1,mx:0,my:0,asp:"916"};
 
 /* ---------- design warp: curve, wave, perspective, skew (applied to the print itself) ---------- */
 var WPAD=.45,WEF=1+2*WPAD;
@@ -674,7 +676,7 @@ function drawScene(ctx,W,H,b,d,t){
   var fab=getFabric(b,d);
   if(fab){var sc=r.w/b.w;ctx.drawImage(fab.canvas,r.x+fab.x*sc,r.y+fab.y*sc,fab.w*sc,fab.h*sc)}
   else drawDesign(ctx,d,dx,dy,dw,dh,pl.rot,b.blend);
-  if(S.motion==="hand")drawHand(ctx,t,dx,dy,Math.max(dw,r.w*.5),S.hsize,s,handStyleFor(S.hstyle,b));
+  if(S.motion==="hand")drawHand(ctx,t,dx,dy,Math.max(dw,r.w*.5),S.hsize,s,handFor(S.hact,S.hstyle,b));
   ctx.restore();
   drawOverlay(ctx,W,H,t);
 }
@@ -747,7 +749,7 @@ $("blend").onchange=function(){if(curB){curB.blend=this.checked;drawEditor()}};
 
 /* ---------- motion controls ---------- */
 $("motion").onchange=function(){
-  S.motion=this.value;var h=this.value==="hand";$("handCtl").classList.toggle("hide",!h);$("hstyleCtl").classList.toggle("hide",!h);
+  S.motion=this.value;var h=this.value==="hand";handUI(false);if(h)setTimeout(function(){$("hactBox").scrollIntoView({block:"nearest",behavior:"smooth"})},60);
   if(h){loadHands();if(S.zoom>1.4){S.zoom=1.25;$("zoom").value=1.25;$("zoomO").textContent="1.25×"}}
 };
 function wireMock(P,O,ids){
@@ -760,6 +762,16 @@ wireMock(0,S,["mscale","mx","my"]);
 $("mreset").onclick=function(){S.ms=1;S.mx=0;S.my=0;$("mscale").value=100;$("mx").value=0;$("my").value=0;$("mscaleO").textContent="100%";$("mxO").textContent="0";$("myO").textContent="0"};
 $("hstyle").onchange=function(){S.hstyle=this.value};
 $("ihstyle").onchange=function(){M.hstyle=this.value};
+$("hact").onchange=function(){S.hact=this.value;handUI(false)};
+$("ihact").onchange=function(){M.hact=this.value;handUI(true)};
+function handUI(img){
+  var O=img?M:S,p=img?"i":"",h=O.motion==="hand";
+  $(img?"iHandCtl":"handCtl").classList.toggle("hide",!h);
+  $(p+"hactBox").classList.toggle("hide",!h);
+  var A=HACT[O.hact],point=O.hact==="mix"||(A&&A.fam==="point");
+  $(img?"ihstyleCtl":"hstyleCtl").classList.toggle("hide",!(h&&point));
+  if(img)$("iHandHint").classList.toggle("hide",!h);
+}
 $("hsize").oninput=function(){S.hsize=this.value/100;$("hsizeO").textContent=this.value+"%"};
 $("zoom").oninput=function(){S.zoom=+this.value;$("zoomO").textContent=(+this.value).toFixed(2).replace(/0$/,"")+"×"};
 $("focus").onchange=function(){S.focus=this.value};
@@ -921,7 +933,7 @@ $("tabShirt").onclick=function(){setMode("shirt")};
 $("tabImage").onclick=function(){setMode("image")};
 
 /* ---------- single image + music ---------- */
-var I=null,M={motion:"studio",zoom:1.5,fit:"blur",bg:"#111111",res:1080,hsize:1,hstyle:"open",ms:1,mx:0,my:0,asp:"916"};
+var I=null,M={motion:"studio",zoom:1.5,fit:"blur",bg:"#111111",res:1080,hsize:1,hstyle:"point1",hact:"smooth",ms:1,mx:0,my:0,asp:"916"};
 var AUD=null,AU={start:0,vol:.8,fade:true},audEl=new Audio(),musicOn=false,results2=[];
 audEl.preload="auto";
 var FW=270,FH=480,fcv=$("iFocus"),fcx=fcv.getContext("2d");
@@ -1012,7 +1024,7 @@ function drawImgScene(ctx,W,H,im,t){
   ctx.save();ctx.translate(W/2,H/2);ctx.scale(s,s);ctx.translate(-cx,-cy);
   if(M.fit==="solid"){ctx.fillStyle=M.bg;ctx.fillRect(0,0,W,H)}else ctx.drawImage(im.bg,0,0,W,H);
   ctx.drawImage(im.img,r.x,r.y,r.w,r.h);
-  if(M.motion==="hand")drawHand(ctx,t,fx,fy,r.w*.68,M.hsize,s,handStyleFor(M.hstyle,im));
+  if(M.motion==="hand")drawHand(ctx,t,fx,fy,r.w*.68,M.hsize,s,handFor(M.hact,M.hstyle,im));
   ctx.restore();
   drawOverlay(ctx,W,H,t);
 }
@@ -1064,7 +1076,7 @@ function this_v(v){return Math.round(v*100)}
 
 /* controls */
 $("iMotion").onchange=function(){
-  M.motion=this.value;var h=this.value==="hand";$("iHandCtl").classList.toggle("hide",!h);$("ihstyleCtl").classList.toggle("hide",!h);$("iHandHint").classList.toggle("hide",!h);
+  M.motion=this.value;var h=this.value==="hand";handUI(true);if(h)setTimeout(function(){$("ihactBox").scrollIntoView({block:"nearest",behavior:"smooth"})},60);
   if(h){loadHands();if(M.zoom>1.4){M.zoom=1.25;$("iZoom").value=1.25;$("iZoomO").textContent="1.25×"}}
 };
 $("ihsize").oninput=function(){M.hsize=this.value/100;$("ihsizeO").textContent=this.value+"%"};
@@ -1301,26 +1313,45 @@ wire2($("iDrop"),$("iFile"),addImages);wire2($("aDrop"),$("aFile"),function(fs){
 var HR=null,handP=null;
 /* K = sprite scale per print-width unit; keys = [time, u, v, rotation(deg), press]; u,v in print widths from the print centre,
    rotation = direction the arm points (0 = right, 90 = down), press 0 hover … 1 touching */
-var HSTY={
-  open:{K:6.6e-4,ease:false,keys:[
-    [1.5,.32,.14,34,.7],[2.5,-.18,-.10,28,1],[3.5,.22,.02,36,1],[4.5,-.20,.14,26,1],[5.5,.18,-.12,34,1],[6.5,-.12,.06,30,1],[7.4,.26,.16,36,.5]]},
-  point1:{K:1.57e-3,ease:true,keys:[
-    [1.6,.22,.30,98,0],[2.3,-.12,-.12,94,1],[3.0,-.12,-.12,94,.25],[3.8,.18,-.06,92,1],[4.5,.18,-.06,92,.25],[5.4,-.22,.12,97,1],[6.5,.22,.12,95,.9],[7.4,.05,.22,96,0]]},
-  point2:{K:1.96e-3,ease:true,keys:[
-    [1.6,-.24,.30,82,0],[2.3,.14,-.10,86,1],[3.0,.14,-.10,86,.25],[3.8,-.16,.04,88,1],[4.5,-.16,.04,88,.25],[5.4,.22,-.12,84,1],[6.5,-.20,.14,86,.9],[7.4,-.05,.22,84,0]]}
-};
-var HORDER=["open","point1","point2"],hmixN=0;
-function handStyleFor(sel,item){
-  if(sel!=="mix")return sel;
-  if(!item)return "open";
-  if(item._hs==null){item._hs=HORDER[hmixN++%3]}
-  return item._hs;
+/* ---------- realistic hand motions ----------
+   A hand is a real photo sprite. Its forearm pivots around an off-screen elbow, so the arm swings naturally as the hand moves,
+   it eases in and out of every move, presses down (smaller, sharper shadow) when it touches, and trembles a little when held up. */
+var HSPR={open:{K:6.6e-4},point1:{K:1.57e-3},point2:{K:1.96e-3}};
+function ellKeys(t0,loops,per,per8,rx,ry,z){
+  var k=[],n=Math.round(8*loops);
+  for(var i=1;i<=n;i++){var a=(-90+i*45)*Math.PI/180;k.push([t0+i*per/8,rx*Math.cos(a),ry*Math.sin(a),z])}
+  return k;
 }
-function hKeys(st){
-  var D=HSTY[st];if(D.full)return D.full;
-  var k=D.keys,f=k[0],l=k[k.length-1],rf=f[3]*Math.PI/180,rl=l[3]*Math.PI/180,L=1.7;
-  D.full=[[0,f[1]+Math.cos(rf)*L,f[2]+Math.sin(rf)*L,f[3],0]].concat(k,[[DUR-.4,l[1]+Math.cos(rl)*L,l[2]+Math.sin(rl)*L,l[3],0]]);
-  return D.full;
+var HACT={
+  smooth:{fam:"open",ease:false,follow:.35,elbow:function(){return [1.55,.95]},
+    keys:[[1.5,.40,.20,.2],[2.6,.08,.04,1],[3.8,-.30,-.05,1],[5.0,.18,.10,1],[6.0,-.14,-.10,1],[6.9,.20,.06,.8],[7.6,.42,.22,.1]]},
+  wipe:{fam:"open",ease:false,follow:.35,elbow:function(){return [1.55,.95]},
+    keys:[[1.5,.42,-.16,.2],[2.5,-.30,-.14,1],[3.5,.28,-.04,1],[4.5,-.30,.06,1],[5.5,.28,.14,1],[6.5,-.22,.20,1],[7.4,.42,.22,.1]]},
+  rest:{fam:"open",ease:true,follow:.3,elbow:function(){return [1.5,.9]},
+    keys:[[1.6,.34,.16,.1],[2.9,.03,.02,1],[4.2,.05,.04,1],[5.4,.02,.01,1],[6.4,.05,.03,1],[7.5,.36,.18,.1]]},
+  tap:{fam:"point",ease:true,follow:.3,elbow:function(sk){return [sk==="point2"?.4:-.4,1.9]},
+    keys:[[1.5,0,.42,0],[2.4,.02,.06,.15],[2.62,.02,.04,1],[2.82,.02,.06,.2],[3.1,.02,.04,1],[3.3,.02,.06,.2],[4.0,-.20,-.02,.2],[4.22,-.20,-.01,1],[4.42,-.20,-.02,.2],[5.2,.20,-.06,.2],[5.42,.20,-.05,1],[5.62,.20,-.06,.2],[6.5,0,.10,.15],[7.4,.04,.42,0]]},
+  trace:{fam:"point",ease:true,follow:.3,elbow:function(sk){return [sk==="point2"?.4:-.4,1.9]},
+    keys:[[1.5,-.30,.45,0],[2.3,-.40,.20,.4],[2.6,-.40,.20,1],[4.0,.40,.20,1],[4.4,.40,.20,.3],[5.1,-.40,-.20,.3],[5.4,-.40,-.20,1],[6.8,.40,-.20,1],[7.1,.40,-.20,.2],[7.6,.30,.45,0]]},
+  circle:{fam:"point",ease:false,follow:.3,elbow:function(sk){return [sk==="point2"?.4:-.4,1.9]},
+    keys:[[1.5,0,.42,0],[2.2,0,-.30,.5]].concat(ellKeys(2.2,2,2.1,0,.46,.30,.55),[[7.0,0,.02,1],[7.5,.02,.42,0]])}
+};
+var HORDER=["smooth","tap","wipe","circle","rest","trace"],hmixN=0,hskinN=0;
+function handFor(actSel,skinSel,item){
+  var a=actSel,k=skinSel;
+  if(!HACT[a]&&a!=="mix")a="smooth";
+  if(a==="mix"){if(!item)a="smooth";else{if(item._ha==null)item._ha=HORDER[hmixN++%HORDER.length];a=item._ha}}
+  if(k==="mix"){if(!item)k="point1";else{if(item._hk==null)item._hk=(hskinN++%2)?"point2":"point1";k=item._hk}}
+  if(k!=="point2")k="point1";
+  return {a:a,k:k};
+}
+var hCache={};
+function hFull(a,k){
+  var key=a+"|"+k;if(hCache[key])return hCache[key];
+  var A=HACT[a],el=A.elbow(k),ks=A.keys,f=ks[0],l=ks[ks.length-1],L=1.8;
+  function away(p){var dx=el[0]-p[1],dy=el[1]-p[2],m=Math.hypot(dx,dy)||1;return [p[1]+dx/m*L,p[2]+dy/m*L]}
+  var s=away(f),e=away(l);
+  return hCache[key]={keys:[[0,s[0],s[1],0]].concat(ks,[[DUR-.4,e[0],e[1],0]]),el:el,p0:[f[1],f[2]]};
 }
 function loadHands(){
   if(handP)return handP;
@@ -1338,29 +1369,31 @@ function loadHands(){
 }
 /* camera zoom follows how long the hand is on the print */
 function handEnv(t){return sm((t-.5)/1.4)*(1-sm((t-7.5)/1.6))}
-function hPose(st,t){
-  var K=hKeys(st),ease=HSTY[st].ease;t=Math.min(Math.max(t,0),DUR);
+function hPose(hf,t){
+  var A=HACT[hf.a],H=hFull(hf.a,hf.k),K=H.keys,ease=A.ease;t=Math.min(Math.max(t,0),DUR);
   var i=0;while(i<K.length-2&&t>=K[i+1][0])i++;
-  var a=K[i],b=K[i+1],f=(t-a[0])/(b[0]-a[0]);f=Math.min(1,Math.max(0,f));if(ease)f=sm(f);
-  var p0=K[Math.max(0,i-1)],p3=K[Math.min(K.length-1,i+2)],o=[],c;
-  for(c=1;c<5;c++){
-    var A=p0[c],B=a[c],C=b[c],D=p3[c];
-    o[c]=ease||c===4?B+(C-B)*f:.5*((2*B)+(-A+C)*f+(2*A-5*B+4*C-D)*f*f+(-A+3*B-3*C+D)*f*f*f);
+  var a=K[i],b=K[i+1],f=(t-a[0])/(b[0]-a[0]);f=Math.min(1,Math.max(0,f));
+  var p0=K[Math.max(0,i-1)],p3=K[Math.min(K.length-1,i+2)],o=[0,0,0,0],c,g=ease?sm(f):f;
+  for(c=1;c<4;c++){
+    var P=p0[c],B=a[c],C=b[c],D=p3[c];
+    o[c]=ease?B+(C-B)*g:.5*((2*B)+(-P+C)*f+(2*P-5*B+4*C-D)*f*f+(-P+3*B-3*C+D)*f*f*f);
   }
-  /* tiny hand tremor so it does not look mechanical */
-  o[1]+=.004*Math.sin(t*6.1)+.002*Math.sin(t*13.7);o[2]+=.004*Math.cos(t*5.3);o[3]+=.8*Math.sin(t*4.1);
+  o[3]=Math.min(1,Math.max(0,o[3]));
+  var amp=1-.6*o[3];
+  o[1]+=amp*(.004*Math.sin(t*6.1)+.002*Math.sin(t*13.7));o[2]+=amp*.004*Math.cos(t*5.3);
+  var ex=H.el[0]+A.follow*(o[1]-H.p0[0]),ey=H.el[1]+A.follow*(o[2]-H.p0[1]);
+  o[4]=Math.atan2(ey-o[2],ex-o[1])*180/Math.PI+amp*.8*Math.sin(t*4.1);
   return o;
 }
 /* cx,cy: centre of the print in scene pixels, pw: print width in scene pixels, zs: camera zoom (for shadow size) */
-function drawHand(ctx,t,cx,cy,pw,size,zs,style){
+function drawHand(ctx,t,cx,cy,pw,size,zs,hf){
   if(!HR||!HR.ready)return;
-  style=HSTY[style]?style:"open";
-  var sp=HR.spr[style];if(!sp)return;
-  var o=hPose(style,t),pr=Math.min(1,Math.max(0,o[4]));
-  var sc=pw*HSTY[style].K*size*(1.04-.06*pr),kk=pw*zs/506;
+  var name=HACT[hf.a].fam==="open"?"open":hf.k,sp=HR.spr[name];if(!sp)return;
+  var o=hPose(hf,t),pr=o[3];
+  var sc=pw*HSPR[name].K*size*(1.06-.10*pr),kk=pw*zs/506;
   ctx.save();
-  ctx.shadowColor="rgba(30,10,0,.36)";ctx.shadowBlur=(7+14*(1-pr))*kk;ctx.shadowOffsetX=(3+8*(1-pr))*kk;ctx.shadowOffsetY=(6+14*(1-pr))*kk;
-  ctx.translate(cx+o[1]*pw,cy+o[2]*pw);ctx.rotate(o[3]*Math.PI/180);ctx.scale(sc,sc);
+  ctx.shadowColor="rgba(30,10,0,.38)";ctx.shadowBlur=(6+16*(1-pr))*kk;ctx.shadowOffsetX=(2+10*(1-pr))*kk;ctx.shadowOffsetY=(5+17*(1-pr))*kk;
+  ctx.translate(cx+o[1]*pw,cy+o[2]*pw);ctx.rotate(o[4]*Math.PI/180);ctx.scale(sc,sc);
   ctx.drawImage(sp.img,-sp.cx,-sp.cy);
   ctx.restore();
 }
@@ -1394,10 +1427,10 @@ $("autoFitBtn").onclick=function(){
 
 /* ---------- presets + remembering the last settings ---------- */
 var PS_MAP={
-  shirt:{motion:["motion","change"],zoom:["zoom","input"],focus:["focus","change"],fit:["fit","change"],bg:["bgc","input"],res:["res","change"],asp:["asp","change"],fabric:["fabric","change"],shade:["shade","input",100],warp:["warp","input",100],dCurve:["dCurve","input",100],dWave:["dWave","input",100],dPersH:["dPersH","input",100],dPersV:["dPersV","input",100],dSkew:["dSkew","input",100],hsize:["hsize","input",100],hstyle:["hstyle","change"],ms:["mscale","input",100],mx:["mx","input",100],my:["my","input",100]},
-  image:{motion:["iMotion","change"],zoom:["iZoom","input"],fit:["iFit","change"],bg:["iBgc","input"],res:["iRes","change"],asp:["iAsp","change"],hsize:["ihsize","input",100],hstyle:["ihstyle","change"],ms:["imscale","input",100],mx:["imx","input",100],my:["imy","input",100]}
+  shirt:{motion:["motion","change"],zoom:["zoom","input"],focus:["focus","change"],fit:["fit","change"],bg:["bgc","input"],res:["res","change"],asp:["asp","change"],fabric:["fabric","change"],shade:["shade","input",100],warp:["warp","input",100],dCurve:["dCurve","input",100],dWave:["dWave","input",100],dPersH:["dPersH","input",100],dPersV:["dPersV","input",100],dSkew:["dSkew","input",100],hsize:["hsize","input",100],hact:["hact","change"],hstyle:["hstyle","change"],ms:["mscale","input",100],mx:["mx","input",100],my:["my","input",100]},
+  image:{motion:["iMotion","change"],zoom:["iZoom","input"],fit:["iFit","change"],bg:["iBgc","input"],res:["iRes","change"],asp:["iAsp","change"],hsize:["ihsize","input",100],hact:["ihact","change"],hstyle:["ihstyle","change"],ms:["imscale","input",100],mx:["imx","input",100],my:["imy","input",100]}
 };
-var PS_ORDER=["motion","fit","bg","res","asp","focus","fabric","shade","warp","dCurve","dWave","dPersH","dPersV","dSkew","hstyle","hsize","zoom","ms","mx","my"];
+var PS_ORDER=["motion","fit","bg","res","asp","focus","fabric","shade","warp","dCurve","dWave","dPersH","dPersV","dSkew","hact","hstyle","hsize","zoom","ms","mx","my"];
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}
 function psCapture(kind){
@@ -1672,6 +1705,8 @@ var styleTouched=false,placedTouched=false;
 makeCards("motion",[["studio","🎬","Studio reveal","Push in, hold, return","★"],["push","🔍","Slow zoom in","Gentle push in"],["pull","🔭","Slow zoom out","Start close, pull back"],["breathe","🌊","Smooth loop","Zooms in and out forever"],["drift","➡️","Drift","Glides across the design"],["hand","✋","Hand sweep","A hand smooths the print"]]);
 makeCards("iMotion",[["studio","🎬","Studio reveal","Push in, hold, return","★"],["push","🔍","Slow zoom in","Gentle push in"],["pull","🔭","Slow zoom out","Start close, pull back"],["breathe","🌊","Smooth loop","Zooms in and out forever"],["drift","➡️","Drift","Glides across the target"],["panx","↔️","Pan sideways","Left to right"],["pany","↕️","Pan down","Top to bottom"],["hand","✋","Hand sweep","A hand smooths the print"]]);
 var FMT=[["916","9:16","Reels"],["45","4:5","Feed"],["11","1:1","Square"]];
+var HA=[["smooth","Smooth",""],["wipe","Wipe",""],["rest","Rest",""],["tap","Tap",""],["trace","Trace",""],["circle","Circle",""],["mix","Mix",""]];
+makeChips("hact","hactS",HA);makeChips("ihact","ihactS",HA);
 makeChips("asp","fmtS",FMT);makeChips("iAsp","fmtI",FMT);
 setTimeout(updateSteps,0);
 function updateSteps(){
