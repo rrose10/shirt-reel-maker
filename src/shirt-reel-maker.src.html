@@ -1353,7 +1353,7 @@ function loadHands(){
       var im=new Image(),c=H[n];
       im.onload=im.onerror=function(){if(--pending===0){R.ready=true;HR=R;resolve(true)}};
       im.src="data:image/webp;base64,"+c.b;
-      R.spr[n]={img:im,w:c.w,h:c.h,cx:c.cx,cy:c.cy};
+      R.spr[n]={img:im,w:c.w,h:c.h,cx:c.cx,cy:c.cy,ax:c.ax,fd:c.fd,yt0:c.yt0,yb0:c.yb0,yt:c.yt,yb:c.yb,prof:c.prof};
     });
   });
   return handP;
@@ -1385,7 +1385,22 @@ function drawHand(ctx,t,cx,cy,pw,size,zs,hf){
   ctx.save();
   ctx.shadowColor="rgba(30,10,0,.38)";ctx.shadowBlur=(6+16*(1-pr))*kk;ctx.shadowOffsetX=(2+10*(1-pr))*kk;ctx.shadowOffsetY=(5+17*(1-pr))*kk;
   ctx.translate(cx+o[1]*pw,cy+o[2]*pw);ctx.rotate(o[4]*Math.PI/180);ctx.scale(sc,sc);
-  ctx.drawImage(sp.img,-sp.cx,-sp.cy);
+  ctx.translate(-sp.cx,-sp.cy);
+  armPath(ctx,sp);
+  ctx.drawImage(sp.img,0,0);
+  ctx.restore();
+}
+/* endless forearm behind the photographed hand: smooth skin gradient, slightly wider towards the elbow */
+function armPath(ctx,sp){
+  if(!sp.prof)return;
+  if(!sp.grad){
+    var g=ctx.createLinearGradient(0,sp.yt,0,sp.yb);
+    sp.prof.forEach(function(p){g.addColorStop(p[0],"rgb("+p[1]+","+p[2]+","+p[3]+")")});
+    sp.grad=g;
+  }
+  var x0=sp.ax-sp.fd,L=9000,gw=.014*L,m=(sp.yt+sp.yb)/2;
+  ctx.save();ctx.fillStyle=sp.grad;
+  ctx.beginPath();ctx.moveTo(x0,sp.yt0);ctx.lineTo(sp.ax,sp.yt);ctx.lineTo(sp.ax+L,sp.yt-gw);ctx.lineTo(sp.ax+L,sp.yb+gw);ctx.lineTo(sp.ax,sp.yb);ctx.lineTo(x0,sp.yb0);ctx.closePath();ctx.fill();
   ctx.restore();
 }
 
