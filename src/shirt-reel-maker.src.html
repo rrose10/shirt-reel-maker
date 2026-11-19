@@ -1432,7 +1432,7 @@ var PSB={shirt:psBuild("shirt","pBoxS"),image:psBuild("image","pBoxI")};
 
 /* ---------- text + logo overlay (CTA at the end of the video) ---------- */
 var OV={text:"",pos:"bottom",from:7,color:"#ff4a2b",logo:null,logoData:"",lpos:"tr",lsize:20,logoAlways:true,lbadge:true};
-(function(){var o=lsGet("srm.ov");if(o){for(var k in o)if(k!=="logo")OV[k]=o[k]}else if(window.LOGO_FULL){OV.logoData=window.LOGO_FULL}
+(function(){var o=lsGet("srm.ov");if(o){for(var k in o)if(k!=="logo")OV[k]=o[k];if(OV.logoData===window.LOGO_FULL&&!OV.ecoChosen)OV.logoData=""}
   if(OV.logoData){var im=new Image();im.onload=function(){OV.logo=im};im.src=OV.logoData}})();
 function ovSave(){var o={};for(var k in OV)if(k!=="logo")o[k]=OV[k];lsSet("srm.ov",o)}
 function rrect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
@@ -1484,7 +1484,7 @@ function ovBuild(boxId){
   $(I("LP")).onchange=function(){OV.lpos=this.value;ovSave();OVS.forEach(function(f){f()})};
   $(I("LS")).oninput=function(){OV.lsize=+this.value;ovSave();OVS.forEach(function(f){f()})};
   $(I("LB")).onchange=function(){OV.lbadge=this.checked;ovSave();OVS.forEach(function(f){f()})};
-  $(I("LE")).onclick=function(){OV.logoData=window.LOGO_FULL;var im=new Image();im.onload=function(){OV.logo=im;ovSave();OVS.forEach(function(f){f()})};im.src=OV.logoData};
+  $(I("LE")).onclick=function(){OV.ecoChosen=true;OV.logoData=window.LOGO_FULL;var im=new Image();im.onload=function(){OV.logo=im;ovSave();OVS.forEach(function(f){f()})};im.src=OV.logoData};
   $(I("LX")).onclick=function(){OV.logo=null;OV.logoData="";ovSave();OVS.forEach(function(f){f()})};
   $(I("L")).onchange=function(){
     var f=this.files&&this.files[0];if(!f)return;
