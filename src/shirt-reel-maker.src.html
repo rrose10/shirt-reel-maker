@@ -1307,7 +1307,7 @@ var HR=null,handP=null;
 /* ---------- realistic hand motions ----------
    A hand is a real photo sprite. Its forearm pivots around an off-screen elbow, so the arm swings naturally as the hand moves,
    it eases in and out of every move, presses down (smaller, sharper shadow) when it touches, and trembles a little when held up. */
-var HSPR={open:{K:6.6e-4},point1:{K:1.57e-3},point2:{K:1.96e-3}};
+var HSPR={open:{K:2.0e-3},point1:{K:2.0e-3},point2:{K:2.0e-3}};
 function ellKeys(t0,loops,per,per8,rx,ry,z){
   var k=[],n=Math.round(8*loops);
   for(var i=1;i<=n;i++){var a=(-90+i*45)*Math.PI/180;k.push([t0+i*per/8,rx*Math.cos(a),ry*Math.sin(a),z])}
@@ -1353,7 +1353,7 @@ function loadHands(){
       var im=new Image(),c=H[n];
       im.onload=im.onerror=function(){if(--pending===0){R.ready=true;HR=R;resolve(true)}};
       im.src="data:image/webp;base64,"+c.b;
-      R.spr[n]={img:im,w:c.w,h:c.h,cx:c.cx,cy:c.cy,ax:c.ax,fd:c.fd,yt0:c.yt0,yb0:c.yb0,yt:c.yt,yb:c.yb,prof:c.prof};
+      R.spr[n]={img:im,w:c.w,h:c.h,cx:c.cx,cy:c.cy,ax:c.ax,fd:c.fd,yt0:c.yt0,yb0:c.yb0,yt:c.yt,yb:c.yb,sT:c.sT,sB:c.sB,prof:c.prof};
     });
   });
   return handP;
@@ -1390,17 +1390,26 @@ function drawHand(ctx,t,cx,cy,pw,size,zs,hf){
   ctx.drawImage(sp.img,0,0);
   ctx.restore();
 }
-/* endless forearm behind the photographed hand: smooth skin gradient, slightly wider towards the elbow */
+/* endless forearm behind the photographed hand: the photo's last columns fade out and a smooth skin-coloured fan continues the arm,
+   widening towards the elbow like a real forearm */
 function armPath(ctx,sp){
   if(!sp.prof)return;
+  var L=9000,k=.6,sT=sp.sT*k,sB=sp.sB*k,x0=sp.ax-sp.fd;
+  function yT(x){return sp.yt+sT*(x-sp.ax)}function yB(x){return sp.yb+sB*(x-sp.ax)}
   if(!sp.grad){
-    var g=ctx.createLinearGradient(0,sp.yt,0,sp.yb);
-    sp.prof.forEach(function(p){g.addColorStop(p[0],"rgb("+p[1]+","+p[2]+","+p[3]+")")});
+    var g=null;
+    if(ctx.createConicGradient&&sB-sT>1e-4){
+      var d=(sp.yb-sp.yt)/(sT-sB),xa=sp.ax+d,ya=yT(xa),th=function(y){return Math.atan2(y-ya,sp.ax-xa)},t0=th(sp.yt);
+      g=ctx.createConicGradient(t0,xa,ya);
+      sp.prof.forEach(function(p){var y=sp.yt+p[0]*(sp.yb-sp.yt),o=(th(y)-t0)/(2*Math.PI);g.addColorStop(Math.min(1,Math.max(0,o)),"rgb("+p[1]+","+p[2]+","+p[3]+")")});
+    }else{
+      g=ctx.createLinearGradient(0,sp.yt,0,sp.yb);
+      sp.prof.forEach(function(p){g.addColorStop(p[0],"rgb("+p[1]+","+p[2]+","+p[3]+")")});
+    }
     sp.grad=g;
   }
-  var x0=sp.ax-sp.fd,L=9000,gw=.014*L,m=(sp.yt+sp.yb)/2;
   ctx.save();ctx.fillStyle=sp.grad;
-  ctx.beginPath();ctx.moveTo(x0,sp.yt0);ctx.lineTo(sp.ax,sp.yt);ctx.lineTo(sp.ax+L,sp.yt-gw);ctx.lineTo(sp.ax+L,sp.yb+gw);ctx.lineTo(sp.ax,sp.yb);ctx.lineTo(x0,sp.yb0);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(x0,sp.yt0);ctx.lineTo(sp.ax,sp.yt);ctx.lineTo(sp.ax+L,yT(sp.ax+L));ctx.lineTo(sp.ax+L,yB(sp.ax+L));ctx.lineTo(sp.ax,sp.yb);ctx.lineTo(x0,sp.yb0);ctx.closePath();ctx.fill();
   ctx.restore();
 }
 
