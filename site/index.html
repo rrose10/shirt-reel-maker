@@ -50,6 +50,27 @@ h1 em{font-style:normal;color:var(--accent)}
 .steps li+li::before{content:"";width:28px;height:1px;background:var(--line);margin-right:2px}
 .grid{display:grid;grid-template-columns:minmax(270px,1fr) minmax(320px,1.4fr) minmax(300px,1fr);gap:16px;align-items:start}
 @media (max-width:1100px){.grid{grid-template-columns:1fr}}
+.tabrow{display:flex;align-items:center;gap:14px 22px;flex-wrap:wrap;margin-bottom:12px}.tabrow .tabs{margin-bottom:0}
+.steps2{display:flex;gap:6px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+.steps2 li{display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border:1px solid var(--line);border-radius:999px;font-size:13px;font-weight:700;color:var(--muted);background:var(--panel)}
+.steps2 li b{width:22px;height:22px;border-radius:50%;background:var(--field);display:grid;place-items:center;font-size:12px;color:var(--muted)}
+.steps2 li.on{color:var(--ink);border-color:var(--accent)}.steps2 li.on b{background:var(--accent);color:#fff}
+.steps2 li.done{color:var(--ink)}.steps2 li.done b{background:#1f9d55;color:#fff}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card{position:relative;text-align:left;border:1.5px solid var(--line);background:var(--field);color:var(--ink);border-radius:12px;padding:7px 9px;cursor:pointer;font:inherit;display:flex;align-items:center;gap:8px;min-width:0}
+.card .tx{display:flex;flex-direction:column;min-width:0}
+.card:hover{border-color:var(--muted)}.card.on{border-color:var(--accent);background:var(--panel);box-shadow:0 0 0 1px var(--accent) inset}
+.card .ic{font-size:20px;line-height:1}.card b{font-size:13px}.card small{font-size:11px;color:var(--muted);line-height:1.25}
+.card .tag{font-style:normal;font-size:9.5px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-left:3px}
+.fmtrow{display:flex;align-items:center;gap:10px;margin-bottom:8px}.fmtrow .fl{font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:var(--field);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.chip small{font-weight:500;color:var(--muted);margin-left:4px;font-size:11.5px}
+.chip.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.need{font-size:13px;color:var(--accent);font-weight:700;margin:0 0 8px}.need:empty{display:none}
+.drop.need{border-color:var(--accent);animation:needp 1.6s ease-in-out infinite;color:inherit;font-size:inherit;margin:0}
+@keyframes needp{0%,100%{box-shadow:0 0 0 0 rgba(255,74,43,.35)}50%{box-shadow:0 0 0 6px rgba(255,74,43,0)}}
+@media (prefers-reduced-motion:reduce){.drop.need{animation:none}}
 .work{display:grid;grid-template-columns:minmax(220px,.75fr) minmax(300px,1.35fr) minmax(340px,1fr);gap:14px;align-items:start}
 .ctlcol{display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 188px);min-height:420px}
 .ctlcol .prevbox{margin-bottom:0}
@@ -149,12 +170,15 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       <h1>Blank shirt in. <em>Moving reel</em> out.</h1>
       <p class="sub">Add blank shirt photos and your transparent PNG designs, place the print once, then turn every combination into a 10 second zoom video for Reels, Shorts and TikTok.</p>
     </div>
-    <button class="btn" id="sampleBtn" type="button">Load a sample</button>
+    <button class="btn" id="sampleBtn" type="button">Try with a sample</button>
   </div>
 
-  <div class="tabs" role="tablist" aria-label="Mode">
-    <button class="tab on" id="tabShirt" type="button" role="tab" aria-selected="true">Shirt mockups</button>
-    <button class="tab" id="tabImage" type="button" role="tab" aria-selected="false">Single image + music</button>
+  <div class="tabrow">
+    <div class="tabs" role="tablist" aria-label="Mode">
+      <button class="tab on" id="tabShirt" type="button" role="tab" aria-selected="true">Shirt mockups</button>
+      <button class="tab" id="tabImage" type="button" role="tab" aria-selected="false">Single image + music</button>
+    </div>
+    <ol class="steps2" id="steps" aria-label="Steps"></ol>
   </div>
 
   <div id="modeShirt">
@@ -184,8 +208,8 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       <div class="ptabs" role="tablist">
         <button class="ptab on" type="button" data-pane="sp-print">Print</button>
         <button class="ptab" type="button" data-pane="sp-warp">Warp</button>
-        <button class="ptab" type="button" data-pane="sp-frame">Frame</button>
-        <button class="ptab" type="button" data-pane="sp-motion">Motion</button>
+        <button class="ptab" type="button" data-pane="sp-motion">Movement</button>
+        <button class="ptab" type="button" data-pane="sp-frame">Size</button>
         <button class="ptab" type="button" data-pane="sp-text">Text</button>
         <button class="ptab" type="button" data-pane="sp-music">Music</button>
         <button class="ptab" type="button" data-pane="sp-save">Save</button>
@@ -213,10 +237,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
           <div class="ctl"><label for="warp">Fold distortion <output id="warpO">50%</output></label><input id="warp" type="range" min="0" max="100" value="50"></div>
         </div>
         <div class="pane" id="sp-frame">
-          <div class="two ctl" style="margin-top:0">
-            <div><label for="asp">Format</label><select id="asp"><option value="916">9:16 · Reels / Stories</option><option value="45">4:5 · Feed</option><option value="11">1:1 · Square</option></select></div>
-            <div><label for="res">Quality</label><select id="res"><option value="1080">1080 × 1920</option><option value="720">720 × 1280</option></select></div>
-          </div>
+          <div class="ctl" style="margin-top:0"><label for="res">Quality</label><select id="res"><option value="1080">1080 × 1920</option><option value="720">720 × 1280</option></select></div>
           <div class="ctl"><label for="mscale">Mockup size <output id="mscaleO">100%</output></label><input id="mscale" type="range" min="40" max="250" value="100"></div>
           <div class="two ctl">
             <div><label for="mx">Left / right <output id="mxO">0</output></label><input id="mx" type="range" min="-50" max="50" value="0"></div>
@@ -267,9 +288,11 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
         </div>
       </div>
       <div class="exportbar">
+        <div class="fmtrow"><span class="fl">Video format</span><div class="chips" id="fmtS"><select id="asp" class="hide"><option value="916">9:16 · Reels / Stories</option><option value="45">4:5 · Feed</option><option value="11">1:1 · Square</option></select></div></div>
+        <div class="need" id="needS"></div>
         <div class="row">
           <button class="btn primary" id="expOne" type="button" disabled>Make this video</button>
-          <button class="btn" id="expAll" type="button" disabled>Make all (0)</button>
+          <button class="btn" id="expAll" type="button" disabled>Make all videos</button>
           <button class="btn hide" id="cancelBtn" type="button">Cancel</button>
         </div>
         <div class="bar" id="bar"><i id="barI"></i></div>
@@ -281,7 +304,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
   <section class="panel" id="results" aria-labelledby="h-res">
     <h2 id="h-res">Finished videos <span class="count" id="cntR">0</span></h2>
     <p class="hint" id="fmtNote">Press Download on one video, or save every video at once as a ZIP.</p>
-    <div class="row" style="margin-bottom:6px"><button class="btn primary" id="zipS" type="button">Download all as ZIP</button><span class="status" id="zipSS" style="margin:0"></span></div>
+    <div class="row" style="margin-bottom:6px"><button class="btn" id="backS" type="button">↑ Back to editor</button><button class="btn primary" id="zipS" type="button">Download all as ZIP</button><span class="status" id="zipSS" style="margin:0"></span></div>
     <div class="vids" id="vids"></div>
   </section>
   </div>
@@ -309,8 +332,8 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
 
       <section class="panel ctlcol sticky" aria-label="Video settings">
         <div class="ptabs" role="tablist">
-          <button class="ptab on" type="button" data-pane="ip-motion">Motion</button>
-          <button class="ptab" type="button" data-pane="ip-frame">Frame</button>
+          <button class="ptab on" type="button" data-pane="ip-motion">Movement</button>
+          <button class="ptab" type="button" data-pane="ip-frame">Size</button>
           <button class="ptab" type="button" data-pane="ip-text">Text</button>
           <button class="ptab" type="button" data-pane="ip-music">Music</button>
           <button class="ptab" type="button" data-pane="ip-save">Save</button>
@@ -334,10 +357,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
             <p class="hint hide" id="iHandHint" style="margin-top:8px">The hand sweeps around the zoom target. Click the print's center in the small image on the left.</p>
           </div>
           <div class="pane" id="ip-frame">
-            <div class="two ctl" style="margin-top:0">
-              <div><label for="iAsp">Format</label><select id="iAsp"><option value="916">9:16 · Reels / Stories</option><option value="45">4:5 · Feed</option><option value="11">1:1 · Square</option></select></div>
-              <div><label for="iRes">Quality</label><select id="iRes"><option value="1080">1080 × 1920</option><option value="720">720 × 1280</option></select></div>
-            </div>
+            <div class="ctl" style="margin-top:0"><label for="iRes">Quality</label><select id="iRes"><option value="1080">1080 × 1920</option><option value="720">720 × 1280</option></select></div>
             <div class="ctl"><label for="imscale">Image size <output id="imscaleO">100%</output></label><input id="imscale" type="range" min="40" max="250" value="100"></div>
             <div class="two ctl">
               <div><label for="imx">Left / right <output id="imxO">0</output></label><input id="imx" type="range" min="-50" max="50" value="0"></div>
@@ -372,9 +392,11 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
           </div>
         </div>
         <div class="exportbar">
+          <div class="fmtrow"><span class="fl">Video format</span><div class="chips" id="fmtI"><select id="iAsp" class="hide"><option value="916">9:16 · Reels / Stories</option><option value="45">4:5 · Feed</option><option value="11">1:1 · Square</option></select></div></div>
+          <div class="need" id="needI"></div>
           <div class="row">
             <button class="btn primary" id="iExp" type="button" disabled>Make this video</button>
-            <button class="btn" id="iExpAll" type="button" disabled>Make all (0)</button>
+            <button class="btn" id="iExpAll" type="button" disabled>Make all videos</button>
             <button class="btn hide" id="iCancel" type="button">Cancel</button>
           </div>
           <div class="bar" id="iBar"><i id="iBarI"></i></div>
@@ -386,7 +408,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
     <section class="panel" id="iResults" aria-labelledby="h-ires">
       <h2 id="h-ires">Finished videos <span class="count" id="iCnt">0</span></h2>
       <p class="hint">Saved as MP4 when your browser supports it, otherwise WebM. Save every video at once as a ZIP.</p>
-      <div class="row" style="margin-bottom:6px"><button class="btn primary" id="zipI" type="button">Download all as ZIP</button><span class="status" id="zipIS" style="margin:0"></span></div>
+      <div class="row" style="margin-bottom:6px"><button class="btn" id="backI" type="button">↑ Back to editor</button><button class="btn primary" id="zipI" type="button">Download all as ZIP</button><span class="status" id="zipIS" style="margin:0"></span></div>
       <div class="vids" id="iVids"></div>
     </section>
   </div>
@@ -598,10 +620,10 @@ function refresh(){
   renderList($("listB"),blanks,curB,false);renderList($("listD"),designs,curD,true);
   $("cntB").textContent=blanks.length;$("cntD").textContent=designs.length;
   var n=blanks.length*designs.length;
-  $("expAll").textContent="Make all ("+n+")";
+  $("expAll").textContent=n>1?"Make all "+n+" videos":"Make all videos";
   $("expAll").disabled=exporting||n<2;
   $("expOne").disabled=exporting||!(curB&&curD);
-  syncControls();drawEditor();
+  syncControls();drawEditor();updateSteps();
 }
 function syncControls(){
   var p=curB?curB.place:null;
@@ -705,6 +727,7 @@ function setPlace(ch){
   if(!curB)return;
   var targets=S.applyAll?blanks:[curB];
   targets.forEach(function(b){for(var k in ch)b.place[k]=ch[k]});
+  placedTouched=true;if(typeof updateSteps==="function")updateSteps();
   touch();syncControls();drawEditor();
 }
 $("fabric").onchange=function(){S.fabric=this.checked;drawEditor()};
@@ -831,7 +854,7 @@ async function runQueue(pairs){
   if(ac){try{ac.close()}catch(e){}}
   var wasCancelled=cancelFlag;
   lock(false);$("barI").style.width="0";
-  if(cancelFlag)setStatus("Cancelled. "+done+" finished.");else if(done&&!failed){await Promise.all(nasP.splice(0));setStatus(done+" video"+(done>1?"s":"")+" ready below."+nasNote(results.slice(0,done)))}
+  if(cancelFlag)setStatus("Cancelled. "+done+" finished.");else if(done&&!failed){await Promise.all(nasP.splice(0));setStatus(done+" video"+(done>1?"s":"")+" ready below."+nasNote(results.slice(0,done)));showResults("results")}
   cancelFlag=false;
   if(pairs.length>1&&done>0&&!wasCancelled&&!failed&&$("autoZipS").checked)saveZip(results.slice(0,done).reverse(),"shirt-reels-"+stamp()+".zip",sayS,$("zipS"));
 }
@@ -848,7 +871,7 @@ function addResult(b,d,out){
 function renderResults(){
   var box=$("vids");box.textContent="";$("results").style.display=results.length?"block":"none";$("cntR").textContent=results.length;$("zipS").textContent="Download all ("+results.length+") as ZIP";
   if(results.some(function(r){return r.ext==="webm"}))$("fmtNote").textContent="Your browser saved WebM files. Facebook and Instagram prefer MP4, so use Chrome or Edge 126+ or Safari for MP4, or convert the WebM first.";
-  results.forEach(function(r){box.appendChild(cardFor(r))});
+  results.forEach(function(r){box.appendChild(cardFor(r))});updateSteps();
 }
 function cardFor(r){
   var c=document.createElement("div");c.className="vid";
@@ -892,7 +915,7 @@ function setMode(m){
   $("modeImage").classList.toggle("hide",m!=="image");
   $("tabShirt").classList.toggle("on",m==="shirt");$("tabImage").classList.toggle("on",m==="image");
   $("tabShirt").setAttribute("aria-selected",String(m==="shirt"));$("tabImage").setAttribute("aria-selected",String(m==="image"));
-  stopMusic();if(m==="image")drawFocus();
+  stopMusic();if(m==="image")drawFocus();updateSteps();
 }
 $("tabShirt").onclick=function(){setMode("shirt")};
 $("tabImage").onclick=function(){setMode("image")};
@@ -968,9 +991,9 @@ function refreshImgs(){
   $("iCntImg").textContent=imgs.length;
   $("iName").textContent=I?I.name+" · "+I.w+" × "+I.h:"";
   $("iExp").disabled=exporting||!I;
-  $("iExpAll").textContent="Make all ("+imgs.length+")";
+  $("iExpAll").textContent=imgs.length>1?"Make all "+imgs.length+" videos":"Make all videos";
   $("iExpAll").disabled=exporting||imgs.length<2;
-  drawFocus();
+  drawFocus();updateSteps();
 }
 
 function drawImgScene(ctx,W,H,im,t){
@@ -1255,12 +1278,12 @@ async function runImgExport(items){
   lockImg(false);$("iBarI").style.width="0";cancelFlag=false;
   if(errMsg)istatus(errMsg);
   else if(wasCancelled)istatus("Cancelled. "+done+" finished.");
-  else{await Promise.all(nasP.splice(0));istatus(done+" video"+(done>1?"s":"")+" ready below."+nasNote(results2.slice(0,done)))}
+  else{await Promise.all(nasP.splice(0));istatus(done+" video"+(done>1?"s":"")+" ready below."+nasNote(results2.slice(0,done)));showResults("iResults")}
   if(items.length>1&&done>0&&!errMsg&&!wasCancelled&&$("autoZipI").checked)saveZip(results2.slice(0,done).reverse(),"image-reels-"+stamp()+".zip",sayI,$("zipI"));
 }
 function renderResults2(){
   var box=$("iVids");box.textContent="";$("iResults").style.display=results2.length?"block":"none";$("iCnt").textContent=results2.length;$("zipI").textContent="Download all ("+results2.length+") as ZIP";
-  results2.forEach(function(r){box.appendChild(cardFor(r))});
+  results2.forEach(function(r){box.appendChild(cardFor(r))});updateSteps();
 }
 $("iExp").onclick=function(){if(I)runImgExport([I])};
 $("iExpAll").onclick=function(){runImgExport(imgs.slice())};
@@ -1620,6 +1643,56 @@ document.querySelectorAll(".ptabs").forEach(function(bar){
     };
   });
 });
+
+
+/* ---------- friendlier controls: style cards, format chips, steps, hints ---------- */
+function makeCards(selId,items){
+  var sel=$(selId),wrap=sel.closest(".ctl"),box=document.createElement("div");box.className="cards";
+  items.forEach(function(it){
+    var b=document.createElement("button");b.type="button";b.className="card";b.setAttribute("data-v",it[0]);
+    b.innerHTML='<span class="ic">'+it[1]+'</span><span class="tx"><b>'+it[2]+(it[4]?' <i class="tag">'+it[4]+'</i>':'')+'</b><small>'+it[3]+'</small></span>';
+    b.onclick=function(){if(exporting)return;sel.value=it[0];sel.dispatchEvent(new Event("change",{bubbles:true}));styleTouched=true;updateSteps()};
+    box.appendChild(b);
+  });
+  function sync(){Array.prototype.forEach.call(box.children,function(c){c.classList.toggle("on",c.getAttribute("data-v")===sel.value)})}
+  sel.addEventListener("change",sync);sync();
+  wrap.classList.add("hide");wrap.parentNode.insertBefore(box,wrap);
+}
+function makeChips(selId,hostId,items){
+  var sel=$(selId),host=$(hostId);
+  items.forEach(function(it){
+    var b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("data-v",it[0]);b.innerHTML=it[1]+'<small>'+it[2]+'</small>';
+    b.onclick=function(){if(exporting)return;sel.value=it[0];sel.dispatchEvent(new Event("change",{bubbles:true}))};
+    host.appendChild(b);
+  });
+  function sync(){Array.prototype.forEach.call(host.querySelectorAll(".chip"),function(c){c.classList.toggle("on",c.getAttribute("data-v")===sel.value)})}
+  sel.addEventListener("change",sync);sync();
+}
+var styleTouched=false,placedTouched=false;
+makeCards("motion",[["studio","🎬","Studio reveal","Push in, hold, return","★"],["push","🔍","Slow zoom in","Gentle push in"],["pull","🔭","Slow zoom out","Start close, pull back"],["breathe","🌊","Smooth loop","Zooms in and out forever"],["drift","➡️","Drift","Glides across the design"],["hand","✋","Hand sweep","A hand smooths the print"]]);
+makeCards("iMotion",[["studio","🎬","Studio reveal","Push in, hold, return","★"],["push","🔍","Slow zoom in","Gentle push in"],["pull","🔭","Slow zoom out","Start close, pull back"],["breathe","🌊","Smooth loop","Zooms in and out forever"],["drift","➡️","Drift","Glides across the target"],["panx","↔️","Pan sideways","Left to right"],["pany","↕️","Pan down","Top to bottom"],["hand","✋","Hand sweep","A hand smooths the print"]]);
+var FMT=[["916","9:16","Reels"],["45","4:5","Feed"],["11","1:1","Square"]];
+makeChips("asp","fmtS",FMT);makeChips("iAsp","fmtI",FMT);
+setTimeout(updateSteps,0);
+function updateSteps(){
+  var ol=$("steps"),img=!$("modeImage").classList.contains("hide"),st,imgs_=typeof imgs==="undefined"||!imgs?[]:imgs,res2=typeof results2==="undefined"||!results2?[]:results2;
+  if(img){st=[["Add images",imgs_.length>0],["Pick a style",styleTouched],["Make video",res2.length>0]]}
+  else{st=[["Add shirt + design",blanks.length>0&&designs.length>0],["Place the print",placedTouched],["Pick a style",styleTouched],["Make video",results.length>0]]}
+  var firstOpen=-1;st.forEach(function(x,i){if(!x[1]&&firstOpen<0)firstOpen=i});
+  ol.innerHTML="";
+  st.forEach(function(x,i){
+    var li=document.createElement("li");li.className=x[1]?"done":(i===firstOpen?"on":"");
+    li.innerHTML="<b>"+(x[1]?"✓":(i+1))+"</b>"+x[0];ol.appendChild(li);
+  });
+  var nS=$("needS"),nI=$("needI");
+  nS.textContent=!blanks.length?"Start by adding a blank shirt photo (left side).":!designs.length?"Now add your transparent PNG design (left side).":"";
+  nI.textContent=!imgs_.length?"Start by adding an image (left side).":"";
+  $("dropB").classList.toggle("need",!blanks.length);
+  $("dropD").classList.toggle("need",!!blanks.length&&!designs.length);
+  $("iDrop").classList.toggle("need",!imgs_.length);
+}
+function showResults(id){var el=$(id);if(el&&el.style.display!=="none"){try{el.scrollIntoView({behavior:"smooth",block:"start"})}catch(e){el.scrollIntoView()}}}
+$("backS").onclick=$("backI").onclick=function(){window.scrollTo({top:0,behavior:"smooth"})};
 
 /* ---------- ZIP: many videos, one save ---------- */
 var CRC_T=null;
