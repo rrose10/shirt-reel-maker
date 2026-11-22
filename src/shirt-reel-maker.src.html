@@ -125,6 +125,10 @@ h1{font-size:clamp(22px,3vw,30px);margin:0}
 .ctl{margin-top:14px}
 .ctl label,.lbl{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
 .ctl output{color:var(--ink);font-variant-numeric:tabular-nums}
+.vbox{display:inline-flex;align-items:center;gap:2px;color:var(--ink)}
+.vnum{width:64px;padding:2px 6px;border-radius:7px;border:1px solid var(--line);background:var(--field);color:var(--ink);font:inherit;font-weight:800;text-align:right;letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.vnum:focus{outline:2px solid var(--accent);outline-offset:0}
+.vu{min-width:8px;font-weight:700;text-transform:none}
 input[type=range]{width:100%;accent-color:var(--accent)}
 select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--field)}
 .check{display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:10px;cursor:pointer}
@@ -431,7 +435,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       </aside>
       <section class="panel sticky" aria-labelledby="h-tpv">
         <h2 id="h-tpv">Live preview</h2>
-        <p class="hint">Click a design on the left to preview it. Drag the print to move it, drag a corner dot to resize, drag the top dot to rotate. Mouse wheel also resizes.</p>
+        <p class="hint">Click a design on the left to preview it. Drag the print to move it, drag a corner dot to resize, drag the top dot to rotate.</p>
         <div class="prevbox big"><canvas id="tPrev" width="360" height="640" aria-label="Video preview" style="touch-action:none;cursor:default"></canvas>
           <div class="timeline"><button class="btn" id="tPlay" type="button">Play</button><input id="tScrub" type="range" min="0" max="299" value="0" aria-label="Timeline"><span id="tTime">0.0 / 10.0s</span></div>
         </div>
@@ -2225,10 +2229,6 @@ function tSyncUI(){
   });
   function end(){drag=null}
   tPrevCv.addEventListener("pointerup",end);tPrevCv.addEventListener("pointercancel",end);
-  tPrevCv.addEventListener("wheel",function(e){
-    if(!TP.vid||!tcur||exporting)return;e.preventDefault();
-    TC.sc=Math.max(.2,Math.min(2.5,TC.sc*(e.deltaY<0?1.05:1/1.05)));tSyncUI();tUpdate();
-  },{passive:false});
 })();
 var tLoop=0;
 async function tPlayLoop(){
@@ -2338,6 +2338,43 @@ tplList().then(function(){if(TP.list.length&&mode==="tpl"&&!TP.vid)tplLoadId(TP.
 loadHands();
 refreshImgs();
 refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
+})();
+
+/* typed numbers next to every slider (click the value, type, Enter) */
+(function(){
+  function parse(t){var m=/^\s*(-?\d+(?:\.\d+)?)/.exec(t||"");return m?+m[1]:null}
+  function enhance(o){
+    if(o.dataset.vn||o.tagName!=="OUTPUT")return;
+    var lab=o.closest("label");if(!lab||!lab.htmlFor)return;
+    var r=document.getElementById(lab.htmlFor);
+    if(!r||r.type!=="range")return;
+    var t=o.textContent;if(t.indexOf(":")>=0||parse(t)===null)return;
+    o.dataset.vn=1;
+    var unit=t.replace(/^\s*-?[\d.]+\s*/,"");
+    var box=document.createElement("span");box.className="vbox";
+    var n=document.createElement("input");n.type="number";n.className="vnum";
+    n.min=r.min;n.max=r.max;n.step=r.step&&r.step!=="any"?r.step:1;
+    n.setAttribute("aria-label",(lab.textContent||"").trim());
+    var u=document.createElement("span");u.className="vu";u.textContent=unit;
+    box.appendChild(n);box.appendChild(u);
+    o.style.display="none";o.parentNode.insertBefore(box,o.nextSibling);
+    function pull(){if(document.activeElement===n)return;var v=parse(o.textContent);if(v!==null)n.value=v;var m=o.textContent.replace(/^\s*-?[\d.]+\s*/,"");if(m!==u.textContent)u.textContent=m}
+    pull();
+    new MutationObserver(pull).observe(o,{childList:true,characterData:true,subtree:true});
+    function push(){
+      var v=parseFloat(n.value);if(isNaN(v)){pull();return}
+      v=Math.max(+r.min,Math.min(+r.max,v));
+      r.value=v;r.dispatchEvent(new Event("input",{bubbles:true}));
+      n.value=parseFloat(r.value);
+    }
+    n.addEventListener("change",push);
+    n.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();push();n.blur()}});
+    n.addEventListener("wheel",function(){n.blur()},{passive:true});
+    n.addEventListener("focus",function(){n.select()});
+  }
+  function scan(root){(root.querySelectorAll?root.querySelectorAll(".ctl output"):[]).forEach(enhance)}
+  scan(document);
+  new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
 </body>
