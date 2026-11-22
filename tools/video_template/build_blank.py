@@ -2,12 +2,12 @@
 Usage (in a work folder that has fr/NNN.png at 720x1280):  python3 build_blank.py FPS x,y,w,h
  x,y,w,h = the print area in frame pixels. Then run pack.py."""
 import cv2,numpy as np,glob,json,sys,os
-WHITE=bool(os.environ.get('WHITE'));SMED=int(os.environ.get('SMED','90'));STH=int(os.environ.get('STH','60'));VTH=int(os.environ.get('VTH','120'))   # WHITE=1: white/light shirt (shirt = low saturation & bright)
+WHITE=bool(os.environ.get('WHITE'));SMED=int(os.environ.get('SMED','90'));WSAT=int(os.environ.get('WSAT','48'));STH=int(os.environ.get('STH','60'));VTH=int(os.environ.get('VTH','120'))   # WHITE=1: white/light shirt (shirt = low saturation & bright)
 FPS=int(sys.argv[1]);bx,by,bw,bh=[int(v) for v in sys.argv[2].split(',')]
 fs=sorted(glob.glob('fr/*.png'));N=len(fs);H,W=1280,720
 def skin(im):
     ycc=cv2.cvtColor(im,cv2.COLOR_BGR2YCrCb);hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
-    m=((ycc[...,1]>135)&(ycc[...,1]<185)&(ycc[...,2]>80)&(ycc[...,2]<135)&(hsv[...,1]>(48 if WHITE else 35))&(hsv[...,2]>70)).astype(np.uint8)
+    m=((ycc[...,1]>135)&(ycc[...,1]<185)&(ycc[...,2]>80)&(ycc[...,2]<135)&(hsv[...,1]>(WSAT if WHITE else 35))&(hsv[...,2]>70)).astype(np.uint8)
     m=cv2.morphologyEx(m,cv2.MORPH_OPEN,np.ones((3,3),np.uint8));m=cv2.morphologyEx(m,cv2.MORPH_CLOSE,np.ones((9,9),np.uint8))
     if WHITE:   # drop tiny specks (warm-tinted fabric folds) - real hands/fingers are far larger; specks would punch holes in the print
         n,lab,st,_=cv2.connectedComponentsWithStats(m,connectivity=8);keep=np.zeros(n,np.uint8);keep[1:]=(st[1:,cv2.CC_STAT_AREA]>=1500)
