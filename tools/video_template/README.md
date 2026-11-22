@@ -33,3 +33,9 @@ When the source video shows a BLANK shirt and the camera does not move, there is
 4. Add `{id,name}` to site/templates/list.json.
 
 Blank-shirt templates use a two-sided shade map (`"bi":1` in track.json): code 128 = neutral, below = fold in shadow, above = fold catching light (code = 128 + (brightness/blur - 1)*254). The tool darkens/brightens the print with it and bends the print slightly along the folds ("Follow fabric folds" slider).
+
+### Blank shirt + moving camera (zoom / dolly)
+1. `fr/NNN.png` at 720x1280 (ffmpeg -vf scale=720:1280).
+2. `python3 track_gen.py REF_FRAME` – sequential SIFT+ECC between neighbouring frames (hands masked out) -> `Ms.npy` (ref -> frame homographies). Pick a REF_FRAME where the whole shirt is visible.
+3. A person wearing the shirt: `python3 similarity.py` (keeps scale+rotation+translation of the torso only, no skew).
+4. `python3 build_blank.py 24 x,y,w,h` (x,y,w,h = default print area in REF_FRAME pixels; picks up Ms.npy), then `python3 pack.py OUTDIR "Name"`.

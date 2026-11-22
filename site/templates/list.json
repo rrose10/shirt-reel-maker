@@ -1,1 +1,38 @@
-[{"id": "bat-black", "name": "Black tee \u00b7 hands smoothing (10 s)"}, {"id": "mannequin-black", "name": "Black tee on a mannequin \u00b7 zoom (10 s)"}, {"id": "blank-boutique", "name": "Blank black tee \u00b7 boutique mannequin (10 s)"}]
+[
+{
+"id": "bat-black",
+"name": "Black tee · hands smoothing (10 s)"
+},
+{
+"id": "mannequin-black",
+"name": "Black tee on a mannequin · zoom (10 s)"
+},
+{
+"id": "blank-boutique",
+"name": "Black · Boutique mannequin, fixed camera (10 s)"
+},
+{
+"id": "black-person-room",
+"name": "Black · Person in a living room (zoom)"
+},
+{
+"id": "black-mannequin-shop",
+"name": "Black · Women's tee on a mannequin, shop (zoom)"
+},
+{
+"id": "black-mannequin-dark",
+"name": "Black · Tee on a black mannequin, boutique (zoom)"
+},
+{
+"id": "black-hanger",
+"name": "Black · Tee on a hanger (zoom)"
+},
+{
+"id": "black-flat-linen",
+"name": "Black · Flat lay on linen, leaf shadows (zoom)"
+},
+{
+"id": "black-flat-cream",
+"name": "Black · Flat lay on cream fabric, sunlight (zoom)"
+}
+]
