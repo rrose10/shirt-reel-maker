@@ -437,26 +437,52 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
         </div>
       </section>
       <section class="panel ctlcol sticky" aria-label="Video settings">
-        <div class="ctl" style="margin-top:0"><label for="tSc">Print size <output id="tScO">100%</output></label><input id="tSc" type="range" min="40" max="170" value="100"></div>
-        <div class="ctl"><label for="tDx">Move left / right <output id="tDxO">0</output></label><input id="tDx" type="range" min="-50" max="50" value="0"></div>
-        <div class="ctl"><label for="tDy">Move up / down <output id="tDyO">0</output></label><input id="tDy" type="range" min="-50" max="50" value="0"></div>
-        <div class="ctl"><label for="tSh">Fabric light and shade <output id="tShO">80%</output></label><input id="tSh" type="range" min="0" max="100" value="80"></div>
-        <div class="ctl"><label for="tRes">Video size</label><select id="tRes"><option value="720">720 × 1280 (fast)</option><option value="1080" selected>1080 × 1920 (full HD)</option></select></div>
-        <div class="sub2">Music</div>
-        <div class="ctl hide" id="vNasBox" style="margin-top:0;margin-bottom:10px"><label for="vNas">Music library on the NAS</label><select id="vNas"><option value="">Choose a song…</option></select></div>
-        <label class="drop" id="vDrop"><strong>Add music</strong><span>Drop a file or click to browse · MP3, WAV, M4A, OGG</span><input id="vFile" type="file" accept="audio/*"></label>
-        <div id="vCtl" class="hide">
-          <div class="fname" id="vInfo"></div>
-          <div class="ctl"><label for="vStart">Start at <output id="vStartO">0:00</output></label><input id="vStart" type="range" min="0" max="0" step="0.1" value="0"></div>
-          <div class="ctl"><label for="vVol">Volume <output id="vVolO">80%</output></label><input id="vVol" type="range" min="0" max="100" value="80"></div>
-          <label class="check"><input type="checkbox" id="vFade" checked> Fade in and out</label>
-          <div class="row" style="margin-top:12px"><button class="btn" id="vPrev" type="button">Play music with preview</button><button class="btn" id="vClear" type="button">Remove music</button><button class="btn hide" id="vToNas" type="button">Add to NAS library</button></div>
+        <div class="ptabs" role="tablist">
+          <button class="ptab on" type="button" data-pane="tp-print">Print</button>
+          <button class="ptab" type="button" data-pane="tp-warp">Warp</button>
+          <button class="ptab" type="button" data-pane="tp-music">Music</button>
+          <button class="ptab" type="button" data-pane="tp-save">Save</button>
         </div>
-        <div id="cBoxT" style="margin-top:14px"></div>
-        <div class="sub2">When making videos</div>
-        <label class="check"><input type="checkbox" id="fastT" checked> Fast render <small style="color:var(--muted)" id="fastTN"></small></label>
-        <label class="check hide" id="nasWrapT"><input type="checkbox" id="nasT" checked> Also save every video to the office NAS <small style="color:var(--muted)">(Office / ShirtReels / videos)</small></label>
-        <label class="check"><input type="checkbox" id="autoZipT" checked> Download all as one ZIP when "Make all" finishes</label>
+        <div class="panes">
+          <div class="pane on" id="tp-print">
+            <div class="ctl" style="margin-top:0"><label for="tSc">Print size <output id="tScO">100%</output></label><input id="tSc" type="range" min="40" max="170" value="100"></div>
+            <div class="ctl"><label for="tRot">Rotation <output id="tRotO">0°</output></label><input id="tRot" type="range" min="-45" max="45" value="0"></div>
+            <div class="ctl"><label for="tDx">Move left / right <output id="tDxO">0</output></label><input id="tDx" type="range" min="-50" max="50" value="0"></div>
+            <div class="ctl"><label for="tDy">Move up / down <output id="tDyO">0</output></label><input id="tDy" type="range" min="-50" max="50" value="0"></div>
+            <div class="ctl"><label for="tSh">Fabric light and shade <output id="tShO">80%</output></label><input id="tSh" type="range" min="0" max="100" value="80"></div>
+            <div class="ctl"><label for="tRes">Video size</label><select id="tRes"><option value="720">720 × 1280 (fast)</option><option value="1080" selected>1080 × 1920 (full HD)</option></select></div>
+          </div>
+          <div class="pane" id="tp-warp">
+            <div class="sub2" style="margin-top:0">Warp the design</div>
+            <p class="hint" style="margin:-4px 0 4px">Bend and tilt the print to match the shirt. 0 = no change. Applies to every design.</p>
+            <div class="ctl"><label for="tCurve">Curve (arch ↔ smile) <output id="tCurveO">0</output></label><input id="tCurve" type="range" min="-100" max="100" value="0"></div>
+            <div class="ctl"><label for="tWave">Wave <output id="tWaveO">0</output></label><input id="tWave" type="range" min="-100" max="100" value="0"></div>
+            <div class="ctl"><label for="tPH">Perspective: left ↔ right <output id="tPHO">0</output></label><input id="tPH" type="range" min="-100" max="100" value="0"></div>
+            <div class="ctl"><label for="tPV">Perspective: top ↔ bottom <output id="tPVO">0</output></label><input id="tPV" type="range" min="-100" max="100" value="0"></div>
+            <div class="ctl"><label for="tSk">Skew (lean) <output id="tSkO">0</output></label><input id="tSk" type="range" min="-100" max="100" value="0"></div>
+            <div class="row" style="margin-top:10px"><button class="btn" id="tWReset" type="button" style="padding:4px 12px">Reset warp</button></div>
+          </div>
+          <div class="pane" id="tp-music">
+            <p class="hint" style="margin-top:0">It plays under the 10 second video. On the office link you can pick a song from the shared NAS music library.</p>
+            <div class="ctl hide" id="vNasBox" style="margin-top:0;margin-bottom:10px"><label for="vNas">Music library on the NAS</label><select id="vNas"><option value="">Choose a song…</option></select></div>
+            <label class="drop" id="vDrop"><strong>Add music</strong><span>Drop a file or click to browse · MP3, WAV, M4A, OGG</span><input id="vFile" type="file" accept="audio/*"></label>
+            <div id="vCtl" class="hide">
+              <div class="fname" id="vInfo"></div>
+              <div class="ctl"><label for="vStart">Start at <output id="vStartO">0:00</output></label><input id="vStart" type="range" min="0" max="0" step="0.1" value="0"></div>
+              <div class="ctl"><label for="vVol">Volume <output id="vVolO">80%</output></label><input id="vVol" type="range" min="0" max="100" value="80"></div>
+              <label class="check"><input type="checkbox" id="vFade" checked> Fade in and out</label>
+              <div class="row" style="margin-top:12px"><button class="btn" id="vPrev" type="button">Play music with preview</button><button class="btn" id="vClear" type="button">Remove music</button><button class="btn hide" id="vToNas" type="button">Add to NAS library</button></div>
+            </div>
+            <p class="note">Facebook and Instagram can mute or block popular copyrighted songs. Use music you own or have a licence for.</p>
+          </div>
+          <div class="pane" id="tp-save">
+            <div id="cBoxT"></div>
+            <div class="sub2">When making videos</div>
+            <label class="check"><input type="checkbox" id="fastT" checked> Fast render <small style="color:var(--muted)" id="fastTN"></small></label>
+            <label class="check hide" id="nasWrapT"><input type="checkbox" id="nasT" checked> Also save every video to the office NAS <small style="color:var(--muted)">(Office / ShirtReels / videos)</small></label>
+            <label class="check"><input type="checkbox" id="autoZipT" checked> Download all as one ZIP when "Make all" finishes</label>
+          </div>
+        </div>
         <div class="exportbar">
           <div class="need" id="needT"></div>
           <div class="row">
@@ -1879,7 +1905,8 @@ $("zipI").onclick=function(){saveZip(results2.slice().reverse(),"image-reels-"+s
 
 /* ---------- video template: a real shirt video, your design in every frame (hands stay in front) ---------- */
 var TP={tr:null,vid:null,url:null,src:null,sctx:null,layer:null,hand:null,msk:null,ov:null,sub:null,list:[],cur:null,loaded:"",prevF:0,play:false,busy:false};
-var TC={sc:1,dx:0,dy:0,sh:.8,res:1080};
+var TC={sc:1,dx:0,dy:0,sh:.8,res:1080,rot:0,curve:0,wave:0,ph:0,pv:0,sk:0};
+function tHasWarp(){return !!(TC.curve||TC.wave||TC.ph||TC.pv||TC.sk)}
 var tdesigns=[],tcur=null,results3=[];
 function sayT(t){$("zipTS").textContent=t}
 function tStatus(t){$("tStatus").textContent=t||""}
@@ -1937,9 +1964,25 @@ function tplSeek(i){
   });
 }
 function tplDesignCanvas(d){
-  if(d._tc)return d._tc;
-  var sc=Math.min(1,1400/Math.max(d.w,d.h)),c=mk(Math.max(2,Math.round(d.w*sc)),Math.max(2,Math.round(d.h*sc))),x=c.getContext("2d");
-  x.imageSmoothingQuality="high";x.drawImage(d.img,0,0,c.width,c.height);d._tc=c;return c;
+  if(!d._tc){
+    var sc=Math.min(1,1400/Math.max(d.w,d.h)),c=mk(Math.max(2,Math.round(d.w*sc)),Math.max(2,Math.round(d.h*sc))),x=c.getContext("2d");
+    x.imageSmoothingQuality="high";x.drawImage(d.img,0,0,c.width,c.height);d._tc=c;
+  }
+  if(!tHasWarp())return d._tc;
+  var key=[TC.curve,TC.wave,TC.ph,TC.pv,TC.sk].join(",");if(d._twk===key&&d._twc)return d._twc;
+  var base=d._tc,sw=base.width,sh=base.height,CW=Math.round(sw*WEF),CH=Math.round(sh*WEF),px=(CW-sw)/2,py=(CH-sh)/2,i,j;
+  var T=mk(CW,CH),tc=T.getContext("2d");tc.imageSmoothingEnabled=true;tc.imageSmoothingQuality="high";
+  for(i=0;i<sw;i++){
+    var u=(i+.5)/sw,x2=2*u-1,sc2=Math.max(.15,1+TC.ph*.55*x2);
+    var yo=TC.curve*.32*sh*(x2*x2-1/3)+TC.wave*.09*sh*Math.sin(u*Math.PI*4);
+    tc.drawImage(base,i,0,1,sh,px+i,py+(sh-sh*sc2)/2+yo,1.15,sh*sc2);
+  }
+  var O=mk(CW,CH),oc=O.getContext("2d");oc.imageSmoothingEnabled=true;oc.imageSmoothingQuality="high";
+  for(j=0;j<CH;j++){
+    var v=Math.max(-1.6,Math.min(1.6,(j+.5-CH/2)/(sh/2))),sx=Math.max(.15,1+TC.pv*.55*v),xo=TC.sk*.4*sw*v;
+    oc.drawImage(T,0,j,CW,1,(CW-CW*sx)/2+xo,j,CW*sx,1.15);
+  }
+  d._twk=key;d._twc=O;return O;
 }
 function tplRect(d){
   var bb=TP.tr.bbox,cx=bb[0]+bb[2]/2+TC.dx*bb[2],cy=bb[1]+bb[3]/2+TC.dy*bb[3];
@@ -1969,9 +2012,9 @@ function tplDraw(ctx,W,H,f,d){
   ctx.drawImage(TP.src,0,0,tr.w,tr.h,0,0,W,H);
   if(!d)return;
   if(!TP.layer||TP.layer.width!==W||TP.layer.height!==H){TP.layer=mk(W,H);TP.hand=mk(W,H);TP.lx=TP.layer.getContext("2d");TP.hx=TP.hand.getContext("2d");TP.msk=mk(L.skin[2],L.skin[3]);TP.mx=TP.msk.getContext("2d");TP.ov=mk(L.shade[2],L.shade[3]);TP.ox=TP.ov.getContext("2d")}
-  var lx=TP.lx,img=tplDesignCanvas(d),r=tplRect(d),N=8,i,j,P=[];
+  var lx=TP.lx,img=tplDesignCanvas(d),r=tplRect(d),N=8,i,j,P=[],ef=tHasWarp()?WEF:1,rw=r[2]*ef,rh=r[3]*ef,rcx=r[0]+r[2]/2,rcy=r[1]+r[3]/2,ca=Math.cos(TC.rot*Math.PI/180),sa=Math.sin(TC.rot*Math.PI/180);
   lx.setTransform(1,0,0,1,0,0);lx.globalCompositeOperation="source-over";lx.clearRect(0,0,W,H);
-  for(j=0;j<=N;j++){P[j]=[];for(i=0;i<=N;i++){var u=i/N,v=j/N;P[j][i]={s:[u*img.width,v*img.height],d:tplProj(Hm,r[0]+u*r[2],r[1]+v*r[3],s)}}}
+  for(j=0;j<=N;j++){P[j]=[];for(i=0;i<=N;i++){var u=i/N,v=j/N,lx0=(u-.5)*rw,ly0=(v-.5)*rh;P[j][i]={s:[u*img.width,v*img.height],d:tplProj(Hm,rcx+lx0*ca-ly0*sa,rcy+lx0*sa+ly0*ca,s)}}}
   for(j=0;j<N;j++)for(i=0;i<N;i++){
     var a=P[j][i],b=P[j][i+1],c=P[j+1][i],e=P[j+1][i+1];
     tplTri(lx,img,a.s,b.s,c.s,a.d,b.d,c.d);tplTri(lx,img,b.s,e.s,c.s,b.d,e.d,c.d);
@@ -2033,6 +2076,11 @@ $("tDx").oninput=function(){TC.dx=this.value/100;$("tDxO").textContent=this.valu
 $("tDy").oninput=function(){TC.dy=this.value/100;$("tDyO").textContent=this.value;tUpdate()};
 $("tSh").oninput=function(){TC.sh=this.value/100;$("tShO").textContent=this.value+"%";tUpdate()};
 $("tRes").onchange=function(){TC.res=+this.value};
+$("tRot").oninput=function(){TC.rot=+this.value;$("tRotO").textContent=this.value+"°";tUpdate()};
+[["tCurve","curve"],["tWave","wave"],["tPH","ph"],["tPV","pv"],["tSk","sk"]].forEach(function(a){
+  $(a[0]).oninput=function(){TC[a[1]]=this.value/100;$(a[0]+"O").textContent=this.value;tUpdate()};
+});
+$("tWReset").onclick=function(){["tCurve","tWave","tPH","tPV","tSk"].forEach(function(k){var e=$(k);e.value=0;e.dispatchEvent(new Event("input",{bubbles:true}))})};
 /* design list */
 function tRender(){
   var el=$("tList");el.textContent="";$("tCnt").textContent=tdesigns.length;
@@ -2070,7 +2118,7 @@ $("tSample").onclick=function(){
 $("fastT").onchange=function(){FAST=this.checked;["fastS","fastI","fastT"].forEach(function(o){$(o).checked=FAST})};
 function tLock(on){
   exporting=on;$("tCancel").classList.toggle("hide",!on);$("tBar").style.display=on?"block":"none";
-  ["tSc","tDx","tDy","tSh","tRes","tTpl","tFile","vFile","tSample"].forEach(function(i){$(i).disabled=on});
+  ["tSc","tRot","tDx","tDy","tSh","tRes","tTpl","tFile","vFile","tSample","tCurve","tWave","tPH","tPV","tSk","tWReset"].forEach(function(i){$(i).disabled=on});
   if(on){TP.play=false;$("tPlay").textContent="Play"}
   tRender();
 }
