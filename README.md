@@ -8,3 +8,8 @@ Mockup থেকে ১০ সেকেন্ডের 9:16 reel ভিডিও
 - `README-bangla.md` — NAS-এ বসানো ও আপডেট করার বিস্তারিত নিয়ম।
 
 আপডেট: নতুন `site/index.html` দিয়ে NAS-এর `site/index.html` বদলে দিন, তারপর ব্রাউজারে রিফ্রেশ।
+
+
+## Video template tab
+
+The **Video template** tab puts your PNG designs onto a real shirt video (hands, zoom and camera moves included) and makes one 10 second reel per design, as a ZIP. The shipped template lives in `site/templates/`. To add more, see `tools/video_template/README.md`.

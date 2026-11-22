@@ -177,6 +177,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
     <div class="tabs" role="tablist" aria-label="Mode">
       <button class="tab on" id="tabShirt" type="button" role="tab" aria-selected="true">Shirt mockups</button>
       <button class="tab" id="tabImage" type="button" role="tab" aria-selected="false">Single image + music</button>
+      <button class="tab" id="tabTpl" type="button" role="tab" aria-selected="false">Video template</button>
     </div>
     <ol class="steps2" id="steps" aria-label="Steps"></ol>
   </div>
@@ -412,6 +413,67 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       <p class="hint">Saved as MP4 when your browser supports it, otherwise WebM. Save every video at once as a ZIP.</p>
       <div class="row" style="margin-bottom:6px"><button class="btn" id="backI" type="button">↑ Back to editor</button><button class="btn primary" id="zipI" type="button">Download all as ZIP</button><span class="status" id="zipIS" style="margin:0"></span></div>
       <div class="vids" id="iVids"></div>
+    </section>
+  </div>
+  <div id="modeTpl" class="hide">
+    <main class="work">
+      <aside class="panel files" aria-labelledby="h-tpl">
+        <h2 id="h-tpl">1. Video template</h2>
+        <p class="hint">A real video of a plain shirt. Your design is placed on it in every frame, and the hands stay in front.</p>
+        <div class="ctl" style="margin-top:0"><label for="tTpl">Template</label><select id="tTpl"><option value="">Loading…</option></select></div>
+        <label class="drop" id="tFilesDrop" style="margin-bottom:6px"><strong>Load template files</strong><span>template.mp4 and track.json (use this if the list above is empty)</span><input id="tFiles" type="file" accept="video/mp4,.mp4,.json,application/json" multiple></label>
+        <div class="fname" id="tTplInfo" style="margin-top:6px"></div>
+        <h2 id="h-tdes" style="margin-top:22px">2. PNG designs <span class="count" id="tCnt">0</span></h2>
+        <p class="hint">Transparent PNGs. Each design becomes its own video.</p>
+        <label class="drop" id="tDrop"><strong>Add transparent PNGs</strong><span>Drop files or click to browse</span><input id="tFile" type="file" accept="image/png,image/webp" multiple></label>
+        <div class="row" style="margin-top:8px"><button class="btn" id="tSample" type="button">Use a sample design</button></div>
+        <div class="thumbs" id="tList"></div>
+      </aside>
+      <section class="panel sticky" aria-labelledby="h-tpv">
+        <h2 id="h-tpv">Live preview</h2>
+        <p class="hint">Click a design on the left to preview it.</p>
+        <div class="prevbox big"><canvas id="tPrev" width="360" height="640" aria-label="Video preview"></canvas>
+          <div class="timeline"><button class="btn" id="tPlay" type="button">Play</button><input id="tScrub" type="range" min="0" max="299" value="0" aria-label="Timeline"><span id="tTime">0.0 / 10.0s</span></div>
+        </div>
+      </section>
+      <section class="panel ctlcol sticky" aria-label="Video settings">
+        <div class="ctl" style="margin-top:0"><label for="tSc">Print size <output id="tScO">100%</output></label><input id="tSc" type="range" min="40" max="170" value="100"></div>
+        <div class="ctl"><label for="tDx">Move left / right <output id="tDxO">0</output></label><input id="tDx" type="range" min="-50" max="50" value="0"></div>
+        <div class="ctl"><label for="tDy">Move up / down <output id="tDyO">0</output></label><input id="tDy" type="range" min="-50" max="50" value="0"></div>
+        <div class="ctl"><label for="tSh">Fabric light and shade <output id="tShO">80%</output></label><input id="tSh" type="range" min="0" max="100" value="80"></div>
+        <div class="ctl"><label for="tRes">Video size</label><select id="tRes"><option value="720">720 × 1280 (fast)</option><option value="1080" selected>1080 × 1920 (full HD)</option></select></div>
+        <div class="sub2">Music</div>
+        <div class="ctl hide" id="vNasBox" style="margin-top:0;margin-bottom:10px"><label for="vNas">Music library on the NAS</label><select id="vNas"><option value="">Choose a song…</option></select></div>
+        <label class="drop" id="vDrop"><strong>Add music</strong><span>Drop a file or click to browse · MP3, WAV, M4A, OGG</span><input id="vFile" type="file" accept="audio/*"></label>
+        <div id="vCtl" class="hide">
+          <div class="fname" id="vInfo"></div>
+          <div class="ctl"><label for="vStart">Start at <output id="vStartO">0:00</output></label><input id="vStart" type="range" min="0" max="0" step="0.1" value="0"></div>
+          <div class="ctl"><label for="vVol">Volume <output id="vVolO">80%</output></label><input id="vVol" type="range" min="0" max="100" value="80"></div>
+          <label class="check"><input type="checkbox" id="vFade" checked> Fade in and out</label>
+          <div class="row" style="margin-top:12px"><button class="btn" id="vPrev" type="button">Play music with preview</button><button class="btn" id="vClear" type="button">Remove music</button><button class="btn hide" id="vToNas" type="button">Add to NAS library</button></div>
+        </div>
+        <div id="cBoxT" style="margin-top:14px"></div>
+        <div class="sub2">When making videos</div>
+        <label class="check"><input type="checkbox" id="fastT" checked> Fast render <small style="color:var(--muted)" id="fastTN"></small></label>
+        <label class="check hide" id="nasWrapT"><input type="checkbox" id="nasT" checked> Also save every video to the office NAS <small style="color:var(--muted)">(Office / ShirtReels / videos)</small></label>
+        <label class="check"><input type="checkbox" id="autoZipT" checked> Download all as one ZIP when "Make all" finishes</label>
+        <div class="exportbar">
+          <div class="need" id="needT"></div>
+          <div class="row">
+            <button class="btn primary" id="tOne" type="button" disabled>Make this video</button>
+            <button class="btn" id="tAll" type="button" disabled>Make all videos</button>
+            <button class="btn hide" id="tCancel" type="button">Cancel</button>
+          </div>
+          <div class="bar" id="tBar"><i id="tBarI"></i></div>
+          <div class="status" id="tStatus" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+    <section class="panel" id="tResults" aria-labelledby="h-tres" style="display:none">
+      <h2 id="h-tres">Finished videos <span class="count" id="tCntR">0</span></h2>
+      <p class="hint">Saved as MP4 when your browser supports it. Save every video at once as a ZIP.</p>
+      <div class="row" style="margin-bottom:6px"><button class="btn" id="backT" type="button">↑ Back to editor</button><button class="btn primary" id="zipT" type="button">Download all as ZIP</button><span class="status" id="zipTS" style="margin:0"></span></div>
+      <div class="vids" id="tVids"></div>
     </section>
   </div>
 </div>
@@ -926,12 +988,16 @@ function setMode(m){
   mode=m;
   $("modeShirt").classList.toggle("hide",m!=="shirt");
   $("modeImage").classList.toggle("hide",m!=="image");
-  $("tabShirt").classList.toggle("on",m==="shirt");$("tabImage").classList.toggle("on",m==="image");
-  $("tabShirt").setAttribute("aria-selected",String(m==="shirt"));$("tabImage").setAttribute("aria-selected",String(m==="image"));
-  stopMusic();if(m==="image")drawFocus();updateSteps();
+  $("modeTpl").classList.toggle("hide",m!=="tpl");
+  [["tabShirt","shirt"],["tabImage","image"],["tabTpl","tpl"]].forEach(function(x){$(x[0]).classList.toggle("on",m===x[1]);$(x[0]).setAttribute("aria-selected",String(m===x[1]))});
+  stopMusic();if(m==="image")drawFocus();
+  if(m==="tpl"){if(!TP.vid&&TP.list.length&&!TP.loading){TP.loading=true;tplLoadId(TP.list[0].id).then(function(){TP.loading=false;$("tTpl").value=TP.loaded;tRender()})}tRender()}
+  else{TP.play=false;$("tPlay").textContent="Play"}
+  updateSteps();
 }
 $("tabShirt").onclick=function(){setMode("shirt")};
 $("tabImage").onclick=function(){setMode("image")};
+$("tabTpl").onclick=function(){setMode("tpl")};
 
 /* ---------- single image + music ---------- */
 var I=null,M={motion:"studio",zoom:1.5,fit:"blur",bg:"#111111",res:1080,hsize:1,hstyle:"point1",hact:"smooth",ms:1,mx:0,my:0,asp:"916"};
@@ -1031,7 +1097,7 @@ function drawImgScene(ctx,W,H,im,t){
 }
 
 /* music (shared by both tabs) */
-var MP=["a","s"];
+var MP=["a","s","v"];
 function curT(){return mode==="shirt"?T:T2}
 function curPlay(){return mode==="shirt"?playing:play2}
 async function setAudio(file){
@@ -1053,7 +1119,7 @@ async function setAudio(file){
     sayMusic("");
   }catch(e){sayMusic("Could not read this audio file. Try an MP3 or WAV file.")}
 }
-function sayMusic(m){if(mode==="shirt")setStatus(m);else istatus(m)}
+function sayMusic(m){if(mode==="shirt")setStatus(m);else if(mode==="tpl")tStatus(m);else istatus(m)}
 function restartMusic(){
   if(!musicOn||!AUD)return;
   try{audEl.volume=AU.vol;audEl.currentTime=Math.min(AU.start+curT(),Math.max(0,AUD.dur-.05));var pr=audEl.play();if(pr&&pr.catch)pr.catch(function(){})}catch(e){}
@@ -1156,6 +1222,7 @@ async function renderFast(drawFn,W,H,audio,onProg){
   for(i2=0;i2<N;i2++){
     if(cancelFlag){try{venc.close()}catch(e){}return null}
     if(err)throw err;
+    if(drawFn.prep)await drawFn.prep(i2/FPS);
     drawFn(ctx,W,H,i2/FPS);
     var vf=new VideoFrame(cv,{timestamp:Math.round(i2*1e6/FPS),duration:Math.round(1e6/FPS)});
     venc.encode(vf,{keyFrame:i2%60===0});vf.close();
@@ -1200,10 +1267,10 @@ function fastNotes(){
   else if(!window.isSecureContext)msg="(needs the secure link <a href=\"https://"+location.hostname+":8443\">https://"+location.hostname+":8443</a>. Using normal 10 s recording for now)";
   else if(FAST_BAD)msg="(failed here, using normal 10 s recording)";
   else msg="(faster, keeps working in a background tab)";
-  ["fastSN","fastIN"].forEach(function(id){var e=$(id);if(e)e.innerHTML=msg});
-  ["fastS","fastI"].forEach(function(id){var e=$(id);if(e){e.disabled=!fastSupported();if(!fastSupported())e.checked=false}});
+  ["fastSN","fastIN","fastTN"].forEach(function(id){var e=$(id);if(e)e.innerHTML=msg});
+  ["fastS","fastI","fastT"].forEach(function(id){var e=$(id);if(e){e.disabled=!fastSupported();if(!fastSupported())e.checked=false}});
 }
-["fastS","fastI"].forEach(function(id){$(id).onchange=function(){FAST=this.checked;["fastS","fastI"].forEach(function(o){$(o).checked=FAST})}});
+["fastS","fastI"].forEach(function(id){$(id).onchange=function(){FAST=this.checked;["fastS","fastI","fastT"].forEach(function(o){$(o).checked=FAST})}});
 fastNotes();
 window.__T={get b(){return curB},get d(){return curD},drawScene:drawScene,renderFast:renderFast,recordAny:recordAny,buildZip:buildZip,captionsFile:captionsFile,get results(){return results},get results2(){return results2}};
 
@@ -1684,7 +1751,7 @@ async function nasPresetsSync(){
   try{
     var r=await fetch(nasUrl("ping"),{cache:"no-store"});
     if(!r.ok||(await r.text()).trim()!=="ok")return;
-    NAS.ok=true;["nasWrapS","nasWrapI"].forEach(function(id){$(id).classList.remove("hide")});
+    NAS.ok=true;["nasWrapS","nasWrapI","nasWrapT"].forEach(function(id){$(id).classList.remove("hide")});
     nasMusicList();nasPresetsSync();
     var tn;MP.forEach(function(p){tn=$(p+"ToNas");if(tn&&AUD&&AUD.file&&!AUD.file._fromNas)tn.classList.remove("hide")});
   }catch(e){}
@@ -1736,7 +1803,9 @@ makeChips("asp","fmtS",FMT);makeChips("iAsp","fmtI",FMT);
 setTimeout(updateSteps,0);
 function updateSteps(){
   var ol=$("steps"),img=!$("modeImage").classList.contains("hide"),st,imgs_=typeof imgs==="undefined"||!imgs?[]:imgs,res2=typeof results2==="undefined"||!results2?[]:results2;
-  if(img){st=[["Add images",imgs_.length>0],["Pick a style",styleTouched],["Make video",res2.length>0]]}
+  var tpl=typeof mode!=="undefined"&&mode==="tpl";
+  if(tpl){st=[["Pick template",!!(typeof TP!=="undefined"&&TP.vid)],["Add designs",typeof tdesigns!=="undefined"&&tdesigns.length>0],["Make videos",typeof results3!=="undefined"&&results3.length>0]]}
+  else if(img){st=[["Add images",imgs_.length>0],["Pick a style",styleTouched],["Make video",res2.length>0]]}
   else{st=[["Add shirt + design",blanks.length>0&&designs.length>0],["Place the print",placedTouched],["Pick a style",styleTouched],["Make video",results.length>0]]}
   var firstOpen=-1;st.forEach(function(x,i){if(!x[1]&&firstOpen<0)firstOpen=i});
   ol.innerHTML="";
@@ -1817,6 +1886,242 @@ async function saveZip(list,zipName,say,btn){
 }
 $("zipS").onclick=function(){saveZip(results.slice().reverse(),"shirt-reels-"+stamp()+".zip",sayS,this)};
 $("zipI").onclick=function(){saveZip(results2.slice().reverse(),"image-reels-"+stamp()+".zip",sayI,this)};
+
+/* ---------- video template: a real shirt video, your design in every frame (hands stay in front) ---------- */
+var TP={tr:null,vid:null,url:null,src:null,sctx:null,layer:null,hand:null,msk:null,ov:null,sub:null,list:[],cur:null,loaded:"",prevF:0,play:false,busy:false};
+var TC={sc:1,dx:0,dy:0,sh:.8,res:1080};
+var tdesigns=[],tcur=null,results3=[];
+function sayT(t){$("zipTS").textContent=t}
+function tStatus(t){$("tStatus").textContent=t||""}
+function mk(w,h,rd){var c=document.createElement("canvas");c.width=w;c.height=h;return c}
+async function tplLoadFiles(tr,blob,label){
+  if(TP.url)URL.revokeObjectURL(TP.url);
+  TP.tr=tr;TP.url=URL.createObjectURL(blob);
+  var v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";v.src=TP.url;
+  await new Promise(function(res,rej){v.onloadeddata=res;v.onerror=function(){rej(new Error("The template video could not be read."))}});
+  TP.vid=v;TP.src=mk(v.videoWidth,v.videoHeight);TP.sctx=TP.src.getContext("2d",{willReadFrequently:true});
+  TP.layer=null;TP.hand=null;
+  $("tScrub").max=tr.n-1;$("tTplInfo").textContent=label+" · "+tr.n+" frames · "+(tr.n/tr.fps).toFixed(1)+" s";
+  await tplSeek(0);tUpdate();
+}
+async function tplLoadId(id){
+  if(!id)return;
+  tStatus("Loading template…");
+  try{
+    var base="templates/"+id+"/";
+    var tr=await (await fetch(base+"track.json",{cache:"no-cache"})).json();
+    var vb=await (await fetch(base+"template.mp4")).blob();
+    await tplLoadFiles(tr,vb,(TP.list.filter(function(x){return x.id===id})[0]||{name:id}).name);
+    TP.loaded=id;tStatus("");
+  }catch(e){tStatus("Could not load that template. "+(e&&e.message?e.message:""))}
+}
+async function tplList(){
+  var sel=$("tTpl");sel.textContent="";
+  try{
+    if(!/^https?:$/.test(location.protocol))throw 0;
+    var r=await fetch("templates/list.json",{cache:"no-cache"});if(!r.ok)throw 0;
+    TP.list=await r.json();
+    if(!TP.list.length)throw 0;
+    TP.list.forEach(function(x){var o=document.createElement("option");o.value=x.id;o.textContent=x.name;sel.appendChild(o)});
+    $("tFilesDrop").classList.add("hide");
+  }catch(e){
+    TP.list=[];var o=document.createElement("option");o.value="";o.textContent="No templates on the server";sel.appendChild(o);
+    $("tFilesDrop").classList.remove("hide");
+  }
+}
+$("tTpl").onchange=function(){tplLoadId(this.value)};
+$("tFiles").onchange=async function(){
+  var fs=Array.prototype.slice.call(this.files);this.value="";
+  var j=fs.filter(function(f){return /\.json$/i.test(f.name)})[0],m=fs.filter(function(f){return /\.mp4$/i.test(f.name)})[0];
+  if(!j||!m){tStatus("Choose both files together: template.mp4 and track.json.");return}
+  try{var tr=JSON.parse(await j.text());await tplLoadFiles(tr,m,m.name);tStatus("")}catch(e){tStatus("Could not read the template files.")}
+};
+function tplSeek(i){
+  return new Promise(function(res){
+    var v=TP.vid,done=false;
+    function fin(){if(done)return;done=true;v.removeEventListener("seeked",fin);try{TP.sctx.drawImage(v,0,0)}catch(e){}res()}
+    v.addEventListener("seeked",fin);
+    var t=(i+.5)/TP.tr.fps;
+    if(Math.abs(v.currentTime-t)<1e-4){fin();return}
+    v.currentTime=t;setTimeout(fin,2500);
+  });
+}
+function tplDesignCanvas(d){
+  if(d._tc)return d._tc;
+  var sc=Math.min(1,1400/Math.max(d.w,d.h)),c=mk(Math.max(2,Math.round(d.w*sc)),Math.max(2,Math.round(d.h*sc))),x=c.getContext("2d");
+  x.imageSmoothingQuality="high";x.drawImage(d.img,0,0,c.width,c.height);d._tc=c;return c;
+}
+function tplRect(d){
+  var bb=TP.tr.bbox,cx=bb[0]+bb[2]/2+TC.dx*bb[2],cy=bb[1]+bb[3]/2+TC.dy*bb[3];
+  var k=Math.min(bb[2]/d.w,bb[3]*1.1/d.h)*TC.sc,w=d.w*k,h=d.h*k;
+  return [cx-w/2,cy-h/2,w,h];
+}
+function tplProj(Hm,x,y,s){var X=Hm[0]*x+Hm[1]*y+Hm[2],Y=Hm[3]*x+Hm[4]*y+Hm[5],Z=Hm[6]*x+Hm[7]*y+Hm[8];return [X/Z*s,Y/Z*s]}
+function tplTri(ctx,img,s0,s1,s2,d0,d1,d2){
+  var det=(s1[0]-s0[0])*(s2[1]-s0[1])-(s2[0]-s0[0])*(s1[1]-s0[1]);if(Math.abs(det)<1e-9)return;
+  var a=((d1[0]-d0[0])*(s2[1]-s0[1])-(d2[0]-d0[0])*(s1[1]-s0[1]))/det,c=((d2[0]-d0[0])*(s1[0]-s0[0])-(d1[0]-d0[0])*(s2[0]-s0[0]))/det;
+  var b=((d1[1]-d0[1])*(s2[1]-s0[1])-(d2[1]-d0[1])*(s1[1]-s0[1]))/det,dd=((d2[1]-d0[1])*(s1[0]-s0[0])-(d1[1]-d0[1])*(s2[0]-s0[0]))/det;
+  var e=d0[0]-a*s0[0]-c*s0[1],f=d0[1]-b*s0[0]-dd*s0[1];
+  var mx=(d0[0]+d1[0]+d2[0])/3,my=(d0[1]+d1[1]+d2[1])/3,g=.7;
+  function ex(p){var vx=p[0]-mx,vy=p[1]-my,l=Math.hypot(vx,vy)||1;return [p[0]+vx/l*g,p[1]+vy/l*g]}
+  var p0=ex(d0),p1=ex(d1),p2=ex(d2);
+  ctx.save();ctx.beginPath();ctx.moveTo(p0[0],p0[1]);ctx.lineTo(p1[0],p1[1]);ctx.lineTo(p2[0],p2[1]);ctx.closePath();ctx.clip();
+  ctx.setTransform(a,b,c,dd,e,f);
+  var sx=Math.min(s0[0],s1[0],s2[0])-1,sy=Math.min(s0[1],s1[1],s2[1])-1,sw=Math.max(s0[0],s1[0],s2[0])-sx+1,sh=Math.max(s0[1],s1[1],s2[1])-sy+1;
+  sx=Math.max(0,sx);sy=Math.max(0,sy);sw=Math.min(img.width-sx,sw);sh=Math.min(img.height-sy,sh);
+  if(sw>0&&sh>0)ctx.drawImage(img,sx,sy,sw,sh,sx,sy,sw,sh);
+  ctx.restore();
+}
+function tplDraw(ctx,W,H,f,d){
+  var tr=TP.tr,s=W/tr.w,Hm=tr.H[Math.max(0,Math.min(tr.n-1,f))],L=tr.layout;
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation="source-over";ctx.globalAlpha=1;
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+  ctx.drawImage(TP.src,0,0,tr.w,tr.h,0,0,W,H);
+  if(!d)return;
+  if(!TP.layer||TP.layer.width!==W||TP.layer.height!==H){TP.layer=mk(W,H);TP.hand=mk(W,H);TP.lx=TP.layer.getContext("2d");TP.hx=TP.hand.getContext("2d");TP.msk=mk(L.skin[2],L.skin[3]);TP.mx=TP.msk.getContext("2d");TP.ov=mk(L.shade[2],L.shade[3]);TP.ox=TP.ov.getContext("2d")}
+  var lx=TP.lx,img=tplDesignCanvas(d),r=tplRect(d),N=8,i,j,P=[];
+  lx.setTransform(1,0,0,1,0,0);lx.globalCompositeOperation="source-over";lx.clearRect(0,0,W,H);
+  for(j=0;j<=N;j++){P[j]=[];for(i=0;i<=N;i++){var u=i/N,v=j/N;P[j][i]={s:[u*img.width,v*img.height],d:tplProj(Hm,r[0]+u*r[2],r[1]+v*r[3],s)}}}
+  for(j=0;j<N;j++)for(i=0;i<N;i++){
+    var a=P[j][i],b=P[j][i+1],c=P[j+1][i],e=P[j+1][i+1];
+    tplTri(lx,img,a.s,b.s,c.s,a.d,b.d,c.d);tplTri(lx,img,b.s,e.s,c.s,b.d,e.d,c.d);
+  }
+  // fabric light and shade taken from the original print
+  if(TC.sh>0){
+    var sd=TP.sctx.getImageData(L.shade[0],L.shade[1],L.shade[2],L.shade[3]),o=TP.ox.createImageData(L.shade[2],L.shade[3]),q,sc=TC.sh*1.9;
+    for(q=0;q<sd.data.length;q+=4){var rel=Math.min(1,sd.data[q]/232);o.data[q+3]=Math.min(235,(1-rel)*255*sc)}
+    TP.ox.putImageData(o,0,0);
+    lx.globalCompositeOperation="source-atop";lx.imageSmoothingEnabled=true;lx.drawImage(TP.ov,0,0,L.shade[2],L.shade[3],0,0,W,H);lx.globalCompositeOperation="source-over";
+  }
+  if("filter" in ctx&&W>=700)ctx.filter="blur(.45px)";
+  ctx.globalAlpha=.97;ctx.drawImage(TP.layer,0,0);ctx.globalAlpha=1;ctx.filter="none";
+  // hands in front of the print
+  var kd=TP.sctx.getImageData(L.skin[0],L.skin[1],L.skin[2],L.skin[3]),mo=TP.mx.createImageData(L.skin[2],L.skin[3]),any=false;
+  for(q=0;q<kd.data.length;q+=4){var m=kd.data[q];if(m>24)any=true;mo.data[q+3]=m}
+  if(any){
+    TP.mx.putImageData(mo,0,0);var hx=TP.hx;
+    hx.setTransform(1,0,0,1,0,0);hx.globalCompositeOperation="source-over";hx.clearRect(0,0,W,H);hx.drawImage(TP.src,0,0,tr.w,tr.h,0,0,W,H);
+    hx.globalCompositeOperation="destination-in";hx.imageSmoothingEnabled=true;hx.drawImage(TP.msk,0,0,L.skin[2],L.skin[3],0,0,W,H);hx.globalCompositeOperation="source-over";
+    ctx.drawImage(TP.hand,0,0);
+  }
+}
+function tFrameOf(t){return Math.max(0,Math.min(TP.tr.n-1,Math.floor(t*TP.tr.fps+1e-6)))}
+function tDrawFn(d){
+  var fn=function(ctx,w,h,t){
+    var v=TP.vid;
+    if(!lastFast){ // normal recording: let the template play in real time
+      if(t<.05){try{v.currentTime=0;var pr=v.play();if(pr&&pr.catch)pr.catch(function(){})}catch(e){}}
+      try{TP.sctx.drawImage(v,0,0)}catch(e){}
+      tplDraw(ctx,w,h,Math.min(TP.tr.n-1,Math.round(v.currentTime*TP.tr.fps)),d);
+    }else tplDraw(ctx,w,h,tFrameOf(t),d);
+  };
+  fn.prep=function(t){return tplSeek(tFrameOf(t))};
+  return fn;
+}
+/* preview */
+var tPrevCv=$("tPrev"),tPrevCx=tPrevCv.getContext("2d");
+async function tUpdate(){
+  if(TP.busy||!TP.vid||exporting)return;TP.busy=true;
+  try{await tplSeek(TP.prevF);tplDraw(tPrevCx,360,640,TP.prevF,tcur)}finally{TP.busy=false}
+  $("tTime").textContent=(TP.prevF/TP.tr.fps).toFixed(1)+" / "+(TP.tr.n/TP.tr.fps).toFixed(1)+"s";
+  $("tScrub").value=TP.prevF;
+}
+var tLoop=0;
+async function tPlayLoop(){
+  if(!TP.play||!TP.vid||exporting)return;
+  var t0=performance.now(),f0=TP.prevF;
+  while(TP.play&&!exporting){
+    TP.prevF=(f0+Math.floor((performance.now()-t0)/1000*TP.tr.fps))%TP.tr.n;
+    await tUpdate();await new Promise(function(r){requestAnimationFrame(r)});
+  }
+}
+$("tPlay").onclick=function(){TP.play=!TP.play;this.textContent=TP.play?"Pause":"Play";if(TP.play)tPlayLoop()};
+$("tScrub").oninput=function(){TP.play=false;$("tPlay").textContent="Play";TP.prevF=+this.value;tUpdate()};
+function tSetting(id,out,fn){$(id).oninput=function(){fn(+this.value);$(out).textContent=this.value.replace(/^(\d+)$/,"$1");tUpdate()}}
+$("tSc").oninput=function(){TC.sc=this.value/100;$("tScO").textContent=this.value+"%";tUpdate()};
+$("tDx").oninput=function(){TC.dx=this.value/100;$("tDxO").textContent=this.value;tUpdate()};
+$("tDy").oninput=function(){TC.dy=this.value/100;$("tDyO").textContent=this.value;tUpdate()};
+$("tSh").oninput=function(){TC.sh=this.value/100;$("tShO").textContent=this.value+"%";tUpdate()};
+$("tRes").onchange=function(){TC.res=+this.value};
+/* design list */
+function tRender(){
+  var el=$("tList");el.textContent="";$("tCnt").textContent=tdesigns.length;
+  tdesigns.forEach(function(it){
+    var t=document.createElement("div");t.className="thumb chk"+(it===tcur?" sel":"");t.tabIndex=0;t.setAttribute("role","button");t.title=it.name;
+    var im=document.createElement("img");im.src=it.thumb;im.alt="";t.appendChild(im);
+    var x=document.createElement("button");x.className="x";x.type="button";x.textContent="×";x.setAttribute("aria-label","Remove "+it.name);
+    x.onclick=function(e){e.stopPropagation();tdesigns.splice(tdesigns.indexOf(it),1);if(tcur===it)tcur=tdesigns[0]||null;tRender();tUpdate()};
+    t.appendChild(x);
+    t.onclick=function(){tcur=it;tRender();tUpdate()};
+    el.appendChild(t);
+  });
+  $("tOne").disabled=!(tcur&&TP.vid)||exporting;$("tAll").disabled=!(tdesigns.length&&TP.vid)||exporting;
+  $("needT").textContent=!TP.vid?"Pick a template first (left side).":!tdesigns.length?"Add your transparent PNG designs (left side).":"";
+  $("tDrop").classList.toggle("need",!!TP.vid&&!tdesigns.length);
+  updateSteps();
+}
+async function tAddFiles(files){
+  for(var i=0;i<files.length;i++){
+    var f=files[i];if(!/^image\//.test(f.type))continue;
+    try{var o=await loadFile(f);tdesigns.push({id:++uid,name:f.name.replace(/\.[^.]+$/,""),img:o.img,w:o.w,h:o.h,thumb:o.url});if(!tcur)tcur=tdesigns[tdesigns.length-1]}
+    catch(e){tStatus("Could not read "+f.name+". Try a PNG or WebP file.")}
+  }
+  tRender();tUpdate();
+}
+wire2($("tDrop"),$("tFile"),tAddFiles);wire2($("vDrop"),$("vFile"),function(fs){setAudio(fs[0])});
+$("tSample").onclick=function(){
+  var c=mk(900,640),x=c.getContext("2d");x.fillStyle="#fff";x.textAlign="center";
+  x.font="800 150px 'Bricolage Grotesque',Arial,sans-serif";x.fillText("GOOD",450,210);
+  x.font="800 110px 'Bricolage Grotesque',Arial,sans-serif";x.fillStyle="#ff9d2e";x.fillText("VIBES",450,350);x.fillStyle="#fff";x.fillText("ONLY",450,470);
+  x.fillRect(200,520,500,12);
+  var im=new Image();im.onload=function(){tdesigns.push({id:++uid,name:"sample-good-vibes",img:im,w:900,h:640,thumb:c.toDataURL("image/png")});tcur=tdesigns[tdesigns.length-1];tRender();tUpdate()};im.src=c.toDataURL("image/png");
+};
+/* make videos */
+$("fastT").onchange=function(){FAST=this.checked;["fastS","fastI","fastT"].forEach(function(o){$(o).checked=FAST})};
+function tLock(on){
+  exporting=on;$("tCancel").classList.toggle("hide",!on);$("tBar").style.display=on?"block":"none";
+  ["tSc","tDx","tDy","tSh","tRes","tTpl","tFile","vFile","tSample"].forEach(function(i){$(i).disabled=on});
+  if(on){TP.play=false;$("tPlay").textContent="Play"}
+  tRender();
+}
+async function tRunQueue(list){
+  if(exporting||!TP.vid)return;
+  var Ctx=window.AudioContext||window.webkitAudioContext,ac=null;
+  if(AUD&&Ctx){try{ac=new Ctx();ac.resume()}catch(e){ac=null}}
+  stopMusic();cancelFlag=false;tLock(true);var done=0,failed=false,withAudio=!!(AUD&&ac);
+  var W=TC.res,H=Math.round(TC.res*16/9/2)*2;
+  for(var i=0;i<list.length;i++){
+    if(cancelFlag)break;
+    var d=list[i],label=(i+1)+" of "+list.length;
+    try{
+      var out=await recordAny(tDrawFn(d),W,H,withAudio?{ac:ac,buffer:AUD.buffer,offset:AU.start,vol:AU.vol,fade:AU.fade}:null,
+        function(f){$("tBarI").style.width=Math.round(f*100)+"%";tStatus((lastFast?"Rendering ":"Recording ")+label+" · "+Math.round(f*100)+"%")});
+      try{TP.vid.pause()}catch(e){}
+      if(out){out.audio=withAudio;
+        var r={name:d.name+"__"+(TP.loaded||"template")+"__reel"+(out.audio?"-music":"")+"."+out.ext,url:URL.createObjectURL(out.blob),blob:out.blob,ext:out.ext,audio:!!out.audio,design:d.name,shirt:""};
+        results3.unshift(r);tRenderResults();done++;
+        if(NAS.ok&&$("nasT").checked)nasP.push(nasSaveVideo(r,sayT));
+      }
+    }catch(err){tStatus(err.message||"Recording failed.");failed=true;break}
+  }
+  if(ac){try{ac.close()}catch(e){}}
+  var wasCancelled=cancelFlag;tLock(false);$("tBarI").style.width="0";
+  if(cancelFlag)tStatus("Cancelled. "+done+" finished.");else if(done&&!failed){await Promise.all(nasP.splice(0));tStatus(done+" video"+(done>1?"s":"")+" ready below."+nasNote(results3.slice(0,done)));showResults("tResults")}
+  cancelFlag=false;
+  if(list.length>1&&done>0&&!wasCancelled&&!failed&&$("autoZipT").checked)saveZip(results3.slice(0,done).reverse(),"template-reels-"+stamp()+".zip",sayT,$("zipT"));
+  tUpdate();
+}
+function tRenderResults(){
+  var box=$("tVids");box.textContent="";$("tResults").style.display=results3.length?"block":"none";$("tCntR").textContent=results3.length;$("zipT").textContent="Download all ("+results3.length+") as ZIP";
+  results3.forEach(function(r){box.appendChild(cardFor(r))});updateSteps();
+}
+$("tOne").onclick=function(){if(tcur)tRunQueue([tcur])};
+$("tAll").onclick=function(){if(tdesigns.length)tRunQueue(tdesigns.slice())};
+$("tCancel").onclick=function(){cancelFlag=true};
+$("zipT").onclick=function(){saveZip(results3.slice().reverse(),"template-reels-"+stamp()+".zip",sayT,this)};
+$("backT").onclick=function(){window.scrollTo({top:0,behavior:"smooth"})};
+capBuild("cBoxT");
+tplList().then(function(){if(TP.list.length&&mode==="tpl"&&!TP.vid)tplLoadId(TP.list[0].id).then(function(){$("tTpl").value=TP.loaded;tRender()})});
 
 loadHands();
 refreshImgs();
