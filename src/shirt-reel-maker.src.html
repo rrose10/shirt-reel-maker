@@ -431,8 +431,8 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       </aside>
       <section class="panel sticky" aria-labelledby="h-tpv">
         <h2 id="h-tpv">Live preview</h2>
-        <p class="hint">Click a design on the left to preview it.</p>
-        <div class="prevbox big"><canvas id="tPrev" width="360" height="640" aria-label="Video preview"></canvas>
+        <p class="hint">Click a design on the left to preview it. Drag the print to move it, drag a corner dot to resize, drag the top dot to rotate. Mouse wheel also resizes.</p>
+        <div class="prevbox big"><canvas id="tPrev" width="360" height="640" aria-label="Video preview" style="touch-action:none;cursor:default"></canvas>
           <div class="timeline"><button class="btn" id="tPlay" type="button">Play</button><input id="tScrub" type="range" min="0" max="299" value="0" aria-label="Timeline"><span id="tTime">0.0 / 10.0s</span></div>
         </div>
       </section>
@@ -445,11 +445,12 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
         </div>
         <div class="panes">
           <div class="pane on" id="tp-print">
-            <div class="ctl" style="margin-top:0"><label for="tSc">Print size <output id="tScO">100%</output></label><input id="tSc" type="range" min="40" max="170" value="100"></div>
-            <div class="ctl"><label for="tRot">Rotation <output id="tRotO">0°</output></label><input id="tRot" type="range" min="-45" max="45" value="0"></div>
-            <div class="ctl"><label for="tDx">Move left / right <output id="tDxO">0</output></label><input id="tDx" type="range" min="-50" max="50" value="0"></div>
-            <div class="ctl"><label for="tDy">Move up / down <output id="tDyO">0</output></label><input id="tDy" type="range" min="-50" max="50" value="0"></div>
+            <div class="ctl" style="margin-top:0"><label for="tSc">Print size <output id="tScO">100%</output></label><input id="tSc" type="range" min="20" max="250" value="100"></div>
+            <div class="ctl"><label for="tRot">Rotation <output id="tRotO">0°</output></label><input id="tRot" type="range" min="-180" max="180" value="0"></div>
+            <div class="ctl"><label for="tDx">Move left / right <output id="tDxO">0</output></label><input id="tDx" type="range" min="-100" max="100" value="0"></div>
+            <div class="ctl"><label for="tDy">Move up / down <output id="tDyO">0</output></label><input id="tDy" type="range" min="-100" max="100" value="0"></div>
             <div class="ctl"><label for="tSh">Fabric light and shade <output id="tShO">80%</output></label><input id="tSh" type="range" min="0" max="100" value="80"></div>
+            <div class="row" style="margin:12px 0 0"><button class="btn" id="tPReset" type="button" style="padding:4px 12px">Reset size and position</button></div>
             <div class="ctl"><label for="tRes">Video size</label><select id="tRes"><option value="720">720 × 1280 (fast)</option><option value="1080" selected>1080 × 1920 (full HD)</option></select></div>
           </div>
           <div class="pane" id="tp-warp">
@@ -1288,7 +1289,7 @@ function fastNotes(){
 }
 ["fastS","fastI"].forEach(function(id){$(id).onchange=function(){FAST=this.checked;["fastS","fastI","fastT"].forEach(function(o){$(o).checked=FAST})}});
 fastNotes();
-window.__T={get b(){return curB},get d(){return curD},drawScene:drawScene,renderFast:renderFast,recordAny:recordAny,buildZip:buildZip,captionsFile:captionsFile,get results(){return results},get results2(){return results2}};
+window.__T={get b(){return curB},get d(){return curD},drawScene:drawScene,renderFast:renderFast,recordAny:recordAny,buildZip:buildZip,captionsFile:captionsFile,get results(){return results},get results2(){return results2},get tq(){return tQuad()},get tc(){return TC}};
 
 /* recording with optional audio */
 function pickMimeA(audio){
@@ -2054,11 +2055,76 @@ function tDrawFn(d){
 /* preview */
 var tPrevCv=$("tPrev"),tPrevCx=tPrevCv.getContext("2d");
 async function tUpdate(){
-  if(TP.busy||!TP.vid||exporting)return;TP.busy=true;
-  try{await tplSeek(TP.prevF);tplDraw(tPrevCx,360,640,TP.prevF,tcur)}finally{TP.busy=false}
+  if(!TP.vid||exporting)return;
+  if(TP.busy){TP.again=true;return}
+  TP.busy=true;
+  try{await tplSeek(TP.prevF);tplDraw(tPrevCx,360,640,TP.prevF,tcur);tDrawHandles()}finally{TP.busy=false}
   $("tTime").textContent=(TP.prevF/TP.tr.fps).toFixed(1)+" / "+(TP.tr.n/TP.tr.fps).toFixed(1)+"s";
   $("tScrub").value=TP.prevF;
+  if(TP.again){TP.again=false;tUpdate()}
 }
+/* drag the print with the mouse: move, resize (corner dots), rotate (top dot) */
+function inv3(m){
+  var a=m[0],b=m[1],c=m[2],d=m[3],e=m[4],f=m[5],g=m[6],h=m[7],i=m[8],A=e*i-f*h,B=-(d*i-f*g),C=d*h-e*g,det=a*A+b*B+c*C;
+  return [A/det,-(b*i-c*h)/det,(b*f-c*e)/det,B/det,(a*i-c*g)/det,-(a*f-c*d)/det,C/det,-(a*h-b*g)/det,(a*e-b*d)/det];
+}
+function tQuad(){
+  if(!tcur||!TP.tr)return null;
+  var Hm=TP.tr.H[TP.prevF],r=tplRect(tcur),cx=r[0]+r[2]/2,cy=r[1]+r[3]/2,ca=Math.cos(TC.rot*Math.PI/180),sa=Math.sin(TC.rot*Math.PI/180),s=tPrevCv.width/TP.tr.w;
+  var pts=[[-1,-1],[1,-1],[1,1],[-1,1]].map(function(q){var lx=q[0]*r[2]/2,ly=q[1]*r[3]/2;return tplProj(Hm,cx+lx*ca-ly*sa,cy+lx*sa+ly*ca,s)});
+  var mx=(pts[0][0]+pts[1][0])/2,my=(pts[0][1]+pts[1][1])/2,ccx=(pts[0][0]+pts[2][0])/2,ccy=(pts[0][1]+pts[2][1])/2,dx=mx-ccx,dy=my-ccy,l=Math.hypot(dx,dy)||1;
+  return {p:pts,c:[ccx,ccy],rot:[mx+dx/l*26,my+dy/l*26],mid:[mx,my]};
+}
+function tDrawHandles(){
+  var q=tQuad();if(!q)return;var x=tPrevCx;
+  x.save();x.setTransform(1,0,0,1,0,0);x.lineWidth=1.5;x.strokeStyle="rgba(255,255,255,.9)";x.setLineDash([5,4]);
+  x.beginPath();q.p.forEach(function(a,i){i?x.lineTo(a[0],a[1]):x.moveTo(a[0],a[1])});x.closePath();x.stroke();x.setLineDash([]);
+  x.beginPath();x.moveTo(q.mid[0],q.mid[1]);x.lineTo(q.rot[0],q.rot[1]);x.stroke();
+  x.fillStyle="#fff";x.strokeStyle="#111";x.lineWidth=1.5;
+  q.p.concat([q.rot]).forEach(function(a,i){x.beginPath();x.arc(a[0],a[1],i===4?6:5,0,Math.PI*2);x.fill();x.stroke()});
+  x.restore();
+}
+function tSyncUI(){
+  var v=function(id,o,val,suf){var e=$(id);e.value=Math.max(+e.min,Math.min(+e.max,val));$(o).textContent=Math.round(val)+(suf||"")};
+  v("tSc","tScO",TC.sc*100,"%");v("tDx","tDxO",TC.dx*100);v("tDy","tDyO",TC.dy*100);v("tRot","tRotO",TC.rot,"°");
+}
+(function(){
+  var drag=null;
+  function pt(e){var r=tPrevCv.getBoundingClientRect();return [(e.clientX-r.left)*tPrevCv.width/r.width,(e.clientY-r.top)*tPrevCv.height/r.height]}
+  function toRef(p){var m=inv3(TP.tr.H[TP.prevF]),s=tPrevCv.width/TP.tr.w,x=p[0]/s,y=p[1]/s,Z=m[6]*x+m[7]*y+m[8];return [(m[0]*x+m[1]*y+m[2])/Z,(m[3]*x+m[4]*y+m[5])/Z]}
+  function inside(q,p){var s=0,i;for(i=0;i<4;i++){var a=q.p[i],b=q.p[(i+1)%4],c=(b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]);if(i&&(c>0)!==(s>0))return false;s=c}return true}
+  function hit(p){
+    var q=tQuad();if(!q)return null;
+    if(Math.hypot(p[0]-q.rot[0],p[1]-q.rot[1])<12)return "rot";
+    for(var i=0;i<4;i++)if(Math.hypot(p[0]-q.p[i][0],p[1]-q.p[i][1])<12)return "size";
+    return inside(q,p)?"move":null;
+  }
+  tPrevCv.addEventListener("pointerdown",function(e){
+    if(!TP.vid||!tcur||exporting)return;
+    var p=pt(e),h=hit(p);if(!h)return;
+    TP.play=false;$("tPlay").textContent="Play";
+    var r=tplRect(tcur),cx=r[0]+r[2]/2,cy=r[1]+r[3]/2,rp=toRef(p);
+    drag={k:h,p0:rp,dx:TC.dx,dy:TC.dy,sc:TC.sc,c:[cx,cy],d0:Math.hypot(rp[0]-cx,rp[1]-cy)||1};
+    try{tPrevCv.setPointerCapture(e.pointerId)}catch(x){}
+    e.preventDefault();
+  });
+  tPrevCv.addEventListener("pointermove",function(e){
+    var p=pt(e);
+    if(!drag){if(TP.vid&&tcur&&!exporting){var h=hit(p);tPrevCv.style.cursor=h==="move"?"move":h==="size"?"nwse-resize":h==="rot"?"grab":"default"}return}
+    var rp=toRef(p),bb=TP.tr.bbox;
+    if(drag.k==="move"){TC.dx=drag.dx+(rp[0]-drag.p0[0])/bb[2];TC.dy=drag.dy+(rp[1]-drag.p0[1])/bb[3];
+      TC.dx=Math.max(-1,Math.min(1,TC.dx));TC.dy=Math.max(-1,Math.min(1,TC.dy))}
+    else if(drag.k==="size"){TC.sc=Math.max(.2,Math.min(2.5,drag.sc*Math.hypot(rp[0]-drag.c[0],rp[1]-drag.c[1])/drag.d0))}
+    else{var a=Math.atan2(rp[1]-drag.c[1],rp[0]-drag.c[0])*180/Math.PI+90;if(a>180)a-=360;if(Math.abs(a)<3)a=0;TC.rot=a}
+    tSyncUI();tUpdate();
+  });
+  function end(){drag=null}
+  tPrevCv.addEventListener("pointerup",end);tPrevCv.addEventListener("pointercancel",end);
+  tPrevCv.addEventListener("wheel",function(e){
+    if(!TP.vid||!tcur||exporting)return;e.preventDefault();
+    TC.sc=Math.max(.2,Math.min(2.5,TC.sc*(e.deltaY<0?1.05:1/1.05)));tSyncUI();tUpdate();
+  },{passive:false});
+})();
 var tLoop=0;
 async function tPlayLoop(){
   if(!TP.play||!TP.vid||exporting)return;
@@ -2076,6 +2142,7 @@ $("tDx").oninput=function(){TC.dx=this.value/100;$("tDxO").textContent=this.valu
 $("tDy").oninput=function(){TC.dy=this.value/100;$("tDyO").textContent=this.value;tUpdate()};
 $("tSh").oninput=function(){TC.sh=this.value/100;$("tShO").textContent=this.value+"%";tUpdate()};
 $("tRes").onchange=function(){TC.res=+this.value};
+$("tPReset").onclick=function(){TC.sc=1;TC.dx=0;TC.dy=0;TC.rot=0;tSyncUI();tUpdate()};
 $("tRot").oninput=function(){TC.rot=+this.value;$("tRotO").textContent=this.value+"°";tUpdate()};
 [["tCurve","curve"],["tWave","wave"],["tPH","ph"],["tPV","pv"],["tSk","sk"]].forEach(function(a){
   $(a[0]).oninput=function(){TC[a[1]]=this.value/100;$(a[0]+"O").textContent=this.value;tUpdate()};
@@ -2118,7 +2185,7 @@ $("tSample").onclick=function(){
 $("fastT").onchange=function(){FAST=this.checked;["fastS","fastI","fastT"].forEach(function(o){$(o).checked=FAST})};
 function tLock(on){
   exporting=on;$("tCancel").classList.toggle("hide",!on);$("tBar").style.display=on?"block":"none";
-  ["tSc","tRot","tDx","tDy","tSh","tRes","tTpl","tFile","vFile","tSample","tCurve","tWave","tPH","tPV","tSk","tWReset"].forEach(function(i){$(i).disabled=on});
+  ["tSc","tRot","tDx","tDy","tSh","tRes","tPReset","tTpl","tFile","vFile","tSample","tCurve","tWave","tPH","tPV","tSk","tWReset"].forEach(function(i){$(i).disabled=on});
   if(on){TP.play=false;$("tPlay").textContent="Play"}
   tRender();
 }
