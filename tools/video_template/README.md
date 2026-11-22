@@ -24,3 +24,10 @@ python3 track_roi.py REF_FRAME x0,y0,x1,y1 [BRIGHT_THRESHOLD]   # a frame where 
 python3 build_roi.py [REMOVE_THRESHOLD]
 python3 pack.py ../site/templates/my-template "My template name"
 ```
+
+## Blank-shirt variant (fixed camera, nothing to remove)
+When the source video shows a BLANK shirt and the camera does not move, there is no print to track or erase:
+1. Extract frames at 720x1280 into `fr/NNN.png`.
+2. `python3 build_blank.py FPS x,y,w,h` (x,y,w,h = print area in frame pixels) – writes identity homographies, skin masks and a shade map.
+3. `python3 pack.py OUTDIR "Name"` – packs template.mp4 + track.json (fps is taken from track_raw.json).
+4. Add `{id,name}` to site/templates/list.json.
