@@ -34,5 +34,21 @@
 {
 "id": "black-flat-cream",
 "name": "Black · Flat lay on cream fabric, sunlight (zoom)"
+},
+{
+"id": "white-bust-shop-zoomout",
+"name": "White · Bust mannequin in shop, zoom-out"
+},
+{
+"id": "white-hanger-wall-zoom",
+"name": "White · Hanger on wall, big zoom-in (hands)"
+},
+{
+"id": "white-flat-oak",
+"name": "White · Flat lay on oak, leaf shadows (zoom)"
+},
+{
+"id": "white-hanger-beige",
+"name": "White · Hanger on beige wall (hand smooths)"
 }
 ]
