@@ -1290,7 +1290,7 @@ function fastNotes(){
 }
 ["fastS","fastI"].forEach(function(id){$(id).onchange=function(){FAST=this.checked;["fastS","fastI","fastT"].forEach(function(o){$(o).checked=FAST})}});
 fastNotes();
-window.__T={get b(){return curB},get d(){return curD},drawScene:drawScene,renderFast:renderFast,recordAny:recordAny,buildZip:buildZip,captionsFile:captionsFile,get results(){return results},get results2(){return results2},get tq(){return tQuad()},get tc(){return TC}};
+window.__T={get tcur(){return tcur},tplDraw:function(){return tplDraw.apply(null,arguments)},tplSeek:function(i){return tplSeek(i)},get TP(){return TP},get b(){return curB},get d(){return curD},drawScene:drawScene,renderFast:renderFast,recordAny:recordAny,buildZip:buildZip,captionsFile:captionsFile,get results(){return results},get results2(){return results2},get tq(){return tQuad()},get tc(){return TC}};
 
 /* recording with optional audio */
 function pickMimeA(audio){
@@ -2020,58 +2020,70 @@ function tplDraw(ctx,W,H,f,d){
   ctx.drawImage(TP.src,0,0,tr.w,tr.h,0,0,W,H);
   if(!d)return;
   if(!TP.layer||TP.layer.width!==W||TP.layer.height!==H){TP.layer=mk(W,H);TP.hand=mk(W,H);TP.lx=TP.layer.getContext("2d");TP.hx=TP.hand.getContext("2d");TP.msk=mk(L.skin[2],L.skin[3]);TP.mx=TP.msk.getContext("2d");TP.ov=mk(L.shade[2],L.shade[3]);TP.ox=TP.ov.getContext("2d")}
-  var lx=TP.lx,img=tplDesignCanvas(d),r=tplRect(d),N=8,i,j,P=[],ef=tHasWarp()?WEF:1,rw=r[2]*ef,rh=r[3]*ef,rcx=r[0]+r[2]/2,rcy=r[1]+r[3]/2,ca=Math.cos(TC.rot*Math.PI/180),sa=Math.sin(TC.rot*Math.PI/180);
-  lx.setTransform(1,0,0,1,0,0);lx.globalCompositeOperation="source-over";lx.clearRect(0,0,W,H);
-  for(j=0;j<=N;j++){P[j]=[];for(i=0;i<=N;i++){var u=i/N,v=j/N,lx0=(u-.5)*rw,ly0=(v-.5)*rh;P[j][i]={s:[u*img.width,v*img.height],d:tplProj(Hm,rcx+lx0*ca-ly0*sa,rcy+lx0*sa+ly0*ca,s)}}}
+  var lx=TP.lx,img=tplDesignCanvas(d),r=tplRect(d),N=tr.bi?12:8,i,j,q,P=[],ef=tHasWarp()?WEF:1,rw=r[2]*ef,rh=r[3]*ef,rcx=r[0]+r[2]/2,rcy=r[1]+r[3]/2,ca=Math.cos(TC.rot*Math.PI/180),sa=Math.sin(TC.rot*Math.PI/180);
+  var bx0=1e9,by0=1e9,bx1=-1e9,by1=-1e9;
+  for(j=0;j<=N;j++){P[j]=[];for(i=0;i<=N;i++){var u=i/N,v=j/N,lx0=(u-.5)*rw,ly0=(v-.5)*rh;var pd=tplProj(Hm,rcx+lx0*ca-ly0*sa,rcy+lx0*sa+ly0*ca,s);P[j][i]={s:[u*img.width,v*img.height],d:pd};bx0=Math.min(bx0,pd[0]);by0=Math.min(by0,pd[1]);bx1=Math.max(bx1,pd[0]);by1=Math.max(by1,pd[1])}}
+  var mg=Math.ceil(6*W/720);bx0=Math.max(0,Math.floor(bx0-mg));by0=Math.max(0,Math.floor(by0-mg));bx1=Math.min(W,Math.ceil(bx1+mg));by1=Math.min(H,Math.ceil(by1+mg));
+  var bw=bx1-bx0,bh=by1-by0;
+  if(bw<2||bh<2)return;
+  lx.setTransform(1,0,0,1,0,0);lx.globalCompositeOperation="source-over";lx.clearRect(bx0,by0,bw,bh);
   for(j=0;j<N;j++)for(i=0;i<N;i++){
     var a=P[j][i],b=P[j][i+1],c=P[j+1][i],e=P[j+1][i+1];
     tplTri(lx,img,a.s,b.s,c.s,a.d,b.d,c.d);tplTri(lx,img,b.s,e.s,c.s,b.d,e.d,c.d);
   }
-  // fabric light and shade taken from the original video
-  if(TC.sh>0||(tr.bi&&TC.fw>0)){
-    var wl=tr.white||232,sd=TP.sctx.getImageData(L.shade[0],L.shade[1],L.shade[2],L.shade[3]),sw0=L.shade[2],sh0=L.shade[3],o=TP.ox.createImageData(sw0,sh0),q,sc=TC.sh*1.9;
-    if(tr.bi){
-      // two-sided shade map (128 = neutral): folds in shadow darken the print, folds catching light brighten it
-      var R=new Float32Array(sw0*sh0),k2=TC.sh*2.2,fv;
-      for(q=0;q<R.length;q++)R[q]=(sd.data[q*4]-128)/254;
-      if(TC.fw>0){
-        // bend the print along the folds: shift pixels by the gradient of the fabric brightness
-        var rr=[r[0],r[1],r[2],r[3]],x0=Math.max(0,Math.floor(rr[0])),y0=Math.max(0,Math.floor(rr[1])),x1=Math.min(W,Math.ceil(rr[0]+rr[2])),y1=Math.min(H,Math.ceil(rr[1]+rr[3]));
-        var rw0=x1-x0,rh0=y1-y0,fs2=sw0/W,kk=TC.fw*260*(W/720),cap=3.2*(W/720),Rb=tBlurF(R,sw0,sh0,6);
-        if(rw0>4&&rh0>4){
-          // r here is the design rect in frame pixels; convert to canvas pixels
-          var s2=W/tr.w;x0=Math.max(0,Math.floor((r[0]-r[2]*.1)*s2));y0=Math.max(0,Math.floor((r[1]-r[3]*.1)*s2));x1=Math.min(W,Math.ceil((r[0]+r[2]*1.1)*s2));y1=Math.min(H,Math.ceil((r[1]+r[3]*1.1)*s2));rw0=x1-x0;rh0=y1-y0;
-          var srcD=lx.getImageData(x0,y0,rw0,rh0),dstD=lx.createImageData(rw0,rh0),X,Y,sd2=srcD.data,dd=dstD.data;
-          for(Y=0;Y<rh0;Y++)for(X=0;X<rw0;X++){
-            var sx=Math.min(sw0-2,Math.max(1,Math.round((x0+X)*fs2))),sy=Math.min(sh0-2,Math.max(1,Math.round((y0+Y)*fs2))),ii=sy*sw0+sx;
-            var gx=Math.max(-cap,Math.min(cap,(Rb[ii+1]-Rb[ii-1])*.5*kk*fs2)),gy=Math.max(-cap,Math.min(cap,(Rb[ii+sw0]-Rb[ii-sw0])*.5*kk*fs2));
-            var fx=X-gx,fy=Y-gy,ix=Math.floor(fx),iy=Math.floor(fy),ax=fx-ix,ay=fy-iy,o4=(Y*rw0+X)*4;
-            if(ix<0||iy<0||ix>=rw0-1||iy>=rh0-1){var c0=(Math.min(rh0-1,Math.max(0,iy))*rw0+Math.min(rw0-1,Math.max(0,ix)))*4;dd[o4]=sd2[c0];dd[o4+1]=sd2[c0+1];dd[o4+2]=sd2[c0+2];dd[o4+3]=sd2[c0+3];continue}
-            var i00=(iy*rw0+ix)*4,i10=i00+4,i01=i00+rw0*4,i11=i01+4,c;
-            for(c=0;c<4;c++)dd[o4+c]=sd2[i00+c]*(1-ax)*(1-ay)+sd2[i10+c]*ax*(1-ay)+sd2[i01+c]*(1-ax)*ay+sd2[i11+c]*ax*ay;
+  // fabric light and shade taken from the original video (only the part of the map under the print)
+  if(TC.sh>0||(tr.bi&&TC.fw>0&&!TP.noBend)){
+    var fs2=L.shade[2]/W,sx0=Math.max(0,Math.floor(bx0*fs2)),sy0=Math.max(0,Math.floor(by0*fs2)),sx1=Math.min(L.shade[2],Math.ceil(bx1*fs2)),sy1=Math.min(L.shade[3],Math.ceil(by1*fs2)),sw0=sx1-sx0,sh0=sy1-sy0;
+    if(sw0>2&&sh0>2){
+      var sd=TP.sctx.getImageData(L.shade[0]+sx0,L.shade[1]+sy0,sw0,sh0),o=TP.ox.createImageData(sw0,sh0),sc=TC.sh*1.9,wl=tr.white||232;
+      if(tr.bi){
+        // two-sided shade map (128 = neutral): folds in shadow darken the print, folds catching light brighten it
+        var R=new Float32Array(sw0*sh0),k2=TC.sh*2.2,fv;
+        for(q=0;q<R.length;q++)R[q]=(sd.data[q*4]-128)/254;
+        if(TC.fw>0&&!TP.noBend&&sw0>14&&sh0>14){
+          // bend the print along the folds: shift pixels by the gradient of the (smoothed) fabric brightness
+          var kk=TC.fw*260*(W/720),cap=3.2*(W/720),Rb=tBlurF(R,sw0,sh0,6),X,Y,sd2,dd,srcD=lx.getImageData(bx0,by0,bw,bh),dstD=lx.createImageData(bw,bh);
+          sd2=srcD.data;dd=dstD.data;
+          var Gx=new Float32Array(sw0*sh0),Gy=new Float32Array(sw0*sh0),gi;
+          for(Y=1;Y<sh0-1;Y++)for(X=1;X<sw0-1;X++){gi=Y*sw0+X;Gx[gi]=Math.max(-cap,Math.min(cap,(Rb[gi+1]-Rb[gi-1])*.5*kk*fs2));Gy[gi]=Math.max(-cap,Math.min(cap,(Rb[gi+sw0]-Rb[gi-sw0])*.5*kk*fs2))}
+          for(Y=0;Y<bh;Y++){
+            var gyv=Math.min(sh0-2.001,Math.max(0,Y*fs2)),gy0=gyv|0,gay=gyv-gy0;
+            for(X=0;X<bw;X++){
+              var gxv=Math.min(sw0-2.001,Math.max(0,X*fs2)),gx0=gxv|0,gax=gxv-gx0,g00=gy0*sw0+gx0,g10=g00+1,g01=g00+sw0,g11=g01+1;
+              var gx=Gx[g00]*(1-gax)*(1-gay)+Gx[g10]*gax*(1-gay)+Gx[g01]*(1-gax)*gay+Gx[g11]*gax*gay,gy=Gy[g00]*(1-gax)*(1-gay)+Gy[g10]*gax*(1-gay)+Gy[g01]*(1-gax)*gay+Gy[g11]*gax*gay;
+              var fx=X-gx,fy=Y-gy,ix=Math.floor(fx),iy=Math.floor(fy),ax=fx-ix,ay=fy-iy,o4=(Y*bw+X)*4;
+              if(ix<0||iy<0||ix>=bw-1||iy>=bh-1){var c0=(Math.min(bh-1,Math.max(0,iy))*bw+Math.min(bw-1,Math.max(0,ix)))*4;dd[o4]=sd2[c0];dd[o4+1]=sd2[c0+1];dd[o4+2]=sd2[c0+2];dd[o4+3]=sd2[c0+3];continue}
+              var i00=(iy*bw+ix)*4,i10=i00+4,i01=i00+bw*4,i11=i01+4,w00=(1-ax)*(1-ay),w10=ax*(1-ay),w01=(1-ax)*ay,w11=ax*ay;
+              dd[o4]=sd2[i00]*w00+sd2[i10]*w10+sd2[i01]*w01+sd2[i11]*w11;dd[o4+1]=sd2[i00+1]*w00+sd2[i10+1]*w10+sd2[i01+1]*w01+sd2[i11+1]*w11;
+              dd[o4+2]=sd2[i00+2]*w00+sd2[i10+2]*w10+sd2[i01+2]*w01+sd2[i11+2]*w11;dd[o4+3]=sd2[i00+3]*w00+sd2[i10+3]*w10+sd2[i01+3]*w01+sd2[i11+3]*w11;
+            }
           }
-          lx.putImageData(dstD,x0,y0);
+          lx.putImageData(dstD,bx0,by0);
         }
-      }
-      for(q=0;q<R.length;q++){
-        fv=1+k2*R[q]*1.0;
-        if(fv<1){o.data[q*4+3]=Math.min(235,(1-fv)*255)}
-        else{o.data[q*4]=o.data[q*4+1]=o.data[q*4+2]=255;o.data[q*4+3]=Math.min(120,(fv-1)*255*.7)}
-      }
-    }else for(q=0;q<sd.data.length;q+=4){var rel=Math.min(1,sd.data[q]/wl);o.data[q+3]=Math.min(235,(1-rel)*255*sc)}
-    TP.ox.putImageData(o,0,0);
-    lx.globalCompositeOperation="source-atop";lx.imageSmoothingEnabled=true;lx.drawImage(TP.ov,0,0,sw0,sh0,0,0,W,H);lx.globalCompositeOperation="source-over";
+        for(q=0;q<R.length;q++){
+          fv=1+k2*R[q];
+          if(fv<1){o.data[q*4+3]=Math.min(235,(1-fv)*255)}
+          else{o.data[q*4]=o.data[q*4+1]=o.data[q*4+2]=255;o.data[q*4+3]=Math.min(120,(fv-1)*255*.7)}
+        }
+      }else for(q=0;q<sd.data.length;q+=4){var rel=Math.min(1,sd.data[q]/wl);o.data[q+3]=Math.min(235,(1-rel)*255*sc)}
+      TP.ox.putImageData(o,0,0);
+      lx.globalCompositeOperation="source-atop";lx.imageSmoothingEnabled=true;lx.drawImage(TP.ov,0,0,sw0,sh0,sx0/fs2,sy0/fs2,sw0/fs2,sh0/fs2);lx.globalCompositeOperation="source-over";
+    }
   }
   if("filter" in ctx&&W>=700)ctx.filter="blur(.45px)";
-  ctx.globalAlpha=.97;ctx.drawImage(TP.layer,0,0);ctx.globalAlpha=1;ctx.filter="none";
-  // hands in front of the print
-  var kd=TP.sctx.getImageData(L.skin[0],L.skin[1],L.skin[2],L.skin[3]),mo=TP.mx.createImageData(L.skin[2],L.skin[3]),any=false;
-  for(q=0;q<kd.data.length;q+=4){var m=kd.data[q];if(m>24)any=true;mo.data[q+3]=m}
+  ctx.globalAlpha=.97;ctx.drawImage(TP.layer,bx0,by0,bw,bh,bx0,by0,bw,bh);ctx.globalAlpha=1;ctx.filter="none";
+  // hands in front of the print (only the area where skin was found)
+  var kd=TP.sctx.getImageData(L.skin[0],L.skin[1],L.skin[2],L.skin[3]),mo=TP.mx.createImageData(L.skin[2],L.skin[3]),any=false,kw=L.skin[2],kh=L.skin[3],mx0=kw,my0=kh,mx1=-1,my1=-1;
+  for(q=0;q<kd.data.length;q+=4){var m=kd.data[q];mo.data[q+3]=m;if(m>24){any=true;var pi=q>>2,px=pi%kw,py=(pi/kw)|0;if(px<mx0)mx0=px;if(px>mx1)mx1=px;if(py<my0)my0=py;if(py>my1)my1=py}}
   if(any){
-    TP.mx.putImageData(mo,0,0);var hx=TP.hx;
-    hx.setTransform(1,0,0,1,0,0);hx.globalCompositeOperation="source-over";hx.clearRect(0,0,W,H);hx.drawImage(TP.src,0,0,tr.w,tr.h,0,0,W,H);
-    hx.globalCompositeOperation="destination-in";hx.imageSmoothingEnabled=true;hx.drawImage(TP.msk,0,0,L.skin[2],L.skin[3],0,0,W,H);hx.globalCompositeOperation="source-over";
-    ctx.drawImage(TP.hand,0,0);
+    TP.mx.putImageData(mo,0,0);var hx=TP.hx,k3=W/kw;
+    var hx0=Math.max(bx0,Math.floor((mx0-2)*k3)),hy0=Math.max(by0,Math.floor((my0-2)*k3)),hx1=Math.min(bx1,Math.ceil((mx1+3)*k3)),hy1=Math.min(by1,Math.ceil((my1+3)*k3)),hw=hx1-hx0,hh=hy1-hy0;
+    if(hw>1&&hh>1){
+      hx.setTransform(1,0,0,1,0,0);hx.globalCompositeOperation="source-over";hx.clearRect(hx0,hy0,hw,hh);
+      hx.drawImage(TP.src,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);
+      hx.globalCompositeOperation="destination-in";hx.imageSmoothingEnabled=true;hx.drawImage(TP.msk,hx0/k3,hy0/k3,hw/k3,hh/k3,hx0,hy0,hw,hh);hx.globalCompositeOperation="source-over";
+      ctx.drawImage(TP.hand,hx0,hy0,hw,hh,hx0,hy0,hw,hh);
+    }
   }
 }
 function tFrameOf(t){return Math.max(0,Math.min(TP.tr.n-1,Math.floor(t*TP.tr.fps+1e-6)))}
@@ -2079,9 +2091,12 @@ function tDrawFn(d){
   var fn=function(ctx,w,h,t){
     var v=TP.vid;
     if(!lastFast){ // normal recording: let the template play in real time
-      if(t<.05){try{v.currentTime=0;var pr=v.play();if(pr&&pr.catch)pr.catch(function(){})}catch(e){}}
+      if(t<.05){try{v.currentTime=0;var pr=v.play();if(pr&&pr.catch)pr.catch(function(){})}catch(e){}TP.noBend=false;TP.ema=0}
       try{TP.sctx.drawImage(v,0,0)}catch(e){}
-      tplDraw(ctx,w,h,Math.min(TP.tr.n-1,Math.round(v.currentTime*TP.tr.fps)),d);
+      var tt0=performance.now();
+      tplDraw(ctx,w,h,Math.min(TP.tr.n-1,Math.floor(v.currentTime*TP.tr.fps+1e-3)),d);
+      // real-time recording must keep up with the video: if drawing is too slow, drop the fold bend (the light/shade stays)
+      TP.ema=(TP.ema||0)*.8+(performance.now()-tt0)*.2;if(TP.ema>24&&t>.3)TP.noBend=true;
     }else tplDraw(ctx,w,h,tFrameOf(t),d);
   };
   fn.prep=function(t){return tplSeek(tFrameOf(t))};
