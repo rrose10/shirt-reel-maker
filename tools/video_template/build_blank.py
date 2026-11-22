@@ -34,10 +34,8 @@ for t,f in enumerate(fs):os.system(f'cp {f} cl/{t:03d}.png')
 np.save('skins.npy',np.array(skins));np.save('shades.npy',np.array(shades))
 import os
 if os.path.exists('Ms.npy'):
-    from scipy.ndimage import gaussian_filter1d
-    Ms=np.load('Ms.npy');Ms=Ms/Ms[:,2:3,2:3]
-    P=Ms.reshape(N,9)[:,:8];P=gaussian_filter1d(P,1.2,axis=0,mode='nearest')
-    Hs=[list(map(float,list(p)+[1.0])) for p in P]
+    sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)));from smooth_h import smooth_h
+    Hs=smooth_h(np.load('Ms.npy'))
 else:Hs=[[1,0,0,0,1,0,0,0,1]]*N
 json.dump({'N':N,'fps':FPS,'white':255,'bi':1,'bbox':[bx,by,bx+bw,by+bh],'H':Hs},open('track_raw.json','w'))
 print('ok',N,'frames')
