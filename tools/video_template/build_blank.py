@@ -8,7 +8,9 @@ def skin(im):
     ycc=cv2.cvtColor(im,cv2.COLOR_BGR2YCrCb);hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
     m=((ycc[...,1]>135)&(ycc[...,1]<185)&(ycc[...,2]>80)&(ycc[...,2]<135)&(hsv[...,1]>35)&(hsv[...,2]>70)).astype(np.uint8)
     m=cv2.morphologyEx(m,cv2.MORPH_OPEN,np.ones((3,3),np.uint8));m=cv2.morphologyEx(m,cv2.MORPH_CLOSE,np.ones((9,9),np.uint8))
-    return cv2.GaussianBlur(cv2.dilate(m,np.ones((5,5),np.uint8)).astype(np.float32),(0,0),1.5)
+    # no dilation: a grown mask lets the dark shirt around the fingers show up as a black rim over the print
+    m=cv2.erode(m,np.ones((3,3),np.uint8))
+    return cv2.GaussianBlur(m.astype(np.float32),(0,0),1.0)
 # two-sided fabric lighting: code = 128 + (ratio-1)*254, ratio = local shirt brightness / its heavy blur
 # (<128 = fold in shadow, >128 = fold catching light). Skin / background are excluded from the reference.
 skins=[];ratios=[]

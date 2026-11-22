@@ -455,6 +455,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
             <div class="ctl"><label for="tDy">Move up / down <output id="tDyO">0</output></label><input id="tDy" type="range" min="-100" max="100" value="0"></div>
             <div class="ctl"><label for="tSh">Fabric light and shade <output id="tShO">80%</output></label><input id="tSh" type="range" min="0" max="100" value="80"></div>
             <div class="ctl"><label for="tTx">Printed-on look (matte ink + cotton weave) <output id="tTxO">60%</output></label><input id="tTx" type="range" min="0" max="100" value="60"></div>
+            <div class="ctl"><label for="tBl">Blur design (blend into shirt) <output id="tBlO">0%</output></label><input id="tBl" type="range" min="0" max="100" value="0"></div>
             <div class="ctl"><label for="tFw">Follow fabric folds (bend) <output id="tFwO">60%</output></label><input id="tFw" type="range" min="0" max="100" value="60"></div>
             <div class="row" style="margin:12px 0 0"><button class="btn" id="tPReset" type="button" style="padding:4px 12px">Reset size and position</button></div>
             <div class="ctl"><label for="tRes">Video size</label><select id="tRes"><option value="720">720 × 1280 (fast)</option><option value="1080" selected>1080 × 1920 (full HD)</option></select></div>
@@ -1922,7 +1923,7 @@ $("zipI").onclick=function(){saveZip(results2.slice().reverse(),"image-reels-"+s
 
 /* ---------- video template: a real shirt video, your design in every frame (hands stay in front) ---------- */
 var TP={tr:null,vid:null,url:null,src:null,sctx:null,layer:null,hand:null,msk:null,ov:null,sub:null,list:[],cur:null,loaded:"",prevF:0,play:false,busy:false};
-var TC={sc:1,dx:0,dy:0,sh:.8,fw:.6,tx:.6,res:1080,rot:0,curve:0,wave:0,ph:0,pv:0,sk:0};
+var TC={sc:1,dx:0,dy:0,sh:.8,fw:.6,tx:.6,bl:0,res:1080,rot:0,curve:0,wave:0,ph:0,pv:0,sk:0};
 function tHasWarp(){return !!(TC.curve||TC.wave||TC.ph||TC.pv||TC.sk)}
 var tdesigns=[],tcur=null,results3=[];
 function sayT(t){$("zipTS").textContent=t}
@@ -2040,8 +2041,8 @@ function tRtFrame(v){
 }
 function tplSoft(base,d,r,s){
   // a touch of ink softness: blur the design once (cached) instead of blurring every video frame
-  var px=r[2]*s*(tHasWarp()?WEF:1);if(px<500)return base;
-  var rad=Math.round(.45*base.width/px*10)/10;if(rad<=.2)return base;
+  var px=r[2]*s*(tHasWarp()?WEF:1),bl=TC.bl||0;if(px<500&&bl<=0)return base;
+  var rad=Math.round((.45+bl*2)*base.width/px*10)/10;if(rad<=.2)return base;
   var key=rad+"|"+(d._twk||"")+"|"+base.width;if(d._tsk===key&&d._tsc)return d._tsc;
   var c=mk(base.width,base.height),x=c.getContext("2d");
   if("filter" in x){x.filter="blur("+rad+"px)";x.drawImage(base,0,0);x.filter="none";d._tsk=key;d._tsc=c;return c}
@@ -2257,6 +2258,7 @@ $("tDx").oninput=function(){TC.dx=this.value/100;$("tDxO").textContent=this.valu
 $("tDy").oninput=function(){TC.dy=this.value/100;$("tDyO").textContent=this.value;tUpdate()};
 $("tSh").oninput=function(){TC.sh=this.value/100;$("tShO").textContent=this.value+"%";tUpdate()};
 $("tTx").oninput=function(){TC.tx=this.value/100;$("tTxO").textContent=this.value+"%";tUpdate()};
+$("tBl").oninput=function(){TC.bl=this.value/100;$("tBlO").textContent=this.value+"%";tUpdate()};
 $("tFw").oninput=function(){TC.fw=this.value/100;$("tFwO").textContent=this.value+"%";tUpdate()};
 $("tRes").onchange=function(){TC.res=+this.value};
 $("tPReset").onclick=function(){TC.sc=1;TC.dx=0;TC.dy=0;TC.rot=0;tSyncUI();tUpdate()};
@@ -2302,7 +2304,7 @@ $("tSample").onclick=function(){
 $("fastT").onchange=function(){FAST=this.checked;["fastS","fastI","fastT"].forEach(function(o){$(o).checked=FAST})};
 function tLock(on){
   exporting=on;$("tCancel").classList.toggle("hide",!on);$("tBar").style.display=on?"block":"none";
-  ["tSc","tRot","tDx","tDy","tSh","tRes","tFw","tTx","tPReset","tTpl","tFile","vFile","tSample","tCurve","tWave","tPH","tPV","tSk","tWReset"].forEach(function(i){$(i).disabled=on});
+  ["tSc","tRot","tDx","tDy","tSh","tRes","tFw","tTx","tBl","tPReset","tTpl","tFile","vFile","tSample","tCurve","tWave","tPH","tPV","tSk","tWReset"].forEach(function(i){$(i).disabled=on});
   if(on){TP.play=false;$("tPlay").textContent="Play"}
   tRender();
 }
