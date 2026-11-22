@@ -2055,6 +2055,20 @@ function tplRect(d){
   return [cx-w/2,cy-h/2,w,h];
 }
 function tplProj(Hm,x,y,s){var X=Hm[0]*x+Hm[1]*y+Hm[2],Y=Hm[3]*x+Hm[4]*y+Hm[5],Z=Hm[6]*x+Hm[7]*y+Hm[8];return [X/Z*s,Y/Z*s]}
+/* alpha of a canvas as an opaque grey picture (white = ink). The warp is drawn a second time with this and the 'lighten' blend, so where two mesh triangles overlap by the anti-seam margin the alpha is max()-ed instead of stacked - stacking doubled the alpha of semi-transparent print pixels and showed up as a grid of light lines inside the design. */
+function tplMask(img){
+  if(img._ma)return img._ma;
+  var t=mk(img.width,img.height),tx=t.getContext("2d");tx.drawImage(img,0,0);tx.globalCompositeOperation="source-in";tx.fillStyle="#fff";tx.fillRect(0,0,t.width,t.height);
+  var o=mk(img.width,img.height),ox=o.getContext("2d");ox.fillStyle="#000";ox.fillRect(0,0,o.width,o.height);ox.drawImage(t,0,0);
+  img._ma=o;return o;
+}
+/* the design is mapped tile by tile; drawing a small sub-rect of a HUGE picture (minifying 20-60x in one go) makes the browser fade the tile edge to transparent = dark grid lines. So hand the mesh a copy that is only a little bigger than what ends up on screen (cached in 25 % steps). */
+function tplPre(img,k){
+  var kq=Math.pow(1.25,Math.ceil(Math.log(k)/Math.log(1.25)-1e-6));if(kq>=.8)return img;
+  var c=img._pre;if(c&&c.kq===kq)return c.cv;
+  var w=Math.max(8,Math.round(img.width*kq)),h=Math.max(8,Math.round(img.height*kq)),cv=mk(w,h),x=cv.getContext("2d");x.imageSmoothingEnabled=true;x.imageSmoothingQuality="high";x.drawImage(img,0,0,w,h);
+  img._pre={kq:kq,cv:cv};return cv;
+}
 function tplTri(ctx,img,s0,s1,s2,d0,d1,d2){
   var det=(s1[0]-s0[0])*(s2[1]-s0[1])-(s2[0]-s0[0])*(s1[1]-s0[1]);if(Math.abs(det)<1e-9)return;
   var a=((d1[0]-d0[0])*(s2[1]-s0[1])-(d2[0]-d0[0])*(s1[1]-s0[1]))/det,c=((d2[0]-d0[0])*(s1[0]-s0[0])-(d1[0]-d0[0])*(s2[0]-s0[0]))/det;
@@ -2085,8 +2099,9 @@ function tplDraw(ctx,W,H,f,d){
   if(!TP.layer||TP.layer.width!==W||TP.layer.height!==H){TP.layer=mk(W,H);TP.hand=mk(W,H);TP.lx=TP.layer.getContext("2d");TP.hx=TP.hand.getContext("2d");TP.msk=mk(L.skin[2],L.skin[3]);TP.mx=TP.msk.getContext("2d");TP.ov=mk(L.shade[2],L.shade[3]);TP.ox=TP.ov.getContext("2d")}
   var lx=TP.lx,img=tplSoft(tplDesignCanvas(d),d,tplRect(d),s),r=tplRect(d),i,j,q,ef=tHasWarp()?WEF:1,rw=r[2]*ef,rh=r[3]*ef,rcx=r[0]+r[2]/2,rcy=r[1]+r[3]/2,ca=Math.cos(TC.rot*Math.PI/180),sa=Math.sin(TC.rot*Math.PI/180);
   var affine=Math.abs(Hm[6])<1e-7&&Math.abs(Hm[7])<1e-7,bend=tr.bi&&TC.fw>0&&!TP.noBend,N=bend?12:(affine?1:8);
-  var bx0=1e9,by0=1e9,bx1=-1e9,by1=-1e9,cc=[[0,0],[1,0],[0,1],[1,1]];
-  for(i=0;i<4;i++){var lx0=(cc[i][0]-.5)*rw,ly0=(cc[i][1]-.5)*rh,pd=tplProj(Hm,rcx+lx0*ca-ly0*sa,rcy+lx0*sa+ly0*ca,s);bx0=Math.min(bx0,pd[0]);by0=Math.min(by0,pd[1]);bx1=Math.max(bx1,pd[0]);by1=Math.max(by1,pd[1])}
+  var bx0=1e9,by0=1e9,bx1=-1e9,by1=-1e9,cc=[[0,0],[1,0],[0,1],[1,1]],cp=[];
+  for(i=0;i<4;i++){var lx0=(cc[i][0]-.5)*rw,ly0=(cc[i][1]-.5)*rh,pd=tplProj(Hm,rcx+lx0*ca-ly0*sa,rcy+lx0*sa+ly0*ca,s);bx0=Math.min(bx0,pd[0]);by0=Math.min(by0,pd[1]);bx1=Math.max(bx1,pd[0]);by1=Math.max(by1,pd[1]);cp[i]=pd}
+  img=tplPre(img,Math.max(Math.hypot(cp[1][0]-cp[0][0],cp[1][1]-cp[0][1])/img.width,Math.hypot(cp[2][0]-cp[0][0],cp[2][1]-cp[0][1])/img.height)*1.5);
   var mg=Math.ceil((bend?10:6)*W/720);bx0=Math.max(0,Math.floor(bx0-mg));by0=Math.max(0,Math.floor(by0-mg));bx1=Math.min(W,Math.ceil(bx1+mg));by1=Math.min(H,Math.ceil(by1+mg));
   var bw=bx1-bx0,bh=by1-by0;
   if(bw<2||bh<2)return;
@@ -2123,6 +2138,18 @@ function tplDraw(ctx,W,H,f,d){
     var a=P[j][i],b=P[j][i+1],c=P[j+1][i],e=P[j+1][i+1];
     tplTri(lx,img,a.s,b.s,c.s,a.d,b.d,c.d);tplTri(lx,img,b.s,e.s,c.s,b.d,e.d,c.d);
   }
+  // second pass: exact alpha (no doubling in the overlap margins), see tplMask
+  if(!TP.mlayer||TP.mlayer.width!==W||TP.mlayer.height!==H){TP.mlayer=mk(W,H);TP.mlx=TP.mlayer.getContext("2d")}
+  var mlx=TP.mlx,ma=tplMask(img);
+  mlx.setTransform(1,0,0,1,0,0);mlx.globalCompositeOperation="source-over";mlx.globalAlpha=1;mlx.fillStyle="#000";mlx.fillRect(bx0,by0,bw,bh);mlx.globalCompositeOperation="lighten";mlx.imageSmoothingEnabled=true;
+  for(j=0;j<N;j++)for(i=0;i<N;i++){
+    var a=P[j][i],b=P[j][i+1],c=P[j+1][i],e=P[j+1][i+1];
+    tplTri(mlx,ma,a.s,b.s,c.s,a.d,b.d,c.d);tplTri(mlx,ma,b.s,e.s,c.s,b.d,e.d,c.d);
+  }
+  mlx.globalCompositeOperation="source-over";
+  var ld=lx.getImageData(bx0,by0,bw,bh),md=mlx.getImageData(bx0,by0,bw,bh),ldd=ld.data,mdd=md.data,qq;
+  for(qq=0;qq<ldd.length;qq+=4)ldd[qq+3]=mdd[qq];
+  lx.putImageData(ld,bx0,by0);
   // fabric light and shade taken from the original video
   if(useSh){
     var o=TP.ox.createImageData(sw0,sh0),sc=TC.sh*1.9,wl=tr.white||232;
