@@ -1978,8 +1978,8 @@ function tplDraw(ctx,W,H,f,d){
   }
   // fabric light and shade taken from the original print
   if(TC.sh>0){
-    var sd=TP.sctx.getImageData(L.shade[0],L.shade[1],L.shade[2],L.shade[3]),o=TP.ox.createImageData(L.shade[2],L.shade[3]),q,sc=TC.sh*1.9;
-    for(q=0;q<sd.data.length;q+=4){var rel=Math.min(1,sd.data[q]/232);o.data[q+3]=Math.min(235,(1-rel)*255*sc)}
+    var wl=tr.white||232,sd=TP.sctx.getImageData(L.shade[0],L.shade[1],L.shade[2],L.shade[3]),o=TP.ox.createImageData(L.shade[2],L.shade[3]),q,sc=TC.sh*1.9;
+    for(q=0;q<sd.data.length;q+=4){var rel=Math.min(1,sd.data[q]/wl);o.data[q+3]=Math.min(235,(1-rel)*255*sc)}
     TP.ox.putImageData(o,0,0);
     lx.globalCompositeOperation="source-atop";lx.imageSmoothingEnabled=true;lx.drawImage(TP.ov,0,0,L.shade[2],L.shade[3],0,0,W,H);lx.globalCompositeOperation="source-over";
   }
