@@ -31,3 +31,5 @@ When the source video shows a BLANK shirt and the camera does not move, there is
 2. `python3 build_blank.py FPS x,y,w,h` (x,y,w,h = print area in frame pixels) – writes identity homographies, skin masks and a shade map.
 3. `python3 pack.py OUTDIR "Name"` – packs template.mp4 + track.json (fps is taken from track_raw.json).
 4. Add `{id,name}` to site/templates/list.json.
+
+Blank-shirt templates use a two-sided shade map (`"bi":1` in track.json): code 128 = neutral, below = fold in shadow, above = fold catching light (code = 128 + (brightness/blur - 1)*254). The tool darkens/brightens the print with it and bends the print slightly along the folds ("Follow fabric folds" slider).
