@@ -2091,6 +2091,10 @@ function tplDraw(ctx,W,H,f,d){
         // gradient of the smoothed fabric brightness = how much the print slides along the folds
         var kk=TC.fw*260*(W/720),cap=3.2*(W/720),Rb=tBlurF(R,sw0,sh0,6),gi,X,Y;Gx=new Float32Array(sw0*sh0);Gy=new Float32Array(sw0*sh0);
         for(Y=1;Y<sh0-1;Y++)for(X=1;X<sw0-1;X++){gi=Y*sw0+X;Gx[gi]=Math.max(-cap,Math.min(cap,(Rb[gi+1]-Rb[gi-1])*.5*kk*fs2));Gy[gi]=Math.max(-cap,Math.min(cap,(Rb[gi+sw0]-Rb[gi-sw0])*.5*kk*fs2))}
+        // a hand (or its shadow) near the print must not push the print around: fade the fold-follow out close to skin
+        var hk=TP.sctx.getImageData(L.skin[0]+sx0,L.skin[1]+sy0,sw0,sh0).data,hs=new Float32Array(sw0*sh0),hany=false;
+        for(q=0;q<hs.length;q++){if(hk[q*4]>24){hs[q]=1;hany=true}}
+        if(hany){var hb=tBlurF(hs,sw0,sh0,18),hf;for(gi=0;gi<hs.length;gi++){hf=1-Math.min(1,hb[gi]*4);Gx[gi]*=hf;Gy[gi]*=hf}}
       }
     }
   }
