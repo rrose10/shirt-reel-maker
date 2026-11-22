@@ -7,8 +7,12 @@ tj=json.load(open('track_raw.json'));FPS=int(tj.get('fps',30))
 for t in range(N):
     c=cv2.imread(f'cl/{t:03d}.png')
     s=cv2.resize(sk[t],(360,640),interpolation=cv2.INTER_AREA);h=cv2.resize(sh[t],(360,640),interpolation=cv2.INTER_AREA)
-    cv2.imwrite(f'pk/{t:03d}.png',np.hstack([c,cv2.cvtColor(np.vstack([s,h]),cv2.COLOR_GRAY2BGR)]))
+    f=np.hstack([c,cv2.cvtColor(np.vstack([s,h]),cv2.COLOR_GRAY2BGR)])
+    # frame number as 12 black/white cells (30x12 px) at the bottom of the right column: the browser can read the exact
+    # frame it is showing, even when a real-time recording drifts against the video clock
+    for b in range(12):f[1268:1280,720+b*30:750+b*30]=255 if (t>>b)&1 else 0
+    cv2.imwrite(f'pk/{t:03d}.png',f)
 subprocess.check_call(['ffmpeg','-v','error','-y','-framerate',str(FPS),'-i','pk/%03d.png','-c:v','libx264','-preset','slow','-crf','21','-g','1','-pix_fmt','yuv420p','-movflags','+faststart','-an',out+'/template.mp4'])
 x0,y0,x1,y1=tj['bbox']
-json.dump({'v':1,'name':name,'w':720,'h':1280,'fps':FPS,'n':tj['N'],'white':round(tj.get('white',232)),'bi':int(tj.get('bi',0)),'bbox':[x0,y0,x1-x0,y1-y0],'layout':{'skin':[720,0,360,640],'shade':[720,640,360,640]},'H':[[round(v,6) for v in h] for h in tj['H']]},open(out+'/track.json','w'),separators=(',',':'))
+json.dump({'v':1,'name':name,'w':720,'h':1280,'fps':FPS,'n':tj['N'],'white':round(tj.get('white',232)),'bi':int(tj.get('bi',0)),'code':1,'bbox':[x0,y0,x1-x0,y1-y0],'layout':{'skin':[720,0,360,640],'shade':[720,640,360,640]},'H':[[round(v,6) for v in h] for h in tj['H']]},open(out+'/track.json','w'),separators=(',',':'))
 print('wrote',out)

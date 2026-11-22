@@ -1291,7 +1291,7 @@ function fastNotes(){
 }
 ["fastS","fastI"].forEach(function(id){$(id).onchange=function(){FAST=this.checked;["fastS","fastI","fastT"].forEach(function(o){$(o).checked=FAST})}});
 fastNotes();
-window.__T={get tcur(){return tcur},tplDraw:function(){return tplDraw.apply(null,arguments)},tplSeek:function(i){return tplSeek(i)},get TP(){return TP},get b(){return curB},get d(){return curD},drawScene:drawScene,renderFast:renderFast,recordAny:recordAny,buildZip:buildZip,captionsFile:captionsFile,get results(){return results},get results2(){return results2},get tq(){return tQuad()},get tc(){return TC}};
+window.__T={tRtFrame:function(v){return tRtFrame(v)},get tcur(){return tcur},tplDraw:function(){return tplDraw.apply(null,arguments)},tplSeek:function(i){return tplSeek(i)},get TP(){return TP},get b(){return curB},get d(){return curD},drawScene:drawScene,renderFast:renderFast,recordAny:recordAny,buildZip:buildZip,captionsFile:captionsFile,get results(){return results},get results2(){return results2},get tq(){return tQuad()},get tc(){return TC}};
 
 /* recording with optional audio */
 function pickMimeA(audio){
@@ -2015,6 +2015,15 @@ function tplTex(){
   }
   x.putImageData(im,0,0);TP.tex=c;return c;
 }
+// Which template frame is on screen right now (real-time recording): newer templates carry the frame number in the picture itself
+function tRtFrame(v){
+  var tr=TP.tr,n=tr.n,i;
+  if(tr.code){
+    try{var cd=TP.sctx.getImageData(tr.w,tr.h-12,360,12).data,b,idx=0;for(b=0;b<12;b++){if(cd[(6*360+b*30+15)*4]>127)idx|=1<<b}if(idx<n)return idx}catch(e){}
+  }
+  if(TP.mt!=null)i=Math.floor(TP.mt*tr.fps+.01);else i=Math.floor(v.currentTime*tr.fps+1e-3);
+  return Math.max(0,Math.min(n-1,i));
+}
 function tplSoft(base,d,r,s){
   // a touch of ink softness: blur the design once (cached) instead of blurring every video frame
   var px=r[2]*s*(tHasWarp()?WEF:1);if(px<500)return base;
@@ -2137,10 +2146,10 @@ function tDrawFn(d){
   var fn=function(ctx,w,h,t){
     var v=TP.vid;
     if(!lastFast){ // normal recording: let the template play in real time
-      if(t<.05){try{v.currentTime=0;var pr=v.play();if(pr&&pr.catch)pr.catch(function(){})}catch(e){}TP.noBend=false;TP.ema=0}
+      if(t<.05){try{v.currentTime=0;var pr=v.play();if(pr&&pr.catch)pr.catch(function(){})}catch(e){}TP.noBend=false;TP.ema=0;TP.mt=null;if(v.requestVideoFrameCallback){(function cb(now,md){TP.mt=md.mediaTime;try{v.requestVideoFrameCallback(cb)}catch(e){}})(0,{mediaTime:0});}}
       try{TP.sctx.drawImage(v,0,0);TP.curI=-1;TP.pre=null}catch(e){}
       var tt0=performance.now();
-      tplDraw(ctx,w,h,Math.min(TP.tr.n-1,Math.floor(v.currentTime*TP.tr.fps+1e-3)),d);
+      tplDraw(ctx,w,h,tRtFrame(v),d);
       // real-time recording must keep up with the video: if drawing is too slow, drop the fold bend (the light/shade stays)
       TP.ema=(TP.ema||0)*.8+(performance.now()-tt0)*.2;if(TP.ema>24&&t>.3)TP.noBend=true;
     }else tplDraw(ctx,w,h,tFrameOf(t),d);
