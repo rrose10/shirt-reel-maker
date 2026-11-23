@@ -2118,7 +2118,7 @@ function tplRimClean(id,w,h,P,r){
   }
 }
 // hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow. Paints the hands into TP.hand
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v5"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v6"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   var hx=TP.hx,mx2=TP.mx2;
   var rx=Math.max(0,Math.floor(hx0/s)-2),ry=Math.max(0,Math.floor(hy0/s)-2),rx1=Math.min(tr.w,Math.ceil((hx0+hw)/s)+2),ry1=Math.min(tr.h,Math.ceil((hy0+hh)/s)+2),rw=rx1-rx,rh=ry1-ry;
@@ -2127,7 +2127,7 @@ function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
     var pc=TP.pc||(TP.pc=mk(tr.w,tr.h)),pcx=pc.getContext("2d");pcx.drawImage(TP.src,rx,ry,rw,rh,rx,ry,rw,rh);
     var mid=mx2.getImageData(rx,ry,rw,rh),pd=pcx.getImageData(rx,ry,rw,rh).data,c0=0,c1=0,c2=0,qq,nn=rw*rh;
     for(qq=0;qq<nn;qq++){if(mid.data[qq*4+3]>200)c0++;if(pd[qq*4]+pd[qq*4+1]+pd[qq*4+2]>60)c2++}
-    tplSkinAlpha(mid,rw,rh,pd);tplFillHoles(mid,rw,rh,1000,pd);mx2.putImageData(mid,rx,ry);
+    tplSkinAlpha(mid,rw,rh,pd,tr.hc);tplFillHoles(mid,rw,rh,1000,pd);mx2.putImageData(mid,rx,ry);
     for(qq=0;qq<nn;qq++){if(mid.data[qq*4+3]>200)c1++}
     TP.dbg="hands "+(tplL2A()?"gpu":"cpu")+" ok raw "+c0+" final "+c1+" plate "+(c2>0?"ok":"BLACK");
   }catch(e){TP.dbg="hands ERROR "+(e&&e.message||e)}}
@@ -2137,7 +2137,7 @@ function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
 }
 // Hand alpha straight from the colour of the plate: skin is clearly more saturated and warmer than the white shirt (and than its grey-blue shadows).
 // The supplied cut-out only decides in deep shadow (very dark pixels), where colour says nothing. Motion-blurred hands become partly transparent in proportion.
-function tplSkinAlpha(id,w,h,P){
+function tplSkinAlpha(id,w,h,P,ext){
   var A=id.data,n=w*h,i,o,R,G,B,mx,mn,sat,a,x,y,k,m,r=4,D=new Uint8Array(n),T=new Uint8Array(n);
   // the supplied cut-out, grown a few pixels: colour may only decide close to a hand (the cast shadow on the shirt is warm and would otherwise show up as blocky patches)
   for(i=0;i<n;i++)T[i]=A[i*4+3]>100?1:0;
@@ -2155,8 +2155,20 @@ function tplSkinAlpha(id,w,h,P){
   for(x=0;x<w;x++){for(y=0;y<h;y++){ok=1;for(k=y-rz;k<=y+rz;k++){if(k<0||k>=h||!E[k*w+x]){ok=0;break}}Z[y*w+x]=ok}}
   for(y=0;y<h;y++){for(x=0;x<w;x++){m=0;for(k=Math.max(0,x-r);k<=Math.min(w-1,x+r);k++)if(T[y*w+k]){m=1;break}D[y*w+x]=m}}
   for(x=0;x<w;x++){for(y=0;y<h;y++){if(!D[y*w+x])continue;for(k=Math.max(0,y-r);k<=Math.min(h-1,y+r);k++)T[k*w+x]=2}}
+  // templates whose supplied cut-out misses a hand (flag hc): skin colour alone decides anywhere in the box, then holes of up to 8px are closed
+  var X=null;
+  if(ext){
+    X=new Uint8Array(n);
+    for(i=0;i<n;i++){o=i*4;R=P[o];G=P[o+1];B=P[o+2];mx=R>G?(R>B?R:B):(G>B?G:B);if(mx<70)continue;mn=R<G?(R<B?R:B):(G<B?G:B);sat=(mx-mn)/mx;if(sat>=.3&&R>=G-4&&G>=B-8)X[i]=1}
+    var re2=4;
+    for(y=0;y<h;y++){for(x=0;x<w;x++){m=0;for(k=Math.max(0,x-re2);k<=Math.min(w-1,x+re2);k++)if(X[y*w+k]){m=1;break}E[y*w+x]=m}}
+    for(x=0;x<w;x++){for(y=0;y<h;y++){m=0;for(k=Math.max(0,y-re2);k<=Math.min(h-1,y+re2);k++)if(E[k*w+x]){m=1;break}D[y*w+x]=m}}
+    for(y=0;y<h;y++){for(x=0;x<w;x++){ok=1;for(k=x-re2;k<=x+re2;k++){if(k<0||k>=w||!D[y*w+k]){ok=0;break}}E[y*w+x]=ok}}
+    for(x=0;x<w;x++){for(y=0;y<h;y++){ok=1;for(k=y-re2;k<=y+re2;k++){if(k<0||k>=h||!E[k*w+x]){ok=0;break}}X[y*w+x]=ok}}
+  }
   for(i=0;i<n;i++){
     o=i*4;
+    if(X&&X[i]){A[o+3]=255;continue}
     if(T[i]!==2){A[o+3]=0;continue}                       // far from any hand
     R=P[o];G=P[o+1];B=P[o+2];mx=R>G?(R>B?R:B):(G>B?G:B);
     if(mx<40)continue;                                    // deep shadow: keep the supplied matte
@@ -2606,6 +2618,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v5</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v6</div>
 </body>
 </html>
