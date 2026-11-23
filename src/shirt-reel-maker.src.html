@@ -1313,7 +1313,7 @@ function recordGeneric(drawFn,W,H,audio,onProg){
     if(mime===null){reject(new Error("This browser cannot record video. Use Chrome, Edge or Safari on a computer."));return}
     var cv=document.createElement("canvas");cv.width=W;cv.height=H;cv.style.cssText="position:fixed;left:-99999px;top:0";document.body.appendChild(cv);
     var ctx=cv.getContext("2d");drawFn(ctx,W,H,0);
-    var stream=cv.captureStream(30),src=null,g=null,dest=null,rec,off=0;
+    var stream=cv.captureStream(FPS),src=null,g=null,dest=null,rec,off=0;
     function cleanup(){cv.remove();try{if(src){src.stop();src.disconnect()}}catch(e){}try{if(g)g.disconnect()}catch(e){}}
     try{
       if(audio){
@@ -2400,7 +2400,8 @@ async function tRunQueue(list){
   var Ctx=window.AudioContext||window.webkitAudioContext,ac=null;
   if(AUD&&Ctx){try{ac=new Ctx();ac.resume()}catch(e){ac=null}}
   stopMusic();cancelFlag=false;tLock(true);var done=0,failed=false,withAudio=!!(AUD&&ac);
-  var W=TC.res,H=Math.round(TC.res*16/9/2)*2,DUR0=DUR,clip=TP.tr.n/TP.tr.fps;
+  var W=TC.res,H=Math.round(TC.res*16/9/2)*2,DUR0=DUR,FPS0=FPS,clip=TP.tr.n/TP.tr.fps;
+  FPS=Math.round(TP.tr.fps)||30;   // export at the template's own frame rate: 24 -> 30 fps repeats every 5th frame and the whole picture hitches 6 times a second
   DUR=Math.round((clip<9?clip+1.5:clip)*100)/100;   // a short clip is not stretched to 10 s: it plays once and holds its last frame for 1.5 s
   for(var i=0;i<list.length;i++){
     if(cancelFlag)break;
@@ -2416,7 +2417,7 @@ async function tRunQueue(list){
       }
     }catch(err){tStatus(err.message||"Recording failed.");failed=true;break}
   }
-  DUR=DUR0;
+  DUR=DUR0;FPS=FPS0;
   if(ac){try{ac.close()}catch(e){}}
   var wasCancelled=cancelFlag;tLock(false);$("tBarI").style.width="0";
   if(cancelFlag)tStatus("Cancelled. "+done+" finished.");else if(done&&!failed){await Promise.all(nasP.splice(0));tStatus(done+" video"+(done>1?"s":"")+" ready below."+nasNote(results3.slice(0,done)));showResults("tResults")}
