@@ -52,8 +52,9 @@ for k in range(1,n):
     par=best.x if free_scale else np.array([1.,best.x[1],best.x[2]])
     PAR[k]=par;FUN[k]=best.fun;REL[k]=best.fun<5
     if REL[k]:prev=par
-from scipy.ndimage import median_filter
-for j in (1,2):PAR[1:still+1,j]=median_filter(PAR[1:still+1,j],size=9,mode='nearest')   # no single-frame spikes (steps survive)
+from scipy.ndimage import median_filter,gaussian_filter1d
+for j in (1,2):      # reject single-frame outliers only (a median over many frames would turn the pull-down ramp into a step)
+    v=PAR[1:still+1,j];ref=median_filter(v,size=7,mode='nearest');bad=np.abs(v-ref)>2.5;v[bad]=ref[bad];PAR[1:still+1,j]=gaussian_filter1d(v,0.7,mode='nearest')
 # once the camera zooms the outline leaves the frame and single-frame fits get noisy: from there on use one robust vertical offset
 # (median of the reliable fits), eased in from the last still-phase value, and no sideways shift.
 idx=np.arange(n);late=idx>still
