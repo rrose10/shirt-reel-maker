@@ -1931,6 +1931,7 @@ function sayT(t){$("zipTS").textContent=t}
 function tStatus(t){$("tStatus").textContent=t||""}
 function mk(w,h,rd){var c=document.createElement("canvas");c.width=w;c.height=h;return c}
 async function tplLoadFiles(tr,blob,label){
+  TP.fab=null;
   if(TP.url)URL.revokeObjectURL(TP.url);
   TP.tr=tr;TP.url=URL.createObjectURL(blob);
   var v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";v.src=TP.url;
@@ -1949,8 +1950,9 @@ async function tplLoadId(id){
     var base="templates/"+id+"/";
     var tr=await (await fetch(base+"track.json",{cache:"no-cache"})).json();
     var vb=await (await fetch(base+"template.mp4")).blob();
+    var fab=null;try{var fr=await fetch(base+"fabric.json",{cache:"no-cache"});if(fr.ok){var fj=await fr.json(),bs=atob(fj.d),u8=new Int8Array(bs.length),fi;for(fi=0;fi<bs.length;fi++){u8[fi]=bs.charCodeAt(fi)<<24>>24}fj.a=u8;fab=fj}}catch(e){fab=null}
     await tplLoadFiles(tr,vb,(TP.list.filter(function(x){return x.id===id})[0]||{name:id}).name);
-    TP.loaded=id;tStatus("");
+    TP.fab=fab;TP.loaded=id;tStatus("");
   }catch(e){tStatus("Could not load that template. "+(e&&e.message?e.message:""))}
 }
 async function tplList(){
@@ -2074,6 +2076,12 @@ function tplRect(d){
   var k=Math.min(bb[2]/d.w,bb[3]*1.1/d.h)*TC.sc,w=d.w*k,h=d.h*k;
   return [cx-w/2,cy-h/2,w,h];
 }
+// sideways shift (plate pixels) of the cloth at plate position (x,y) in frame f, from fabric.json (made by tools/video_template/fabric_field.py)
+function tplFab(F,f,x,y){
+  var u=(x-F.x0)/F.step,v=(y-F.y0)/F.step;u=Math.max(0,Math.min(F.cols-1.001,u));v=Math.max(0,Math.min(F.rows-1.001,v));
+  var i=u|0,j=v|0,a=u-i,b=v-j,o=f*F.rows*F.cols,A=F.a,w=F.cols;
+  return F.unit*(A[o+j*w+i]*(1-a)*(1-b)+A[o+j*w+i+1]*a*(1-b)+A[o+(j+1)*w+i]*(1-a)*b+A[o+(j+1)*w+i+1]*a*b);
+}
 function tplProj(Hm,x,y,s){var X=Hm[0]*x+Hm[1]*y+Hm[2],Y=Hm[3]*x+Hm[4]*y+Hm[5],Z=Hm[6]*x+Hm[7]*y+Hm[8];return [X/Z*s,Y/Z*s]}
 /* alpha of a canvas as an opaque grey picture (white = ink). The warp is drawn a second time with this and the 'lighten' blend, so where two mesh triangles overlap by the anti-seam margin the alpha is max()-ed instead of stacked - stacking doubled the alpha of semi-transparent print pixels and showed up as a grid of light lines inside the design. */
 /* luminance -> alpha without reading pixels back: an SVG colour matrix used as a canvas filter (Chrome/Edge/Firefox GPU path).
@@ -2171,9 +2179,11 @@ function tplDraw(ctx,W,H,f,d){
     return [Gx[g]*(1-ax)*(1-ay)+Gx[g+1]*ax*(1-ay)+Gx[g+sw0]*(1-ax)*ay+Gx[g+sw0+1]*ax*ay,Gy[g]*(1-ax)*(1-ay)+Gy[g+1]*ax*(1-ay)+Gy[g+sw0]*(1-ax)*ay+Gy[g+sw0+1]*ax*ay];
   }
   var P=[];
+  var fab=bend&&TP.fab&&TP.fab.n>f?TP.fab:null,fabK=TC.fw/0.6;
   var th=tr.bi?.5*TC.fw:0,sth=Math.sin(th);
   for(j=0;j<=N;j++){P[j]=[];for(i=0;i<=N;i++){var u0=i/N,v0=j/N,lx1=(th>.02?Math.sin((u0-.5)*2*th)/sth/2:(u0-.5))*rw,ly1=(v0-.5)*rh,pd2=tplProj(Hm,rcx+lx1*ca-ly1*sa,rcy+lx1*sa+ly1*ca,s);
     if(Gx){var dv=disp(pd2[0],pd2[1]);pd2=[pd2[0]+dv[0],pd2[1]+dv[1]]}
+    if(fab){var g0=tplProj(tr.H[0],rcx+lx1*ca-ly1*sa,rcy+lx1*sa+ly1*ca,1);pd2=[pd2[0]+tplFab(fab,f,g0[0],g0[1])*fabK*s,pd2[1]]}
     P[j][i]={s:[u0*img.width,v0*img.height],d:pd2}}}
   PF('P');lx.setTransform(1,0,0,1,0,0);lx.globalCompositeOperation="source-over";lx.clearRect(bx0,by0,bw,bh);
   for(j=0;j<N;j++)for(i=0;i<N;i++){
