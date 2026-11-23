@@ -2118,7 +2118,7 @@ function tplRimClean(id,w,h,P,r){
   }
 }
 // hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow. Paints the hands into TP.hand
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v8"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw;
@@ -2130,7 +2130,7 @@ function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
     if(c0||tr.hc){
       var pc=TP.pc||(TP.pc=mk(kw,kh)),pcx=pc.getContext("2d");pcx.imageSmoothingEnabled=true;pcx.drawImage(TP.src,0,0,tr.w,tr.h,0,0,kw,kh);
       var pd=pcx.getImageData(ax,ay,aw,ah).data;
-      tplSkinAlpha(mid,aw,ah,pd,tr.hc);tplFillHoles(mid,aw,ah,260,pd);mx2.putImageData(mid,ax,ay);
+      tplSkinAlpha(mid,aw,ah,pd,tr.hc,tr.sl,tr.sz);tplFillHoles(mid,aw,ah,260,pd);mx2.putImageData(mid,ax,ay);
       for(qq=0;qq<nn;qq++){if(mid.data[qq*4+3]>200)c1++}
       TP.dbg="hands "+(tplL2A()?"gpu":"cpu")+" ok final "+c1;
     }else TP.dbg="hands "+(tplL2A()?"gpu":"cpu")+" none";
@@ -2141,7 +2141,8 @@ function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
 }
 // Hand alpha straight from the colour of the plate: skin is clearly more saturated and warmer than the white shirt (and than its grey-blue shadows).
 // The supplied cut-out only decides in deep shadow (very dark pixels), where colour says nothing. Motion-blurred hands become partly transparent in proportion.
-function tplSkinAlpha(id,w,h,P,ext){
+function tplSkinAlpha(id,w,h,P,ext,sl,sz){
+  sl=sl||.18;sz=sz||.06;
   var A=id.data,n=w*h,i,o,R,G,B,mx,mn,sat,a,x,y,k,m,r=2,D=new Uint8Array(n),T=new Uint8Array(n);
   // the supplied cut-out, grown a few pixels: colour may only decide close to a hand (the cast shadow on the shirt is warm and would otherwise show up as blocky patches)
   for(i=0;i<n;i++)T[i]=A[i*4+3]>100?1:0;
@@ -2179,7 +2180,7 @@ function tplSkinAlpha(id,w,h,P,ext){
     mn=R<G?(R<B?R:B):(G<B?G:B);sat=(mx-mn)/mx;
     if(C[i]&&sat>=.22&&R>=G-4&&G>=B-8){A[o+3]=255;continue} // inside the cut-out and not shirt-coloured: hand, however pale the highlight
     if(!(R>=G-4&&G>=B-8)){A[o+3]=0;continue}              // not a skin hue
-    a=(sat-.18)/.12;if(Z[i]&&sat>.06){m=(sat-.06)/.06;if(m>a)a=m}   // pale warm patch inside / next to the hand: skin
+    a=(sat-sl)/.12;if(Z[i]&&sat>sz){m=(sat-sz)/.06;if(m>a)a=m}   // pale warm patch inside / next to the hand: skin
     A[o+3]=a<=0?0:a>=1?255:a*255;
   }
 }
@@ -2622,6 +2623,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v8</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9</div>
 </body>
 </html>
