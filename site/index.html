@@ -2128,36 +2128,40 @@ function tplRimClean(id,w,h,P,r){
   }
 }
 // hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow. Paints the hands into TP.hand
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v7"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v8"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
-  var hx=TP.hx,mx2=TP.mx2;
-  var rx=Math.max(0,Math.floor(hx0/s)-2),ry=Math.max(0,Math.floor(hy0/s)-2),rx1=Math.min(tr.w,Math.ceil((hx0+hw)/s)+2),ry1=Math.min(tr.h,Math.ceil((hy0+hh)/s)+2),rw=rx1-rx,rh=ry1-ry;
-  mx2.setTransform(1,0,0,1,0,0);mx2.globalCompositeOperation="source-over";mx2.imageSmoothingEnabled=true;mx2.clearRect(0,0,tr.w,tr.h);mx2.drawImage(TP.msk,0,0,kw,kh,0,0,tr.w,tr.h);
-  if(rw>2&&rh>2){try{
-    var pc=TP.pc||(TP.pc=mk(tr.w,tr.h)),pcx=pc.getContext("2d");pcx.drawImage(TP.src,rx,ry,rw,rh,rx,ry,rw,rh);
-    var mid=mx2.getImageData(rx,ry,rw,rh),pd=pcx.getImageData(rx,ry,rw,rh).data,c0=0,c1=0,c2=0,qq,nn=rw*rh;
-    for(qq=0;qq<nn;qq++){if(mid.data[qq*4+3]>200)c0++;if(pd[qq*4]+pd[qq*4+1]+pd[qq*4+2]>60)c2++}
-    tplSkinAlpha(mid,rw,rh,pd,tr.hc);tplFillHoles(mid,rw,rh,1000,pd);mx2.putImageData(mid,rx,ry);
-    for(qq=0;qq<nn;qq++){if(mid.data[qq*4+3]>200)c1++}
-    TP.dbg="hands "+(tplL2A()?"gpu":"cpu")+" ok raw "+c0+" final "+c1+" plate "+(c2>0?"ok":"BLACK");
+  // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
+  var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw;
+  var ax=Math.max(0,Math.floor(hx0/k3)-2),ay=Math.max(0,Math.floor(hy0/k3)-2),ax1=Math.min(kw,Math.ceil((hx0+hw)/k3)+2),ay1=Math.min(kh,Math.ceil((hy0+hh)/k3)+2),aw=ax1-ax,ah=ay1-ay;
+  mx2.setTransform(1,0,0,1,0,0);mx2.globalCompositeOperation="source-over";mx2.imageSmoothingEnabled=true;mx2.clearRect(0,0,kw,kh);mx2.drawImage(TP.msk,0,0);
+  if(aw>2&&ah>2){try{
+    var mid=mx2.getImageData(ax,ay,aw,ah),nn=aw*ah,qq,c0=0,c1=0;
+    for(qq=0;qq<nn;qq++){if(mid.data[qq*4+3]>100){c0++;break}}
+    if(c0||tr.hc){
+      var pc=TP.pc||(TP.pc=mk(kw,kh)),pcx=pc.getContext("2d");pcx.imageSmoothingEnabled=true;pcx.drawImage(TP.src,0,0,tr.w,tr.h,0,0,kw,kh);
+      var pd=pcx.getImageData(ax,ay,aw,ah).data;
+      tplSkinAlpha(mid,aw,ah,pd,tr.hc);tplFillHoles(mid,aw,ah,260,pd);mx2.putImageData(mid,ax,ay);
+      for(qq=0;qq<nn;qq++){if(mid.data[qq*4+3]>200)c1++}
+      TP.dbg="hands "+(tplL2A()?"gpu":"cpu")+" ok final "+c1;
+    }else TP.dbg="hands "+(tplL2A()?"gpu":"cpu")+" none";
   }catch(e){TP.dbg="hands ERROR "+(e&&e.message||e)}}
   hx.setTransform(1,0,0,1,0,0);hx.globalCompositeOperation="source-over";hx.clearRect(hx0,hy0,hw,hh);
   hx.drawImage(TP.src,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);
-  hx.globalCompositeOperation="destination-in";hx.imageSmoothingEnabled=true;hx.drawImage(TP.msk2,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);hx.globalCompositeOperation="source-over";
+  hx.globalCompositeOperation="destination-in";hx.imageSmoothingEnabled=true;hx.drawImage(TP.msk2,hx0/k3,hy0/k3,hw/k3,hh/k3,hx0,hy0,hw,hh);hx.globalCompositeOperation="source-over";
 }
 // Hand alpha straight from the colour of the plate: skin is clearly more saturated and warmer than the white shirt (and than its grey-blue shadows).
 // The supplied cut-out only decides in deep shadow (very dark pixels), where colour says nothing. Motion-blurred hands become partly transparent in proportion.
 function tplSkinAlpha(id,w,h,P,ext){
-  var A=id.data,n=w*h,i,o,R,G,B,mx,mn,sat,a,x,y,k,m,r=4,D=new Uint8Array(n),T=new Uint8Array(n);
+  var A=id.data,n=w*h,i,o,R,G,B,mx,mn,sat,a,x,y,k,m,r=2,D=new Uint8Array(n),T=new Uint8Array(n);
   // the supplied cut-out, grown a few pixels: colour may only decide close to a hand (the cast shadow on the shirt is warm and would otherwise show up as blocky patches)
   for(i=0;i<n;i++)T[i]=A[i*4+3]>100?1:0;
   // the inside of the supplied cut-out (shrunk 3px from its rim) is certainly hand, however pale a highlight is; the rim is decided by colour
-  var C=new Uint8Array(n),re=3,ok;
+  var C=new Uint8Array(n),re=2,ok;
   for(i=0;i<n;i++)C[i]=A[i*4+3]>200?1:0;
   for(y=0;y<h;y++){for(x=0;x<w;x++){ok=1;for(k=x-re;k<=x+re;k++){if(k<0||k>=w||!C[y*w+k]){ok=0;break}}D[y*w+x]=ok}}
   for(x=0;x<w;x++){for(y=0;y<h;y++){ok=1;for(k=y-re;k<=y+re;k++){if(k<0||k>=h||!D[k*w+x]){ok=0;break}}C[y*w+x]=ok}}
   // closing of the cut-out (grow then shrink 6px): holes and notches in it are where a pale sunlit patch of skin may sit
-  var Z=new Uint8Array(n),rz=6,E=new Uint8Array(n);
+  var Z=new Uint8Array(n),rz=3,E=new Uint8Array(n);
   for(i=0;i<n;i++)Z[i]=A[i*4+3]>200?1:0;
   for(y=0;y<h;y++){for(x=0;x<w;x++){m=0;for(k=Math.max(0,x-rz);k<=Math.min(w-1,x+rz);k++)if(Z[y*w+k]){m=1;break}E[y*w+x]=m}}
   for(x=0;x<w;x++){for(y=0;y<h;y++){m=0;for(k=Math.max(0,y-rz);k<=Math.min(h-1,y+rz);k++)if(E[k*w+x]){m=1;break}Z[y*w+x]=m}}
@@ -2170,7 +2174,7 @@ function tplSkinAlpha(id,w,h,P,ext){
   if(ext){
     X=new Uint8Array(n);
     for(i=0;i<n;i++){o=i*4;R=P[o];G=P[o+1];B=P[o+2];mx=R>G?(R>B?R:B):(G>B?G:B);if(mx<70)continue;mn=R<G?(R<B?R:B):(G<B?G:B);sat=(mx-mn)/mx;if(sat>=.16&&R>=G-4&&G>=B-8&&B<=.82*R)X[i]=1}
-    var re2=4;
+    var re2=2;
     for(y=0;y<h;y++){for(x=0;x<w;x++){m=0;for(k=Math.max(0,x-re2);k<=Math.min(w-1,x+re2);k++)if(X[y*w+k]){m=1;break}E[y*w+x]=m}}
     for(x=0;x<w;x++){for(y=0;y<h;y++){m=0;for(k=Math.max(0,y-re2);k<=Math.min(h-1,y+re2);k++)if(E[k*w+x]){m=1;break}D[y*w+x]=m}}
     for(y=0;y<h;y++){for(x=0;x<w;x++){ok=1;for(k=x-re2;k<=x+re2;k++){if(k<0||k>=w||!D[y*w+k]){ok=0;break}}E[y*w+x]=ok}}
@@ -2259,7 +2263,7 @@ function tplDraw(ctx,W,H,f,d){
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
   ctx.drawImage(TP.src,0,0,tr.w,tr.h,0,0,W,H);
   if(!d)return;
-  if(!TP.layer||TP.layer.width!==W||TP.layer.height!==H){TP.layer=mk(W,H);TP.hand=mk(W,H);TP.lx=TP.layer.getContext("2d");TP.hx=TP.hand.getContext("2d");TP.msk=mk(L.skin[2],L.skin[3]);TP.mx=TP.msk.getContext("2d");TP.msk2=mk(TP.tr.w,TP.tr.h);TP.mx2=TP.msk2.getContext("2d");TP.ov=mk(L.shade[2],L.shade[3]);TP.ox=TP.ov.getContext("2d")}
+  if(!TP.layer||TP.layer.width!==W||TP.layer.height!==H){TP.layer=mk(W,H);TP.hand=mk(W,H);TP.lx=TP.layer.getContext("2d");TP.hx=TP.hand.getContext("2d");TP.msk=mk(L.skin[2],L.skin[3]);TP.mx=TP.msk.getContext("2d");TP.msk2=mk(L.skin[2],L.skin[3]);TP.mx2=TP.msk2.getContext("2d");TP.ov=mk(L.shade[2],L.shade[3]);TP.ox=TP.ov.getContext("2d")}
   var lx=TP.lx,img=tplSoft(tplDesignCanvas(d),d,tplRect(d),s),r=tplRect(d),i,j,q,ef=tHasWarp()?WEF:1,rw=r[2]*ef,rh=r[3]*ef,rcx=r[0]+r[2]/2,rcy=r[1]+r[3]/2,ca=Math.cos(TC.rot*Math.PI/180),sa=Math.sin(TC.rot*Math.PI/180);
   var affine=Math.abs(Hm[6])<1e-7&&Math.abs(Hm[7])<1e-7,bend=tr.bi&&TC.fw>0&&!TP.noBend,N=bend?12:(affine?1:8);
   var bx0=1e9,by0=1e9,bx1=-1e9,by1=-1e9,cc=[[0,0],[1,0],[0,1],[1,1]],cp=[];
@@ -2628,6 +2632,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v7</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v8</div>
 </body>
 </html>
