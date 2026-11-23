@@ -1991,10 +1991,29 @@ function tplSeek(i){
   if(pre&&pre.i===i){pv=pre.p.then(function(){return pre.v})}
   else{var fv=(pre&&pre.v===TP.vid)?TP.vid2:TP.vid;if(!v2)fv=TP.vid;pv=tSeekVid(fv,i).then(function(){return fv})}
   TP.pre=null;
-  return pv.then(function(v){
-    try{TP.sctx.drawImage(v,0,0)}catch(e){}
+  return pv.then(function(v){return tGrab(v,i)}).then(function(v){
     TP.curI=i;
     if(v2&&i+1<n){var o=(v===TP.vid)?TP.vid2:TP.vid;TP.pre={i:i+1,v:o,p:tSeekVid(o,i+1)}}
+  });
+}
+// Frame number that is printed into the picture itself (12 small squares under the mask column); -1 when it cannot be read
+function tCodeIdx(){
+  var tr=TP.tr;if(!tr||!tr.code)return -1;
+  try{var cd=TP.sctx.getImageData(tr.w,tr.h-12,360,12).data,b,idx=0;for(b=0;b<12;b++){if(cd[(6*360+b*30+15)*4]>127)idx|=1<<b}return idx<tr.n?idx:-1}catch(e){return -1}
+}
+// Draw the decoded frame and make sure it really is frame i. Hardware decoders sometimes still show an older frame right after "seeked"
+// (the hand then lags a few frames behind the tracked shirt and the print leaks over fingertips), so wait and redraw until the number matches.
+function tGrab(v,i){
+  return new Promise(function(res){
+    var tries=0;
+    (function go(){
+      try{TP.sctx.drawImage(v,0,0)}catch(e){res(v);return}
+      var idx=tCodeIdx();
+      if(idx<0||idx===i||tries>=60){if(idx>=0&&idx!==i)TP.miss=(TP.miss||0)+1;res(v);return}
+      tries++;
+      if(tries===20){try{v.currentTime=(i+.5)/TP.tr.fps+(tries&1?1e-3:0)}catch(e){}}
+      setTimeout(go,tries<5?6:20);
+    })();
   });
 }
 function tplDesignCanvas(d){
