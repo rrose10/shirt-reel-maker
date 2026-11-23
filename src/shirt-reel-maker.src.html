@@ -461,6 +461,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
             <div class="ctl"><label for="tTx">Printed-on look (matte ink + cotton weave) <output id="tTxO">60%</output></label><input id="tTx" type="range" min="0" max="100" value="60"></div>
             <div class="ctl"><label for="tBl">Blur design (Gaussian radius) <output id="tBlO">0 px</output></label><input id="tBl" type="range" min="0" max="5" step="0.05" value="0"></div>
             <div class="ctl"><label for="tFw">Follow fabric folds (bend) <output id="tFwO">60%</output></label><input id="tFw" type="range" min="0" max="100" value="60"></div>
+            <div class="ctl"><label for="tZf">Follow camera zoom <output id="tZfO">100%</output></label><input id="tZf" type="range" min="0" max="100" value="100"></div>
             <div class="row" style="margin:12px 0 0"><button class="btn" id="tPReset" type="button" style="padding:4px 12px">Reset size and position</button></div>
             <div class="ctl"><label for="tRes">Video size</label><select id="tRes"><option value="720">720 × 1280 (fast)</option><option value="1080" selected>1080 × 1920 (full HD)</option></select></div>
           </div>
@@ -1934,7 +1935,7 @@ $("zipI").onclick=function(){saveZip(results2.slice().reverse(),"image-reels-"+s
 
 /* ---------- video template: a real shirt video, your design in every frame (hands stay in front) ---------- */
 var TP={tr:null,vid:null,url:null,src:null,sctx:null,layer:null,hand:null,msk:null,ov:null,sub:null,list:[],cur:null,loaded:"",prevF:0,play:false,busy:false};window.__TP=TP;
-var TC={sc:1,dx:0,dy:0,sh:.8,fw:.6,tx:.6,bl:0,res:1080,rot:0,curve:0,wave:0,ph:0,pv:0,sk:0};
+var TC={sc:1,dx:0,dy:0,sh:.8,fw:.6,zf:1,tx:.6,bl:0,res:1080,rot:0,curve:0,wave:0,ph:0,pv:0,sk:0};
 function tHasWarp(){return !!(TC.curve||TC.wave||TC.ph||TC.pv||TC.sk)}
 var tdesigns=[],tcur=null,results3=[];
 function sayT(t){$("zipTS").textContent=t}
@@ -2118,7 +2119,7 @@ function tplRimClean(id,w,h,P,r){
   }
 }
 // hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow. Paints the hands into TP.hand
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · zoom-1"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw;
@@ -2190,6 +2191,16 @@ function tplFab(F,f,x,y){
   var i=u|0,j=v|0,a=u-i,b=v-j,o=f*F.rows*F.cols,A=F.a,w=F.cols;
   return F.unit*(A[o+j*w+i]*(1-a)*(1-b)+A[o+j*w+i+1]*a*(1-b)+A[o+(j+1)*w+i]*(1-a)*b+A[o+(j+1)*w+i+1]*a*b);
 }
+// "Follow camera zoom": the camera of some templates zooms into the shirt; at 100% the print grows exactly like the shirt, lower values let it grow less
+// (it stays centred on the same spot of the shirt and only its size is eased back towards its size at the start)
+function tplHz(f,d){
+  var tr=TP.tr,H=tr.H[Math.max(0,Math.min(tr.n-1,f))],z=TC.zf;
+  if(z>=.999||!d||H[6]||H[7])return H;
+  var H0=tr.H[0],sr=Math.sqrt(Math.abs((H[0]*H[4]-H[1]*H[3])/((H0[0]*H0[4]-H0[1]*H0[3])||1)));
+  if(!(sr>0)||Math.abs(sr-1)<1e-4)return H;
+  var k=(1+z*(sr-1))/sr,r=tplRect(d),c=tplProj(H,r[0]+r[2]/2,r[1]+r[3]/2,1);
+  return [k*H[0],k*H[1],k*H[2]+(1-k)*c[0],k*H[3],k*H[4],k*H[5]+(1-k)*c[1],H[6],H[7],H[8]];
+}
 function tplProj(Hm,x,y,s){var X=Hm[0]*x+Hm[1]*y+Hm[2],Y=Hm[3]*x+Hm[4]*y+Hm[5],Z=Hm[6]*x+Hm[7]*y+Hm[8];return [X/Z*s,Y/Z*s]}
 /* alpha of a canvas as an opaque grey picture (white = ink). The warp is drawn a second time with this and the 'lighten' blend, so where two mesh triangles overlap by the anti-seam margin the alpha is max()-ed instead of stacked - stacking doubled the alpha of semi-transparent print pixels and showed up as a grid of light lines inside the design. */
 /* luminance -> alpha without reading pixels back: an SVG colour matrix used as a canvas filter (Chrome/Edge/Firefox GPU path).
@@ -2249,7 +2260,7 @@ function tBlurF(a,w,h,r){
 }
 function tplDraw(ctx,W,H,f,d){
   var PFt=performance.now();function PF(n){if(TP.prof){var t=performance.now();TP.prof[n]=(TP.prof[n]||0)+t-PFt;PFt=t}}
-  var tr=TP.tr,s=W/tr.w,Hm=tr.H[Math.max(0,Math.min(tr.n-1,f))],L=tr.layout;
+  var tr=TP.tr,s=W/tr.w,Hm=tplHz(f,d),L=tr.layout;
   ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation="source-over";ctx.globalAlpha=1;
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
   ctx.drawImage(TP.src,0,0,tr.w,tr.h,0,0,W,H);
@@ -2421,7 +2432,7 @@ function inv3(m){
 }
 function tQuad(){
   if(!tcur||!TP.tr)return null;
-  var Hm=TP.tr.H[TP.prevF],r=tplRect(tcur),cx=r[0]+r[2]/2,cy=r[1]+r[3]/2,ca=Math.cos(TC.rot*Math.PI/180),sa=Math.sin(TC.rot*Math.PI/180),s=tPrevCv.width/TP.tr.w;
+  var Hm=tplHz(TP.prevF,tcur),r=tplRect(tcur),cx=r[0]+r[2]/2,cy=r[1]+r[3]/2,ca=Math.cos(TC.rot*Math.PI/180),sa=Math.sin(TC.rot*Math.PI/180),s=tPrevCv.width/TP.tr.w;
   var pts=[[-1,-1],[1,-1],[1,1],[-1,1]].map(function(q){var lx=q[0]*r[2]/2,ly=q[1]*r[3]/2;return tplProj(Hm,cx+lx*ca-ly*sa,cy+lx*sa+ly*ca,s)});
   var mx=(pts[0][0]+pts[1][0])/2,my=(pts[0][1]+pts[1][1])/2,ccx=(pts[0][0]+pts[2][0])/2,ccy=(pts[0][1]+pts[2][1])/2,dx=mx-ccx,dy=my-ccy,l=Math.hypot(dx,dy)||1;
   return {p:pts,c:[ccx,ccy],rot:[mx+dx/l*26,my+dy/l*26],mid:[mx,my]};
@@ -2442,7 +2453,7 @@ function tSyncUI(){
 (function(){
   var drag=null;
   function pt(e){var r=tPrevCv.getBoundingClientRect();return [(e.clientX-r.left)*tPrevCv.width/r.width,(e.clientY-r.top)*tPrevCv.height/r.height]}
-  function toRef(p){var m=inv3(TP.tr.H[TP.prevF]),s=tPrevCv.width/TP.tr.w,x=p[0]/s,y=p[1]/s,Z=m[6]*x+m[7]*y+m[8];return [(m[0]*x+m[1]*y+m[2])/Z,(m[3]*x+m[4]*y+m[5])/Z]}
+  function toRef(p){var m=inv3(tplHz(TP.prevF,tcur)),s=tPrevCv.width/TP.tr.w,x=p[0]/s,y=p[1]/s,Z=m[6]*x+m[7]*y+m[8];return [(m[0]*x+m[1]*y+m[2])/Z,(m[3]*x+m[4]*y+m[5])/Z]}
   function inside(q,p){var s=0,i;for(i=0;i<4;i++){var a=q.p[i],b=q.p[(i+1)%4],c=(b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]);if(i&&(c>0)!==(s>0))return false;s=c}return true}
   function hit(p){
     var q=tQuad();if(!q)return null;
@@ -2491,6 +2502,7 @@ $("tSh").oninput=function(){TC.sh=this.value/100;$("tShO").textContent=this.valu
 $("tTx").oninput=function(){TC.tx=this.value/100;$("tTxO").textContent=this.value+"%";tUpdate()};
 $("tBl").oninput=function(){TC.bl=+this.value;$("tBlO").textContent=(+this.value)+" px";tUpdate()};
 $("tFw").oninput=function(){TC.fw=this.value/100;$("tFwO").textContent=this.value+"%";tUpdate()};
+$("tZf").oninput=function(){TC.zf=this.value/100;$("tZfO").textContent=this.value+"%";tUpdate()};
 $("tRes").onchange=function(){TC.res=+this.value};
 $("tPReset").onclick=function(){TC.sc=1;TC.dx=0;TC.dy=0;TC.rot=0;tSyncUI();tUpdate()};
 $("tRot").oninput=function(){TC.rot=+this.value;$("tRotO").textContent=this.value+"°";tUpdate()};
@@ -2535,7 +2547,7 @@ $("tSample").onclick=function(){
 $("fastT").onchange=function(){FAST=this.checked;["fastS","fastI","fastT"].forEach(function(o){$(o).checked=FAST})};
 function tLock(on){
   exporting=on;$("tCancel").classList.toggle("hide",!on);$("tBar").style.display=on?"block":"none";
-  ["tSc","tRot","tDx","tDy","tSh","tRes","tFw","tTx","tBl","tPReset","tTpl","tFile","vFile","tSample","tCurve","tWave","tPH","tPV","tSk","tWReset"].forEach(function(i){$(i).disabled=on});
+  ["tSc","tRot","tDx","tDy","tSh","tRes","tFw","tZf","tTx","tBl","tPReset","tTpl","tFile","vFile","tSample","tCurve","tWave","tPH","tPV","tSk","tWReset"].forEach(function(i){$(i).disabled=on});
   if(on){TP.play=false;$("tPlay").textContent="Play"}
   tRender();
 }
@@ -2623,6 +2635,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · zoom-1</div>
 </body>
 </html>
