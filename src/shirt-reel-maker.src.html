@@ -2086,6 +2086,20 @@ function tplRect(d){
   var k=Math.min(bb[2]/d.w,bb[3]*1.1/d.h)*TC.sc,w=d.w*k,h=d.h*k;
   return [cx-w/2,cy-h/2,w,h];
 }
+// enclosed holes in the hand cut-out (alpha channel): background regions not connected to the picture border and smaller than maxA pixels become opaque
+function tplFillHoles(id,w,h,maxA){
+  var A=id.data,n=w*h,st=new Uint8Array(n),q=new Int32Array(n),i,x,y,qh,qt,any=false;
+  for(i=0;i<n;i++){if(A[i*4+3]>200){st[i]=1;any=true}}
+  if(!any)return false;
+  function fl(s0,mark,lim){var c=0;qh=0;qt=0;q[qt++]=s0;st[s0]=mark;while(qh<qt){var p=q[qh++],px=p%w,py=(p/w)|0,nb;c++;
+    if(px>0&&st[nb=p-1]===0){st[nb]=mark;q[qt++]=nb}if(px<w-1&&st[nb=p+1]===0){st[nb]=mark;q[qt++]=nb}
+    if(py>0&&st[nb=p-w]===0){st[nb]=mark;q[qt++]=nb}if(py<h-1&&st[nb=p+w]===0){st[nb]=mark;q[qt++]=nb}}return c}
+  for(x=0;x<w;x++){if(st[x]===0)fl(x,2);if(st[(h-1)*w+x]===0)fl((h-1)*w+x,2)}
+  for(y=0;y<h;y++){if(st[y*w]===0)fl(y*w,2);if(st[y*w+w-1]===0)fl(y*w+w-1,2)}
+  var did=false;
+  for(i=0;i<n;i++){if(st[i]===0){var c=fl(i,3);if(c<=maxA){for(var j=0;j<c;j++){A[q[j]*4+3]=255}did=true}}}
+  return did;
+}
 // sideways shift (plate pixels) of the cloth at plate position (x,y) in frame f, from fabric.json (made by tools/video_template/fabric_field.py)
 function tplFab(F,f,x,y){
   var u=(x-F.x0)/F.step,v=(y-F.y0)/F.step;u=Math.max(0,Math.min(F.cols-1.001,u));v=Math.max(0,Math.min(F.rows-1.001,v));
@@ -2101,9 +2115,9 @@ function tplL2A(){
   if(TPL_L2A!==null)return TPL_L2A;
   TPL_L2A=false;
   try{
-    if(!document.getElementById("tplL2A")){
+    if(!document.getElementById("tplL2A")||!document.getElementById("tplHoles")){var old=document.getElementById("tplL2A");if(old&&old.ownerSVGElement&&old.ownerSVGElement.parentNode)old.ownerSVGElement.parentNode.remove();
       var d=document.createElement("div");d.style.cssText="position:absolute;width:0;height:0;overflow:hidden";
-      d.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0"><filter id="tplL2A" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0"/></filter></svg>';
+      d.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0"><filter id="tplL2A" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0"/></filter><filter id="tplHoles" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feMorphology operator="dilate" radius="4"/><feMorphology operator="erode" radius="4"/></filter></svg>';
       document.body.appendChild(d);
     }
     var a=mk(4,4),b=mk(4,4),ac=a.getContext("2d"),bc=b.getContext("2d");
@@ -2156,7 +2170,7 @@ function tplDraw(ctx,W,H,f,d){
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
   ctx.drawImage(TP.src,0,0,tr.w,tr.h,0,0,W,H);
   if(!d)return;
-  if(!TP.layer||TP.layer.width!==W||TP.layer.height!==H){TP.layer=mk(W,H);TP.hand=mk(W,H);TP.lx=TP.layer.getContext("2d");TP.hx=TP.hand.getContext("2d");TP.msk=mk(L.skin[2],L.skin[3]);TP.mx=TP.msk.getContext("2d");TP.ov=mk(L.shade[2],L.shade[3]);TP.ox=TP.ov.getContext("2d")}
+  if(!TP.layer||TP.layer.width!==W||TP.layer.height!==H){TP.layer=mk(W,H);TP.hand=mk(W,H);TP.lx=TP.layer.getContext("2d");TP.hx=TP.hand.getContext("2d");TP.msk=mk(L.skin[2],L.skin[3]);TP.mx=TP.msk.getContext("2d");TP.msk2=mk(L.skin[2],L.skin[3]);TP.mx2=TP.msk2.getContext("2d");TP.ov=mk(L.shade[2],L.shade[3]);TP.ox=TP.ov.getContext("2d")}
   var lx=TP.lx,img=tplSoft(tplDesignCanvas(d),d,tplRect(d),s),r=tplRect(d),i,j,q,ef=tHasWarp()?WEF:1,rw=r[2]*ef,rh=r[3]*ef,rcx=r[0]+r[2]/2,rcy=r[1]+r[3]/2,ca=Math.cos(TC.rot*Math.PI/180),sa=Math.sin(TC.rot*Math.PI/180);
   var affine=Math.abs(Hm[6])<1e-7&&Math.abs(Hm[7])<1e-7,bend=tr.bi&&TC.fw>0&&!TP.noBend,N=bend?12:(affine?1:8);
   var bx0=1e9,by0=1e9,bx1=-1e9,by1=-1e9,cc=[[0,0],[1,0],[0,1],[1,1]],cp=[];
@@ -2246,10 +2260,13 @@ function tplDraw(ctx,W,H,f,d){
     // skin mask -> alpha on the GPU, no pixel read-back; drawn only inside the print's box
     var kw=L.skin[2],kh=L.skin[3],k3=W/kw,mx=TP.mx;mx.setTransform(1,0,0,1,0,0);mx.globalCompositeOperation="source-over";mx.clearRect(0,0,kw,kh);
     mx.filter="url(#tplL2A)";mx.drawImage(TP.sctx.canvas,L.skin[0],L.skin[1],kw,kh,0,0,kw,kh);mx.filter="none";
+    // the cut-out of the hands has small holes (motion blur, shadows, rings): close them so the print never shows through a finger. Closing (dilate then erode) + the original on top, so edges at the frame border stay.
+    var mx2=TP.mx2;mx2.setTransform(1,0,0,1,0,0);mx2.globalCompositeOperation="source-over";mx2.clearRect(0,0,kw,kh);mx2.filter="url(#tplHoles)";mx2.drawImage(TP.msk,0,0);mx2.filter="none";mx2.drawImage(TP.msk,0,0);
+    try{var mid=mx2.getImageData(0,0,kw,kh);if(tplFillHoles(mid,kw,kh,260))mx2.putImageData(mid,0,0)}catch(e){}
     var hx0=bx0,hy0=by0,hw=bw,hh=bh,hx=TP.hx;
     hx.setTransform(1,0,0,1,0,0);hx.globalCompositeOperation="source-over";hx.clearRect(hx0,hy0,hw,hh);
     hx.drawImage(TP.src,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);
-    hx.globalCompositeOperation="destination-in";hx.imageSmoothingEnabled=true;hx.drawImage(TP.msk,hx0/k3,hy0/k3,hw/k3,hh/k3,hx0,hy0,hw,hh);hx.globalCompositeOperation="source-over";
+    hx.globalCompositeOperation="destination-in";hx.imageSmoothingEnabled=true;hx.drawImage(TP.msk2,hx0/k3,hy0/k3,hw/k3,hh/k3,hx0,hy0,hw,hh);hx.globalCompositeOperation="source-over";
     ctx.drawImage(TP.hand,hx0,hy0,hw,hh,hx0,hy0,hw,hh);
   }else{
   var kd=TP.sctx.getImageData(L.skin[0],L.skin[1],L.skin[2],L.skin[3]),mo=TP.mx.createImageData(L.skin[2],L.skin[3]),any=false,kw=L.skin[2],kh=L.skin[3],mx0=kw,my0=kh,mx1=-1,my1=-1;
