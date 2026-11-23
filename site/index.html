@@ -2097,7 +2097,7 @@ function tplRect(d){
   return [cx-w/2,cy-h/2,w,h];
 }
 // enclosed holes in the hand cut-out (alpha channel): background regions not connected to the picture border and smaller than maxA pixels become opaque
-function tplFillHoles(id,w,h,maxA){
+function tplFillHoles(id,w,h,maxA,P){
   var A=id.data,n=w*h,st=new Uint8Array(n),q=new Int32Array(n),i,x,y,qh,qt,any=false;
   for(i=0;i<n;i++){if(A[i*4+3]>200){st[i]=1;any=true}}
   if(!any)return false;
@@ -2107,7 +2107,8 @@ function tplFillHoles(id,w,h,maxA){
   for(x=0;x<w;x++){if(st[x]===0)fl(x,2);if(st[(h-1)*w+x]===0)fl((h-1)*w+x,2)}
   for(y=0;y<h;y++){if(st[y*w]===0)fl(y*w,2);if(st[y*w+w-1]===0)fl(y*w+w-1,2)}
   var did=false;
-  for(i=0;i<n;i++){if(st[i]===0){var c=fl(i,3);if(c<=maxA){for(var j=0;j<c;j++){A[q[j]*4+3]=255}did=true}}}
+  for(i=0;i<n;i++){if(st[i]===0){var c=fl(i,3);if(c<=maxA){var sk=0,j,o,r,g,b,mxv,mnv;for(j=0;j<c;j++){o=q[j]*4;r=P[o];g=P[o+1];b=P[o+2];mxv=Math.max(r,g,b);mnv=Math.min(r,g,b);if(r>=g&&g>=b-6&&mxv>70&&(mxv-mnv)/mxv>.16)sk++}
+      if(sk>=c*.6){for(j=0;j<c;j++){A[q[j]*4+3]=255}did=true}}}}
   return did;
 }
 // sideways shift (plate pixels) of the cloth at plate position (x,y) in frame f, from fabric.json (made by tools/video_template/fabric_field.py)
@@ -2270,9 +2271,9 @@ function tplDraw(ctx,W,H,f,d){
     // skin mask -> alpha on the GPU, no pixel read-back; drawn only inside the print's box
     var kw=L.skin[2],kh=L.skin[3],k3=W/kw,mx=TP.mx;mx.setTransform(1,0,0,1,0,0);mx.globalCompositeOperation="source-over";mx.clearRect(0,0,kw,kh);
     mx.filter="url(#tplL2A)";mx.drawImage(TP.sctx.canvas,L.skin[0],L.skin[1],kw,kh,0,0,kw,kh);mx.filter="none";
-    // the cut-out of the hands has small holes (motion blur, shadows, rings): close them so the print never shows through a finger. Closing (dilate then erode) + the original on top, so edges at the frame border stay.
-    var mx2=TP.mx2;mx2.setTransform(1,0,0,1,0,0);mx2.globalCompositeOperation="source-over";mx2.clearRect(0,0,kw,kh);mx2.filter="url(#tplHoles)";mx2.drawImage(TP.msk,0,0);mx2.filter="none";mx2.drawImage(TP.msk,0,0);
-    try{var mid=mx2.getImageData(0,0,kw,kh);if(tplFillHoles(mid,kw,kh,260))mx2.putImageData(mid,0,0)}catch(e){}
+    // the cut-out of the hands has small holes (motion blur, shadows, rings): fill the ones that lie on skin so the print never shows through a finger (gaps between fingers show the shirt, not skin, and stay open)
+    var mx2=TP.mx2;mx2.setTransform(1,0,0,1,0,0);mx2.globalCompositeOperation="source-over";mx2.clearRect(0,0,kw,kh);mx2.drawImage(TP.msk,0,0);
+    try{var pc=TP.pc||(TP.pc=mk(kw,kh)),pcx=pc.getContext("2d");pcx.drawImage(TP.src,0,0,tr.w,tr.h,0,0,kw,kh);var mid=mx2.getImageData(0,0,kw,kh);if(tplFillHoles(mid,kw,kh,260,pcx.getImageData(0,0,kw,kh).data))mx2.putImageData(mid,0,0)}catch(e){}
     var hx0=bx0,hy0=by0,hw=bw,hh=bh,hx=TP.hx;
     hx.setTransform(1,0,0,1,0,0);hx.globalCompositeOperation="source-over";hx.clearRect(hx0,hy0,hw,hh);
     hx.drawImage(TP.src,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);
