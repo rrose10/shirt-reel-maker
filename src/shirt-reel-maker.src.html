@@ -2118,14 +2118,19 @@ function tplRimClean(id,w,h,P,r){
   }
 }
 // hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow. Paints the hands into TP.hand
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v4"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   var hx=TP.hx,mx2=TP.mx2;
   var rx=Math.max(0,Math.floor(hx0/s)-2),ry=Math.max(0,Math.floor(hy0/s)-2),rx1=Math.min(tr.w,Math.ceil((hx0+hw)/s)+2),ry1=Math.min(tr.h,Math.ceil((hy0+hh)/s)+2),rw=rx1-rx,rh=ry1-ry;
   mx2.setTransform(1,0,0,1,0,0);mx2.globalCompositeOperation="source-over";mx2.imageSmoothingEnabled=true;mx2.clearRect(0,0,tr.w,tr.h);mx2.drawImage(TP.msk,0,0,kw,kh,0,0,tr.w,tr.h);
   if(rw>2&&rh>2){try{
     var pc=TP.pc||(TP.pc=mk(tr.w,tr.h)),pcx=pc.getContext("2d");pcx.drawImage(TP.src,rx,ry,rw,rh,rx,ry,rw,rh);
-    var mid=mx2.getImageData(rx,ry,rw,rh),pd=pcx.getImageData(rx,ry,rw,rh).data;tplSkinAlpha(mid,rw,rh,pd);tplFillHoles(mid,rw,rh,1000,pd);mx2.putImageData(mid,rx,ry);
-  }catch(e){}}
+    var mid=mx2.getImageData(rx,ry,rw,rh),pd=pcx.getImageData(rx,ry,rw,rh).data,c0=0,c1=0,c2=0,qq,nn=rw*rh;
+    for(qq=0;qq<nn;qq++){if(mid.data[qq*4+3]>200)c0++;if(pd[qq*4]+pd[qq*4+1]+pd[qq*4+2]>60)c2++}
+    tplSkinAlpha(mid,rw,rh,pd);tplFillHoles(mid,rw,rh,1000,pd);mx2.putImageData(mid,rx,ry);
+    for(qq=0;qq<nn;qq++){if(mid.data[qq*4+3]>200)c1++}
+    TP.dbg="hands "+(tplL2A()?"gpu":"cpu")+" ok raw "+c0+" final "+c1+" plate "+(c2>0?"ok":"BLACK");
+  }catch(e){TP.dbg="hands ERROR "+(e&&e.message||e)}}
   hx.setTransform(1,0,0,1,0,0);hx.globalCompositeOperation="source-over";hx.clearRect(hx0,hy0,hw,hh);
   hx.drawImage(TP.src,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);
   hx.globalCompositeOperation="destination-in";hx.imageSmoothingEnabled=true;hx.drawImage(TP.msk2,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);hx.globalCompositeOperation="source-over";
@@ -2593,6 +2598,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.7;pointer-events:none;z-index:9999">build hands-v3 · b9add49</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v4</div>
 </body>
 </html>
