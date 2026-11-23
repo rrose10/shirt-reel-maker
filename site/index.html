@@ -2128,7 +2128,7 @@ function tplRimClean(id,w,h,P,r){
   }
 }
 // hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow. Paints the hands into TP.hand
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v6"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v7"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   var hx=TP.hx,mx2=TP.mx2;
   var rx=Math.max(0,Math.floor(hx0/s)-2),ry=Math.max(0,Math.floor(hy0/s)-2),rx1=Math.min(tr.w,Math.ceil((hx0+hw)/s)+2),ry1=Math.min(tr.h,Math.ceil((hy0+hh)/s)+2),rw=rx1-rx,rh=ry1-ry;
@@ -2169,7 +2169,7 @@ function tplSkinAlpha(id,w,h,P,ext){
   var X=null;
   if(ext){
     X=new Uint8Array(n);
-    for(i=0;i<n;i++){o=i*4;R=P[o];G=P[o+1];B=P[o+2];mx=R>G?(R>B?R:B):(G>B?G:B);if(mx<70)continue;mn=R<G?(R<B?R:B):(G<B?G:B);sat=(mx-mn)/mx;if(sat>=.3&&R>=G-4&&G>=B-8)X[i]=1}
+    for(i=0;i<n;i++){o=i*4;R=P[o];G=P[o+1];B=P[o+2];mx=R>G?(R>B?R:B):(G>B?G:B);if(mx<70)continue;mn=R<G?(R<B?R:B):(G<B?G:B);sat=(mx-mn)/mx;if(sat>=.16&&R>=G-4&&G>=B-8&&B<=.82*R)X[i]=1}
     var re2=4;
     for(y=0;y<h;y++){for(x=0;x<w;x++){m=0;for(k=Math.max(0,x-re2);k<=Math.min(w-1,x+re2);k++)if(X[y*w+k]){m=1;break}E[y*w+x]=m}}
     for(x=0;x<w;x++){for(y=0;y<h;y++){m=0;for(k=Math.max(0,y-re2);k<=Math.min(h-1,y+re2);k++)if(E[k*w+x]){m=1;break}D[y*w+x]=m}}
@@ -2628,6 +2628,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v6</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v7</div>
 </body>
 </html>
