@@ -2127,6 +2127,19 @@ function tplRimClean(id,w,h,P,r){
     A[i*4+3]=a*sc;
   }
 }
+// hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow. Paints the hands into TP.hand
+function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
+  var hx=TP.hx,mx2=TP.mx2;
+  var rx=Math.max(0,Math.floor(hx0/s)-2),ry=Math.max(0,Math.floor(hy0/s)-2),rx1=Math.min(tr.w,Math.ceil((hx0+hw)/s)+2),ry1=Math.min(tr.h,Math.ceil((hy0+hh)/s)+2),rw=rx1-rx,rh=ry1-ry;
+  mx2.setTransform(1,0,0,1,0,0);mx2.globalCompositeOperation="source-over";mx2.imageSmoothingEnabled=true;mx2.clearRect(0,0,tr.w,tr.h);mx2.drawImage(TP.msk,0,0,kw,kh,0,0,tr.w,tr.h);
+  if(rw>2&&rh>2){try{
+    var pc=TP.pc||(TP.pc=mk(tr.w,tr.h)),pcx=pc.getContext("2d");pcx.drawImage(TP.src,rx,ry,rw,rh,rx,ry,rw,rh);
+    var mid=mx2.getImageData(rx,ry,rw,rh),pd=pcx.getImageData(rx,ry,rw,rh).data;tplSkinAlpha(mid,rw,rh,pd);tplFillHoles(mid,rw,rh,1000,pd);mx2.putImageData(mid,rx,ry);
+  }catch(e){}}
+  hx.setTransform(1,0,0,1,0,0);hx.globalCompositeOperation="source-over";hx.clearRect(hx0,hy0,hw,hh);
+  hx.drawImage(TP.src,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);
+  hx.globalCompositeOperation="destination-in";hx.imageSmoothingEnabled=true;hx.drawImage(TP.msk2,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);hx.globalCompositeOperation="source-over";
+}
 // Hand alpha straight from the colour of the plate: skin is clearly more saturated and warmer than the white shirt (and than its grey-blue shadows).
 // The supplied cut-out only decides in deep shadow (very dark pixels), where colour says nothing. Motion-blurred hands become partly transparent in proportion.
 function tplSkinAlpha(id,w,h,P){
@@ -2313,17 +2326,7 @@ function tplDraw(ctx,W,H,f,d){
     // skin mask -> alpha on the GPU, no pixel read-back; drawn only inside the print's box
     var kw=L.skin[2],kh=L.skin[3],k3=W/kw,mx=TP.mx;mx.setTransform(1,0,0,1,0,0);mx.globalCompositeOperation="source-over";mx.clearRect(0,0,kw,kh);
     mx.filter="url(#tplL2A)";mx.drawImage(TP.sctx.canvas,L.skin[0],L.skin[1],kw,kh,0,0,kw,kh);mx.filter="none";
-    // hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow
-    var hx0=bx0,hy0=by0,hw=bw,hh=bh,hx=TP.hx,mx2=TP.mx2;
-    var rx=Math.max(0,Math.floor(hx0/s)-2),ry=Math.max(0,Math.floor(hy0/s)-2),rx1=Math.min(tr.w,Math.ceil((hx0+hw)/s)+2),ry1=Math.min(tr.h,Math.ceil((hy0+hh)/s)+2),rw=rx1-rx,rh=ry1-ry;
-    mx2.setTransform(1,0,0,1,0,0);mx2.globalCompositeOperation="source-over";mx2.imageSmoothingEnabled=true;mx2.clearRect(0,0,tr.w,tr.h);mx2.drawImage(TP.msk,0,0,kw,kh,0,0,tr.w,tr.h);
-    if(rw>2&&rh>2){try{
-      var pc=TP.pc||(TP.pc=mk(tr.w,tr.h)),pcx=pc.getContext("2d");pcx.drawImage(TP.src,rx,ry,rw,rh,rx,ry,rw,rh);
-      var mid=mx2.getImageData(rx,ry,rw,rh),pd=pcx.getImageData(rx,ry,rw,rh).data;tplSkinAlpha(mid,rw,rh,pd);tplFillHoles(mid,rw,rh,1000,pd);mx2.putImageData(mid,rx,ry);
-    }catch(e){}}
-    hx.setTransform(1,0,0,1,0,0);hx.globalCompositeOperation="source-over";hx.clearRect(hx0,hy0,hw,hh);
-    hx.drawImage(TP.src,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);
-    hx.globalCompositeOperation="destination-in";hx.imageSmoothingEnabled=true;hx.drawImage(TP.msk2,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);hx.globalCompositeOperation="source-over";
+    var hx0=bx0,hy0=by0,hw=bw,hh=bh;tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh);
     ctx.drawImage(TP.hand,hx0,hy0,hw,hh,hx0,hy0,hw,hh);
   }else{
   var kd=TP.sctx.getImageData(L.skin[0],L.skin[1],L.skin[2],L.skin[3]),mo=TP.mx.createImageData(L.skin[2],L.skin[3]),any=false,kw=L.skin[2],kh=L.skin[3],mx0=kw,my0=kh,mx1=-1,my1=-1;
@@ -2332,9 +2335,7 @@ function tplDraw(ctx,W,H,f,d){
     TP.mx.putImageData(mo,0,0);var hx=TP.hx,k3=W/kw;
     var hx0=Math.max(bx0,Math.floor((mx0-2)*k3)),hy0=Math.max(by0,Math.floor((my0-2)*k3)),hx1=Math.min(bx1,Math.ceil((mx1+3)*k3)),hy1=Math.min(by1,Math.ceil((my1+3)*k3)),hw=hx1-hx0,hh=hy1-hy0;
     if(hw>1&&hh>1){
-      hx.setTransform(1,0,0,1,0,0);hx.globalCompositeOperation="source-over";hx.clearRect(hx0,hy0,hw,hh);
-      hx.drawImage(TP.src,hx0/s,hy0/s,hw/s,hh/s,hx0,hy0,hw,hh);
-      hx.globalCompositeOperation="destination-in";hx.imageSmoothingEnabled=true;hx.drawImage(TP.msk,hx0/k3,hy0/k3,hw/k3,hh/k3,hx0,hy0,hw,hh);hx.globalCompositeOperation="source-over";
+      tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh);
       ctx.drawImage(TP.hand,hx0,hy0,hw,hh,hx0,hy0,hw,hh);
     }
   }
