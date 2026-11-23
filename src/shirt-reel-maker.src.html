@@ -1933,7 +1933,7 @@ $("zipS").onclick=function(){saveZip(results.slice().reverse(),"shirt-reels-"+st
 $("zipI").onclick=function(){saveZip(results2.slice().reverse(),"image-reels-"+stamp()+".zip",sayI,this)};
 
 /* ---------- video template: a real shirt video, your design in every frame (hands stay in front) ---------- */
-var TP={tr:null,vid:null,url:null,src:null,sctx:null,layer:null,hand:null,msk:null,ov:null,sub:null,list:[],cur:null,loaded:"",prevF:0,play:false,busy:false};
+var TP={tr:null,vid:null,url:null,src:null,sctx:null,layer:null,hand:null,msk:null,ov:null,sub:null,list:[],cur:null,loaded:"",prevF:0,play:false,busy:false};window.__TP=TP;
 var TC={sc:1,dx:0,dy:0,sh:.8,fw:.6,tx:.6,bl:0,res:1080,rot:0,curve:0,wave:0,ph:0,pv:0,sk:0};
 function tHasWarp(){return !!(TC.curve||TC.wave||TC.ph||TC.pv||TC.sk)}
 var tdesigns=[],tcur=null,results3=[];
@@ -2098,7 +2098,7 @@ function tplFillHoles(id,w,h,maxA,P){
   for(y=0;y<h;y++){if(st[y*w]===0)fl(y*w,2);if(st[y*w+w-1]===0)fl(y*w+w-1,2)}
   var did=false;
   for(i=0;i<n;i++){if(st[i]===0){var c=fl(i,3);if(c<=maxA){var sk=0,j,o,r,g,b,mxv,mnv;for(j=0;j<c;j++){o=q[j]*4;r=P[o];g=P[o+1];b=P[o+2];mxv=Math.max(r,g,b);mnv=Math.min(r,g,b);if(r>=g&&g>=b-6&&mxv>70&&(mxv-mnv)/mxv>.06)sk++}
-      if(sk>=c*.6){for(j=0;j<c;j++){A[q[j]*4+3]=255}did=true}}}}
+      if(sk>=c*.6||c<=1200){for(j=0;j<c;j++){A[q[j]*4+3]=255}did=true}}}}
   return did;
 }
 // the cut-out of the hands is a bit generous: along its outer rim it also contains white shirt (light halo around the fingers).
@@ -2118,7 +2118,7 @@ function tplRimClean(id,w,h,P,r){
   }
 }
 // hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow. Paints the hands into TP.hand
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v4"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v5"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   var hx=TP.hx,mx2=TP.mx2;
   var rx=Math.max(0,Math.floor(hx0/s)-2),ry=Math.max(0,Math.floor(hy0/s)-2),rx1=Math.min(tr.w,Math.ceil((hx0+hw)/s)+2),ry1=Math.min(tr.h,Math.ceil((hy0+hh)/s)+2),rw=rx1-rx,rh=ry1-ry;
@@ -2146,6 +2146,13 @@ function tplSkinAlpha(id,w,h,P){
   for(i=0;i<n;i++)C[i]=A[i*4+3]>200?1:0;
   for(y=0;y<h;y++){for(x=0;x<w;x++){ok=1;for(k=x-re;k<=x+re;k++){if(k<0||k>=w||!C[y*w+k]){ok=0;break}}D[y*w+x]=ok}}
   for(x=0;x<w;x++){for(y=0;y<h;y++){ok=1;for(k=y-re;k<=y+re;k++){if(k<0||k>=h||!D[k*w+x]){ok=0;break}}C[y*w+x]=ok}}
+  // closing of the cut-out (grow then shrink 6px): holes and notches in it are where a pale sunlit patch of skin may sit
+  var Z=new Uint8Array(n),rz=6,E=new Uint8Array(n);
+  for(i=0;i<n;i++)Z[i]=A[i*4+3]>200?1:0;
+  for(y=0;y<h;y++){for(x=0;x<w;x++){m=0;for(k=Math.max(0,x-rz);k<=Math.min(w-1,x+rz);k++)if(Z[y*w+k]){m=1;break}E[y*w+x]=m}}
+  for(x=0;x<w;x++){for(y=0;y<h;y++){m=0;for(k=Math.max(0,y-rz);k<=Math.min(h-1,y+rz);k++)if(E[k*w+x]){m=1;break}Z[y*w+x]=m}}
+  for(y=0;y<h;y++){for(x=0;x<w;x++){ok=1;for(k=x-rz;k<=x+rz;k++){if(k<0||k>=w||!Z[y*w+k]){ok=0;break}}E[y*w+x]=ok}}
+  for(x=0;x<w;x++){for(y=0;y<h;y++){ok=1;for(k=y-rz;k<=y+rz;k++){if(k<0||k>=h||!E[k*w+x]){ok=0;break}}Z[y*w+x]=ok}}
   for(y=0;y<h;y++){for(x=0;x<w;x++){m=0;for(k=Math.max(0,x-r);k<=Math.min(w-1,x+r);k++)if(T[y*w+k]){m=1;break}D[y*w+x]=m}}
   for(x=0;x<w;x++){for(y=0;y<h;y++){if(!D[y*w+x])continue;for(k=Math.max(0,y-r);k<=Math.min(h-1,y+r);k++)T[k*w+x]=2}}
   for(i=0;i<n;i++){
@@ -2156,7 +2163,8 @@ function tplSkinAlpha(id,w,h,P){
     mn=R<G?(R<B?R:B):(G<B?G:B);sat=(mx-mn)/mx;
     if(C[i]&&sat>=.22&&R>=G-4&&G>=B-8){A[o+3]=255;continue} // inside the cut-out and not shirt-coloured: hand, however pale the highlight
     if(!(R>=G-4&&G>=B-8)){A[o+3]=0;continue}              // not a skin hue
-    a=(sat-.18)/.12;A[o+3]=a<=0?0:a>=1?255:a*255;
+    a=(sat-.18)/.12;if(Z[i]&&sat>.06){m=(sat-.06)/.06;if(m>a)a=m}   // pale warm patch inside / next to the hand: skin
+    A[o+3]=a<=0?0:a>=1?255:a*255;
   }
 }
 // sideways shift (plate pixels) of the cloth at plate position (x,y) in frame f, from fabric.json (made by tools/video_template/fabric_field.py)
@@ -2598,6 +2606,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v4</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v5</div>
 </body>
 </html>
