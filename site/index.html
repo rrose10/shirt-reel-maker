@@ -460,6 +460,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
             <div class="ctl"><label for="tDy">Move up / down <output id="tDyO">0</output></label><input id="tDy" type="range" min="-100" max="100" value="0"></div>
             <div class="ctl"><label for="tSh">Fabric light and shade <output id="tShO">80%</output></label><input id="tSh" type="range" min="0" max="100" value="80"></div>
             <div class="ctl"><label for="tTx">Printed-on look (matte ink + cotton weave) <output id="tTxO">60%</output></label><input id="tTx" type="range" min="0" max="100" value="60"></div>
+            <div class="ctl"><label for="tVm">Match the video (softer edges, exposure, camera grain) <output id="tVmO">60%</output></label><input id="tVm" type="range" min="0" max="100" value="60"></div>
             <div class="ctl"><label for="tBl">Blur design (Gaussian radius) <output id="tBlO">0 px</output></label><input id="tBl" type="range" min="0" max="5" step="0.05" value="0"></div>
             <div class="ctl"><label for="tFw">Follow fabric folds (bend) <output id="tFwO">60%</output></label><input id="tFw" type="range" min="0" max="100" value="60"></div>
             <div class="ctl"><label for="tZf">Follow camera zoom <output id="tZfO">100%</output></label><input id="tZf" type="range" min="0" max="200" value="100"></div>
@@ -1978,7 +1979,7 @@ $("zipI").onclick=function(){saveZip(results2.slice().reverse(),"image-reels-"+s
 
 /* ---------- video template: a real shirt video, your design in every frame (hands stay in front) ---------- */
 var TP={tr:null,vid:null,url:null,src:null,sctx:null,layer:null,hand:null,msk:null,ov:null,sub:null,list:[],cur:null,loaded:"",prevF:0,play:false,busy:false};window.__TP=TP;
-var TC={sc:1,dx:0,dy:0,sh:.8,fw:.6,zf:1,tx:.6,bl:0,res:1080,rot:0,curve:0,wave:0,ph:0,pv:0,sk:0};
+var TC={sc:1,dx:0,dy:0,sh:.8,fw:.6,zf:1,tx:.6,vm:.6,bl:0,res:1080,rot:0,curve:0,wave:0,ph:0,pv:0,sk:0};
 function tHasWarp(){return !!(TC.curve||TC.wave||TC.ph||TC.pv||TC.sk)}
 var tdesigns=[],tcur=null,results3=[];
 function sayT(t){$("zipTS").textContent=t}
@@ -2093,6 +2094,14 @@ function tplDesignCanvas(d){
   }
   d._twk=key;d._twc=O;return O;
 }
+function tplGrain(){
+  // camera noise tile: both light and dark specks, drawn at a different offset every frame so it flickers like real video noise
+  if(TP.grain)return TP.grain;
+  var n=256,c=mk(n,n),x=c.getContext("2d"),im=x.createImageData(n,n),i,k,seed=99;
+  function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
+  for(i=0;i<n*n;i++){k=i*4;var g=(rnd()+rnd()+rnd()-1.5)*2,v=g>0?255:0;im.data[k]=im.data[k+1]=im.data[k+2]=v;im.data[k+3]=Math.min(255,Math.abs(g)*150)}
+  x.putImageData(im,0,0);TP.grain=c;return c;
+}
 function tplTex(){
   if(TP.tex)return TP.tex;
   var n=128,c=mk(n,n),x=c.getContext("2d"),im=x.createImageData(n,n),i,j,k,seed=7;
@@ -2118,7 +2127,7 @@ function tRtFrame(v){
 function tplSoft(base,d,r,s){
   // a touch of ink softness: blur the design once (cached) instead of blurring every video frame
   // base = fine default softness for big prints; TC.bl = extra Gaussian radius in pixels of a 1080-wide video (like Photoshop's Gaussian Blur radius)
-  var px=r[2]*s*(tHasWarp()?WEF:1),bl=TC.bl||0,def=px<500?0:.45,rr=def+bl*s/1.5;if(rr<=0)return base;
+  var px=r[2]*s*(tHasWarp()?WEF:1),bl=(TC.bl||0)+.5*(TC.vm||0),def=px<500?0:.45,rr=def+bl*s/1.5;if(rr<=0)return base;
   var rad=Math.round(rr*base.width/px*20)/20;if(rad<.05)return base;
   var key=rad+"|"+(d._twk||"")+"|"+base.width;if(d._tsk===key&&d._tsc)return d._tsc;
   var c=mk(base.width,base.height),x=c.getContext("2d");
@@ -2241,7 +2250,7 @@ $("aiMakeVid").onclick=async function(){
   AI.busy=false;$("aiMakeVid").disabled=false;updateSteps();aiStatus();
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · ai-1"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-1"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -2475,7 +2484,15 @@ function tplDraw(ctx,W,H,f,d){
     if(pat){if(pat.setTransform)pat.setTransform(new DOMMatrix().scale(W/720*1.5));lx.globalAlpha=Math.min(1,TC.tx*1.15);lx.fillStyle=pat;lx.fillRect(bx0,by0,bw,bh)}
     lx.globalAlpha=1;lx.globalCompositeOperation="source-over";
   }
-  PF('tex');ctx.globalAlpha=.97;ctx.drawImage(TP.layer,bx0,by0,bw,bh,bx0,by0,bw,bh);ctx.globalAlpha=1;PF('blit');
+  PF('tex');if(TC.vm>0){
+    // sit in the video's exposure and noise: a printed white is never as bright as a pure screen white, and the camera noise runs through the ink too
+    lx.globalCompositeOperation="source-atop";
+    lx.globalAlpha=.14*TC.vm;lx.fillStyle="#000";lx.fillRect(bx0,by0,bw,bh);
+    var gp=lx.createPattern(tplGrain(),"repeat");
+    if(gp){var go=((f*7919)%256),go2=((f*104729)%256);if(gp.setTransform)gp.setTransform(new DOMMatrix().translate(go,go2).scale(Math.max(.75,W/720)));lx.globalAlpha=.22*TC.vm;lx.fillStyle=gp;lx.fillRect(bx0,by0,bw,bh)}
+    lx.globalAlpha=1;lx.globalCompositeOperation="source-over";
+  }
+  PF('match');ctx.globalAlpha=.97;ctx.drawImage(TP.layer,bx0,by0,bw,bh,bx0,by0,bw,bh);ctx.globalAlpha=1;PF('blit');
   // hands in front of the print (only the area where skin was found)
   if(tplL2A()){
     // skin mask -> alpha on the GPU, no pixel read-back; drawn only inside the print's box
@@ -2622,6 +2639,7 @@ $("tDx").oninput=function(){TC.dx=this.value/100;$("tDxO").textContent=this.valu
 $("tDy").oninput=function(){TC.dy=this.value/100;$("tDyO").textContent=this.value;tUpdate()};
 $("tSh").oninput=function(){TC.sh=this.value/100;$("tShO").textContent=this.value+"%";tUpdate()};
 $("tTx").oninput=function(){TC.tx=this.value/100;$("tTxO").textContent=this.value+"%";tUpdate()};
+$("tVm").oninput=function(){TC.vm=this.value/100;$("tVmO").textContent=this.value+"%";tUpdate()};
 $("tBl").oninput=function(){TC.bl=+this.value;$("tBlO").textContent=(+this.value)+" px";tUpdate()};
 $("tFw").oninput=function(){TC.fw=this.value/100;$("tFwO").textContent=this.value+"%";tUpdate()};
 $("tZf").oninput=function(){TC.zf=this.value/100;$("tZfO").textContent=this.value+"%";tUpdate()};
@@ -2669,7 +2687,7 @@ $("tSample").onclick=function(){
 $("fastT").onchange=function(){FAST=this.checked;["fastS","fastI","fastT"].forEach(function(o){$(o).checked=FAST})};
 function tLock(on){
   exporting=on;$("tCancel").classList.toggle("hide",!on);$("tBar").style.display=on?"block":"none";
-  ["tSc","tRot","tDx","tDy","tSh","tRes","tFw","tZf","tTx","tBl","tPReset","tTpl","tFile","vFile","tSample","tCurve","tWave","tPH","tPV","tSk","tWReset"].forEach(function(i){$(i).disabled=on});
+  ["tSc","tRot","tDx","tDy","tSh","tRes","tFw","tZf","tTx","tVm","tBl","tPReset","tTpl","tFile","vFile","tSample","tCurve","tWave","tPH","tPV","tSk","tWReset"].forEach(function(i){$(i).disabled=on});
   if(on){TP.play=false;$("tPlay").textContent="Play"}
   tRender();
 }
@@ -2757,6 +2775,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · ai-1</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-1</div>
 </body>
 </html>
