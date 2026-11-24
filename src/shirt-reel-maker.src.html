@@ -441,7 +441,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       <section class="panel sticky" aria-labelledby="h-tpv">
         <h2 id="h-tpv">Live preview</h2>
         <p class="hint">Click a design on the left to preview it. Drag the print to move it, drag a corner dot to resize, drag the top dot to rotate.</p>
-        <div class="prevbox big"><canvas id="tPrev" width="360" height="640" aria-label="Video preview" style="touch-action:none;cursor:default"></canvas>
+        <div class="prevbox big"><canvas id="tPrev" width="540" height="960" aria-label="Video preview" style="touch-action:none;cursor:default"></canvas>
           <div class="timeline"><button class="btn" id="tPlay" type="button">Play</button><input id="tScrub" type="range" min="0" max="299" value="0" aria-label="Timeline"><span id="tTime">0.0 / 10.0s</span></div>
         </div>
       </section>
@@ -2240,7 +2240,7 @@ $("aiMakeVid").onclick=async function(){
   AI.busy=false;$("aiMakeVid").disabled=false;updateSteps();aiStatus();
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-1"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-2"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -2549,7 +2549,7 @@ async function tUpdate(){
   if(!TP.vid||exporting)return;
   if(TP.busy){TP.again=true;return}
   TP.busy=true;
-  try{await tplSeek(TP.prevF);tplDraw(tPrevCx,360,640,TP.prevF,tcur);tDrawHandles()}finally{TP.busy=false}
+  try{await tplSeek(TP.prevF);tplDraw(tPrevCx,tPrevCv.width,tPrevCv.height,TP.prevF,tcur);tDrawHandles()}finally{TP.busy=false}
   $("tTime").textContent=(TP.prevF/TP.tr.fps).toFixed(1)+" / "+(TP.tr.n/TP.tr.fps).toFixed(1)+"s";
   $("tScrub").value=TP.prevF;
   if(TP.again){TP.again=false;tUpdate()}
@@ -2564,15 +2564,15 @@ function tQuad(){
   var Hm=tplHz(TP.prevF,tcur),r=tplRect(tcur),cx=r[0]+r[2]/2,cy=r[1]+r[3]/2,ca=Math.cos(TC.rot*Math.PI/180),sa=Math.sin(TC.rot*Math.PI/180),s=tPrevCv.width/TP.tr.w;
   var pts=[[-1,-1],[1,-1],[1,1],[-1,1]].map(function(q){var lx=q[0]*r[2]/2,ly=q[1]*r[3]/2;return tplProj(Hm,cx+lx*ca-ly*sa,cy+lx*sa+ly*ca,s)});
   var mx=(pts[0][0]+pts[1][0])/2,my=(pts[0][1]+pts[1][1])/2,ccx=(pts[0][0]+pts[2][0])/2,ccy=(pts[0][1]+pts[2][1])/2,dx=mx-ccx,dy=my-ccy,l=Math.hypot(dx,dy)||1;
-  return {p:pts,c:[ccx,ccy],rot:[mx+dx/l*26,my+dy/l*26],mid:[mx,my]};
+  return {p:pts,c:[ccx,ccy],rot:[mx+dx/l*26*(tPrevCv.width/360),my+dy/l*26*(tPrevCv.width/360)],mid:[mx,my]};
 }
 function tDrawHandles(){
   var q=tQuad();if(!q)return;var x=tPrevCx;
-  x.save();x.setTransform(1,0,0,1,0,0);x.lineWidth=1.5;x.strokeStyle="rgba(255,255,255,.9)";x.setLineDash([5,4]);
+  var hk=tPrevCv.width/360;x.save();x.setTransform(1,0,0,1,0,0);x.lineWidth=1.5*hk;x.strokeStyle="rgba(255,255,255,.9)";x.setLineDash([5*hk,4*hk]);
   x.beginPath();q.p.forEach(function(a,i){i?x.lineTo(a[0],a[1]):x.moveTo(a[0],a[1])});x.closePath();x.stroke();x.setLineDash([]);
   x.beginPath();x.moveTo(q.mid[0],q.mid[1]);x.lineTo(q.rot[0],q.rot[1]);x.stroke();
-  x.fillStyle="#fff";x.strokeStyle="#111";x.lineWidth=1.5;
-  q.p.concat([q.rot]).forEach(function(a,i){x.beginPath();x.arc(a[0],a[1],i===4?6:5,0,Math.PI*2);x.fill();x.stroke()});
+  x.fillStyle="#fff";x.strokeStyle="#111";x.lineWidth=1.5*hk;
+  q.p.concat([q.rot]).forEach(function(a,i){x.beginPath();x.arc(a[0],a[1],(i===4?6:5)*hk,0,Math.PI*2);x.fill();x.stroke()});
   x.restore();
 }
 function tSyncUI(){
@@ -2586,8 +2586,8 @@ function tSyncUI(){
   function inside(q,p){var s=0,i;for(i=0;i<4;i++){var a=q.p[i],b=q.p[(i+1)%4],c=(b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]);if(i&&(c>0)!==(s>0))return false;s=c}return true}
   function hit(p){
     var q=tQuad();if(!q)return null;
-    if(Math.hypot(p[0]-q.rot[0],p[1]-q.rot[1])<12)return "rot";
-    for(var i=0;i<4;i++)if(Math.hypot(p[0]-q.p[i][0],p[1]-q.p[i][1])<12)return "size";
+    var ht=12*(tPrevCv.width/360);if(Math.hypot(p[0]-q.rot[0],p[1]-q.rot[1])<ht)return "rot";
+    for(var i=0;i<4;i++)if(Math.hypot(p[0]-q.p[i][0],p[1]-q.p[i][1])<ht)return "size";
     return inside(q,p)?"move":null;
   }
   tPrevCv.addEventListener("pointerdown",function(e){
@@ -2765,6 +2765,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-1</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-2</div>
 </body>
 </html>
