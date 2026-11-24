@@ -78,6 +78,8 @@ h1 em{font-style:normal;color:var(--accent)}
 .ctlcol .timeline{width:min(100%,280px);margin-top:6px}
 .prevbox.big #iPrev{width:auto;height:min(calc(100vh - 330px),640px);max-width:100%}
 .prevbox.big .timeline{width:min(100%,320px)}
+/* the preview is drawn at 540x960 for sharpness but shown at the old size (360 px wide) */
+#tPrev{width:360px;max-width:100%;height:auto;aspect-ratio:9/16;display:block}
 .ptabs{display:flex;gap:3px;background:var(--field);padding:3px;border-radius:11px;border:1px solid var(--line)}
 .ptab{flex:1;border:0;background:none;padding:7px 1px;border-radius:8px;font-weight:700;font-size:12.5px;color:var(--muted);cursor:pointer}
 .ptab:hover{color:var(--ink)}
@@ -2250,7 +2252,7 @@ $("aiMakeVid").onclick=async function(){
   AI.busy=false;$("aiMakeVid").disabled=false;updateSteps();aiStatus();
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-2"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-3"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -2775,6 +2777,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-2</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-3</div>
 </body>
 </html>
