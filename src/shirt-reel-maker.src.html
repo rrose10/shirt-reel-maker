@@ -461,7 +461,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
             <div class="ctl"><label for="tTx">Printed-on look (matte ink + cotton weave) <output id="tTxO">60%</output></label><input id="tTx" type="range" min="0" max="100" value="60"></div>
             <div class="ctl"><label for="tBl">Blur design (Gaussian radius) <output id="tBlO">0 px</output></label><input id="tBl" type="range" min="0" max="5" step="0.05" value="0"></div>
             <div class="ctl"><label for="tFw">Follow fabric folds (bend) <output id="tFwO">60%</output></label><input id="tFw" type="range" min="0" max="100" value="60"></div>
-            <div class="ctl"><label for="tZf">Follow camera zoom <output id="tZfO">100%</output></label><input id="tZf" type="range" min="0" max="100" value="100"></div>
+            <div class="ctl"><label for="tZf">Follow camera zoom <output id="tZfO">100%</output></label><input id="tZf" type="range" min="0" max="200" value="100"></div>
             <div class="row" style="margin:12px 0 0"><button class="btn" id="tPReset" type="button" style="padding:4px 12px">Reset size and position</button></div>
             <div class="ctl"><label for="tRes">Video size</label><select id="tRes"><option value="720">720 × 1280 (fast)</option><option value="1080" selected>1080 × 1920 (full HD)</option></select></div>
           </div>
@@ -2119,7 +2119,7 @@ function tplRimClean(id,w,h,P,r){
   }
 }
 // hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow. Paints the hands into TP.hand
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · zoom-2"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · zoom-3"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -2196,11 +2196,11 @@ function tplFab(F,f,x,y){
 // "Follow camera zoom": the camera of some templates zooms into the shirt; at 100% the print grows exactly like the shirt, lower values let it grow less
 // (it stays centred on the same spot of the shirt and only its size is eased back towards its size at the start)
 function tplHz(f,d){
-  var tr=TP.tr,H=tr.H[Math.max(0,Math.min(tr.n-1,f))],z=TC.zf;
-  if(z>=.999||!d||H[6]||H[7])return H;
+  var tr=TP.tr,H=tr.H[Math.max(0,Math.min(tr.n-1,f))],z=TC.zf*(tr.zb||1);
+  if(Math.abs(z-1)<.001||!d||H[6]||H[7])return H;
   var H0=tr.H[0],sr=Math.sqrt(Math.abs((H[0]*H[4]-H[1]*H[3])/((H0[0]*H0[4]-H0[1]*H0[3])||1)));
   if(!(sr>0)||Math.abs(sr-1)<1e-4)return H;
-  var k=(1+z*(sr-1))/sr,r=tplRect(d),c=tplProj(H,r[0]+r[2]/2,r[1]+r[3]/2,1);
+  var k=(1+z*(sr-1))/sr,r=tplRect(d),c=tr.za?tplProj(H,tr.za[0],tr.za[1],1):tplProj(H,r[0]+r[2]/2,r[1]+r[3]/2,1);   // tr.za: point of the shirt (collar) the extra growth is centred on
   return [k*H[0],k*H[1],k*H[2]+(1-k)*c[0],k*H[3],k*H[4],k*H[5]+(1-k)*c[1],H[6],H[7],H[8]];
 }
 function tplProj(Hm,x,y,s){var X=Hm[0]*x+Hm[1]*y+Hm[2],Y=Hm[3]*x+Hm[4]*y+Hm[5],Z=Hm[6]*x+Hm[7]*y+Hm[8];return [X/Z*s,Y/Z*s]}
@@ -2635,6 +2635,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · zoom-2</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · zoom-3</div>
 </body>
 </html>
