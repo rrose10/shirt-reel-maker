@@ -182,6 +182,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       <button class="tab on" id="tabShirt" type="button" role="tab" aria-selected="true">Shirt mockups</button>
       <button class="tab" id="tabImage" type="button" role="tab" aria-selected="false">Single image + music</button>
       <button class="tab" id="tabTpl" type="button" role="tab" aria-selected="false">Video template</button>
+      <button class="tab" id="tabAi" type="button" role="tab" aria-selected="false">AI video</button>
     </div>
     <ol class="steps2" id="steps" aria-label="Steps"></ol>
   </div>
@@ -514,6 +515,35 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       <div class="row" style="margin-bottom:6px"><button class="btn" id="backT" type="button">↑ Back to editor</button><button class="btn primary" id="zipT" type="button">Download all as ZIP</button><span class="status" id="zipTS" style="margin:0"></span></div>
       <div class="vids" id="tVids"></div>
     </section>
+  </div>
+
+  <div id="modeAi" class="hide">
+    <main class="work">
+      <aside class="panel files">
+        <h2>1 · Your design</h2>
+        <p class="hint">Transparent PNG. The AI puts it on a shirt, so check the letters carefully afterwards.</p>
+        <label class="drop" id="aiDropD"><strong>Add a PNG design</strong><span>Drop a file or click to browse</span><input id="aiFileD" type="file" accept="image/png,image/webp"></label>
+        <div class="thumbs" id="aiThD"></div>
+        <h2 style="margin-top:14px">Or your own mockup photo</h2>
+        <p class="hint">Already have the design on a shirt? Add it here and skip step 2.</p>
+        <label class="drop" id="aiDropM"><strong>Add a mockup photo</strong><span>JPG, PNG or WebP</span><input id="aiFileM" type="file" accept="image/png,image/jpeg,image/webp"></label>
+      </aside>
+      <section class="panel" style="flex:1;min-width:0">
+        <h2>2 · Mockup photo</h2>
+        <div class="ctl"><label for="aiWho">Who wears it, and where</label><input id="aiWho" type="text" value="a young woman in a bright urban garden, casual TikTok selfie style" style="width:100%"></div>
+        <div class="ctl"><label for="aiShirt">Shirt</label><input id="aiShirt" type="text" value="black oversized cotton t-shirt" style="width:100%"></div>
+        <div class="row" style="margin-top:8px"><button class="btn primary" id="aiMakeImg" type="button">Make mockup photo</button><span class="status" id="aiImgS" style="margin:0"></span></div>
+        <img id="aiImgOut" alt="" style="display:none;max-height:420px;max-width:100%;border-radius:12px;margin-top:10px;border:1px solid var(--line)">
+        <h2 style="margin-top:18px">3 · Video</h2>
+        <div class="ctl"><label for="aiPrompt">What happens in the video</label><textarea id="aiPrompt" rows="5" style="width:100%"></textarea></div>
+        <div class="row"><div class="ctl" style="margin:0"><label for="aiRes">Quality</label><select id="aiRes"><option value="720p">720p (default)</option><option value="1080p">1080p</option></select></div>
+        <div class="ctl" style="margin:0"><label for="aiAsp">Shape</label><select id="aiAsp"><option value="9:16">9:16 vertical</option><option value="16:9">16:9 wide</option></select></div></div>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="aiMakeVid" type="button">Make AI video</button><span class="status" id="aiVidS" style="margin:0"></span></div>
+        <p class="hint" id="aiNote" style="margin-top:8px">Every photo and video is paid from the Google account on the NAS. A video takes a few minutes.</p>
+        <div id="aiVidBox" style="display:none;margin-top:10px"><video id="aiVid" controls playsinline style="max-height:520px;max-width:100%;border-radius:12px"></video>
+          <div class="row" style="margin-top:8px"><a class="btn" id="aiDl" download="ai-video.mp4">Download</a><span class="status" id="aiSaveS" style="margin:0"></span></div></div>
+      </section>
+    </main>
   </div>
 </div>
 
@@ -1034,7 +1064,8 @@ function setMode(m){
   $("modeShirt").classList.toggle("hide",m!=="shirt");
   $("modeImage").classList.toggle("hide",m!=="image");
   $("modeTpl").classList.toggle("hide",m!=="tpl");
-  [["tabShirt","shirt"],["tabImage","image"],["tabTpl","tpl"]].forEach(function(x){$(x[0]).classList.toggle("on",m===x[1]);$(x[0]).setAttribute("aria-selected",String(m===x[1]))});
+  $("modeAi").classList.toggle("hide",m!=="ai");
+  [["tabShirt","shirt"],["tabImage","image"],["tabTpl","tpl"],["tabAi","ai"]].forEach(function(x){$(x[0]).classList.toggle("on",m===x[1]);$(x[0]).setAttribute("aria-selected",String(m===x[1]))});
   stopMusic();if(m==="image")drawFocus();
   if(m==="tpl"){if(!TP.vid&&TP.list.length&&!TP.loading){TP.loading=true;tplLoadId(TP.list[0].id).then(function(){TP.loading=false;$("tTpl").value=TP.loaded;tRender()})}tRender()}
   else{TP.play=false;$("tPlay").textContent="Play"}
@@ -1043,6 +1074,7 @@ function setMode(m){
 $("tabShirt").onclick=function(){setMode("shirt")};
 $("tabImage").onclick=function(){setMode("image")};
 $("tabTpl").onclick=function(){setMode("tpl")};
+$("tabAi").onclick=function(){setMode("ai");aiStatus()};
 
 /* ---------- single image + music ---------- */
 var I=null,M={motion:"studio",zoom:1.5,fit:"blur",bg:"#111111",res:1080,hsize:1,hstyle:"point1",hact:"smooth",ms:1,mx:0,my:0,asp:"916"};
@@ -1850,7 +1882,8 @@ setTimeout(updateSteps,0);
 function updateSteps(){
   var ol=$("steps"),img=!$("modeImage").classList.contains("hide"),st,imgs_=typeof imgs==="undefined"||!imgs?[]:imgs,res2=typeof results2==="undefined"||!results2?[]:results2;
   var tpl=typeof mode!=="undefined"&&mode==="tpl";
-  if(tpl){st=[["Pick template",!!(typeof TP!=="undefined"&&TP.vid)],["Add designs",typeof tdesigns!=="undefined"&&tdesigns.length>0],["Make videos",typeof results3!=="undefined"&&results3.length>0]]}
+  if(typeof mode!=="undefined"&&mode==="ai"){st=[["Add design",typeof AI!=="undefined"&&!!(AI.design||AI.mock)],["Mockup photo",typeof AI!=="undefined"&&!!AI.mock],["Make video",typeof AI!=="undefined"&&!!AI.done]]}
+  else if(tpl){st=[["Pick template",!!(typeof TP!=="undefined"&&TP.vid)],["Add designs",typeof tdesigns!=="undefined"&&tdesigns.length>0],["Make videos",typeof results3!=="undefined"&&results3.length>0]]}
   else if(img){st=[["Add images",imgs_.length>0],["Pick a style",styleTouched],["Make video",res2.length>0]]}
   else{st=[["Add shirt + design",blanks.length>0&&designs.length>0],["Place the print",placedTouched],["Pick a style",styleTouched],["Make video",results.length>0]]}
   var firstOpen=-1;st.forEach(function(x,i){if(!x[1]&&firstOpen<0)firstOpen=i});
@@ -2119,7 +2152,86 @@ function tplRimClean(id,w,h,P,r){
   }
 }
 // hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow. Paints the hands into TP.hand
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · zoom-3"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+
+/* ---------- AI video: Google Gemini through the small proxy on the NAS (the API key never reaches the browser) ---------- */
+var AI={design:null,mock:null,done:false,busy:false};
+function aiSay(id,t,bad){var e=$(id);e.textContent=t||"";e.style.color=bad?"#c0392b":""}
+function aiFileToB64(file,maxSide,type){
+  return new Promise(function(res,rej){
+    var u=URL.createObjectURL(file),im=new Image();
+    im.onload=function(){
+      var k=Math.min(1,maxSide/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement("canvas");
+      c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);
+      var x=c.getContext("2d");if(type==="image/jpeg"){x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height)}
+      x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);
+      var d=c.toDataURL(type,.92);res({mime:type,data:d.split(",")[1],url:d});
+    };
+    im.onerror=function(){URL.revokeObjectURL(u);rej(new Error("Could not read this image"))};im.src=u;
+  });
+}
+async function aiPost(path,body){
+  var r=await fetch("ai/"+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),j={};
+  try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(j.error||("The NAS answered "+r.status+" (is the AI proxy running?)"));
+  return j;
+}
+async function aiStatus(){
+  try{
+    var r=await fetch("ai/status",{cache:"no-store"}),j=await r.json();
+    $("aiNote").textContent=j.configured?"Every photo and video is paid from the Google account on the NAS. A video takes a few minutes. Videos today: "+j.videosToday+" of "+j.dailyLimit+".":"The NAS has no Google API key yet. Put it in the .env file and restart (see README).";
+  }catch(e){$("aiNote").textContent="AI video only works from the NAS link (the page must be opened from the NAS, with the AI proxy running)."}
+}
+async function aiSetDesign(f){
+  try{
+    var o=await aiFileToB64(f,2048,"image/png");AI.design=o;
+    $("aiThD").innerHTML="";var im=new Image();im.src=o.url;im.style.cssText="max-width:120px;max-height:120px;background:#888;border-radius:8px";$("aiThD").appendChild(im);
+    updateSteps();
+  }catch(e){aiSay("aiImgS",e.message,1)}
+}
+async function aiSetMock(f){
+  try{
+    var o=await aiFileToB64(f,1600,"image/jpeg");AI.mock=o;$("aiImgOut").src=o.url;$("aiImgOut").style.display="";aiSay("aiImgS","Using your own mockup photo.");updateSteps();
+  }catch(e){aiSay("aiImgS",e.message,1)}
+}
+function aiWire(zone,input,fn){
+  input.onchange=function(){if(input.files[0])fn(input.files[0]);input.value=""};
+  zone.addEventListener("dragover",function(e){e.preventDefault()});
+  zone.addEventListener("drop",function(e){e.preventDefault();if(e.dataTransfer.files[0])fn(e.dataTransfer.files[0])});
+}
+aiWire($("aiDropD"),$("aiFileD"),aiSetDesign);aiWire($("aiDropM"),$("aiFileM"),aiSetMock);
+$("aiPrompt").value="UGC-style vertical video. The person in the photo smiles at the camera and turns slightly to show off the front of the t-shirt, then glances down at the print and back up. Handheld phone camera feel, natural daylight, gentle movement. The print on the shirt must stay exactly as in the photo: same letters, same colours, no changes.";
+$("aiMakeImg").onclick=async function(){
+  if(AI.busy)return;if(!AI.design){aiSay("aiImgS","Add your PNG design first.",1);return}
+  AI.busy=true;$("aiMakeImg").disabled=true;aiSay("aiImgS","Making the photo… about a minute.");
+  try{
+    var prompt="Photo of "+$("aiWho").value+", wearing a "+$("aiShirt").value+". The attached image is the design. Print it on the front chest of the shirt exactly as it is: every letter, shape and colour unchanged, nothing added, nothing cropped, sitting naturally on the fabric with the folds and light of the shirt. Vertical 9:16 smartphone photo, realistic, sharp.";
+    var j=await aiPost("image",{prompt:prompt,images:[{mime:AI.design.mime,data:AI.design.data}],aspect_ratio:"9:16"});
+    AI.mock={mime:j.mime,data:j.data};$("aiImgOut").src="data:"+j.mime+";base64,"+j.data;$("aiImgOut").style.display="";
+    aiSay("aiImgS","Done. Check that the design is correct, then make the video (or press this again for another photo).");
+  }catch(e){aiSay("aiImgS",e.message,1)}
+  AI.busy=false;$("aiMakeImg").disabled=false;updateSteps();aiStatus();
+};
+$("aiMakeVid").onclick=async function(){
+  if(AI.busy)return;if(!AI.mock){aiSay("aiVidS","Make or add a mockup photo first.",1);return}
+  AI.busy=true;$("aiMakeVid").disabled=true;aiSay("aiVidS","Sending to Google…");$("aiVidBox").style.display="none";
+  try{
+    var j=await aiPost("video",{prompt:$("aiPrompt").value,image:{mime:AI.mock.mime,data:AI.mock.data},aspect_ratio:$("aiAsp").value,resolution:$("aiRes").value});
+    var t0=Date.now(),st;
+    for(;;){
+      await new Promise(function(r){setTimeout(r,4000)});
+      var r=await fetch("ai/job/"+j.job,{cache:"no-store"});st=await r.json();
+      if(st.state==="done")break;
+      if(st.state==="error")throw new Error(st.error||"Video failed");
+      aiSay("aiVidS","Making the video… "+Math.round((Date.now()-t0)/1000)+" s (usually 2–5 minutes). You can keep this tab open.");
+    }
+    var fr=await fetch("ai/job/"+j.job+"/file"),blob=await fr.blob(),url=URL.createObjectURL(blob);
+    $("aiVid").src=url;$("aiDl").href=url;$("aiVidBox").style.display="";AI.done=true;aiSay("aiVidS","Done.");
+    nasSaveVideo({name:"ai-video.mp4",blob:blob},function(t){aiSay("aiSaveS",t)});
+  }catch(e){aiSay("aiVidS",e.message,1)}
+  AI.busy=false;$("aiMakeVid").disabled=false;updateSteps();aiStatus();
+};
+
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · ai-1"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -2635,6 +2747,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · zoom-3</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · ai-1</div>
 </body>
 </html>
