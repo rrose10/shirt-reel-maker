@@ -50,5 +50,9 @@
 {
 "id": "white-hanger-beige",
 "name": "White · Hanger on beige wall (hand smooths)"
+},
+{
+"id": "white-sweatshirt-carpet",
+"name": "White · Sweatshirt on carpet, hands move it (30 fps)"
 }
 ]
