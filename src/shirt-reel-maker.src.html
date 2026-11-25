@@ -2065,24 +2065,28 @@ function tGrab(v,i){
     })();
   });
 }
+var tFast=false;
 function tplDesignCanvas(d){
-  if(!d._tc){
-    var sc=Math.min(1,1400/Math.max(d.w,d.h)),c=mk(Math.max(2,Math.round(d.w*sc)),Math.max(2,Math.round(d.h*sc))),x=c.getContext("2d");
+  var LIM=tFast?340:1400;   // while a warp slider is being dragged the design is bent at a low resolution (fast); the sharp one is built when the slider is released
+  if(!d._tc||d._tcL!==LIM){
+    d._tcL=LIM;d._twc=null;
+    var sc=Math.min(1,LIM/Math.max(d.w,d.h)),c=mk(Math.max(2,Math.round(d.w*sc)),Math.max(2,Math.round(d.h*sc))),x=c.getContext("2d");
     x.imageSmoothingQuality="high";x.drawImage(d.img,0,0,c.width,c.height);d._tc=c;
   }
   if(!tHasWarp())return d._tc;
-  var key=[TC.curve,TC.wave,TC.ph,TC.pv,TC.sk].join(",");if(d._twk===key&&d._twc)return d._twc;
+  var key=[TC.curve,TC.wave,TC.ph,TC.pv,TC.sk,LIM].join(",");if(d._twk===key&&d._twc)return d._twc;
   var base=d._tc,sw=base.width,sh=base.height,CW=Math.round(sw*WEF),CH=Math.round(sh*WEF),px=(CW-sw)/2,py=(CH-sh)/2,i,j;
-  var T=mk(CW,CH),tc=T.getContext("2d");tc.imageSmoothingEnabled=true;tc.imageSmoothingQuality="high";
-  for(i=0;i<sw;i++){
+  var T=mk(CW,CH),tc=T.getContext("2d",{willReadFrequently:true});tc.imageSmoothingEnabled=true;tc.imageSmoothingQuality=tFast?"low":"high";
+  var ST=tFast?2:1;
+  for(i=0;i<sw;i+=ST){
     var u=(i+.5)/sw,x2=2*u-1,sc2=Math.max(.15,1+TC.ph*.55*x2);
     var yo=TC.curve*.32*sh*(x2*x2-1/3)+TC.wave*.09*sh*Math.sin(u*Math.PI*4);
-    tc.drawImage(base,i,0,1,sh,px+i,py+(sh-sh*sc2)/2+yo,1.15,sh*sc2);
+    tc.drawImage(base,i,0,ST,sh,px+i,py+(sh-sh*sc2)/2+yo,ST*1.15,sh*sc2);
   }
-  var O=mk(CW,CH),oc=O.getContext("2d");oc.imageSmoothingEnabled=true;oc.imageSmoothingQuality="high";
-  for(j=0;j<CH;j++){
+  var O=mk(CW,CH),oc=O.getContext("2d",{willReadFrequently:true});oc.imageSmoothingEnabled=true;oc.imageSmoothingQuality=tFast?"low":"high";
+  for(j=0;j<CH;j+=ST){
     var v=Math.max(-1.6,Math.min(1.6,(j+.5-CH/2)/(sh/2))),sx=Math.max(.15,1+TC.pv*.55*v),xo=TC.sk*.4*sw*v;
-    oc.drawImage(T,0,j,CW,1,(CW-CW*sx)/2+xo,j,CW*sx,1.15);
+    oc.drawImage(T,0,j,CW,ST,(CW-CW*sx)/2+xo,j,CW*sx,ST*1.15);
   }
   d._twk=key;d._twc=O;return O;
 }
@@ -2242,7 +2246,7 @@ $("aiMakeVid").onclick=async function(){
   AI.busy=false;$("aiMakeVid").disabled=false;updateSteps();aiStatus();
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-3"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-4"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -2639,9 +2643,10 @@ $("tRes").onchange=function(){TC.res=+this.value};
 $("tPReset").onclick=function(){TC.sc=1;TC.dx=0;TC.dy=0;TC.rot=0;tSyncUI();tUpdate()};
 $("tRot").oninput=function(){TC.rot=+this.value;$("tRotO").textContent=this.value+"°";tUpdate()};
 [["tCurve","curve"],["tWave","wave"],["tPH","ph"],["tPV","pv"],["tSk","sk"]].forEach(function(a){
-  $(a[0]).oninput=function(){TC[a[1]]=this.value/100;$(a[0]+"O").textContent=this.value;tUpdate()};
+  $(a[0]).oninput=function(){TC[a[1]]=this.value/100;$(a[0]+"O").textContent=this.value;tFast=true;tUpdate()};
+  $(a[0]).onchange=function(){tFast=false;tUpdate()};
 });
-$("tWReset").onclick=function(){["tCurve","tWave","tPH","tPV","tSk"].forEach(function(k){var e=$(k);e.value=0;e.dispatchEvent(new Event("input",{bubbles:true}))})};
+$("tWReset").onclick=function(){["tCurve","tWave","tPH","tPV","tSk"].forEach(function(k){var e=$(k);e.value=0;e.dispatchEvent(new Event("input",{bubbles:true}))});tFast=false;tUpdate()};
 /* design list */
 function tRender(){
   var el=$("tList");el.textContent="";$("tCnt").textContent=tdesigns.length;
@@ -2767,6 +2772,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-3</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-4</div>
 </body>
 </html>
