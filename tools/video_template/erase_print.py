@@ -110,16 +110,22 @@ for k,f in enumerate(fs):
     rel=((lab[...,1]>121)&(lab[...,2]>127)&(hsvi[...,1]>28)&(hsvi[...,2]>50)&(zone>0)).astype(np.uint8)
     rel=cv2.morphologyEx(rel,cv2.MORPH_OPEN,np.ones((3,3),np.uint8))
     skd=np.maximum(cv2.dilate(sk,np.ones((9,9),np.uint8)),cv2.dilate(rel,np.ones((9,9),np.uint8)))
-    hole=(((cv2.dilate(wm,np.ones((21,21),np.uint8))>0)|(extra>0))).astype(np.uint8)
+    hole=(((cv2.dilate(wm,np.ones((45,45),np.uint8))>0)|(extra>0))).astype(np.uint8)
     hole=(cv2.GaussianBlur(cv2.morphologyEx(hole,cv2.MORPH_CLOSE,np.ones((15,15),np.uint8)).astype(np.float32),(0,0),6)>0.5).astype(np.uint8)
     # fill uses only pixels that are neither print nor hand
-    known=1-np.maximum(np.maximum(cv2.dilate(wm,np.ones((3,3),np.uint8)),extra),skd)
+    known=1-np.maximum(np.maximum(cv2.dilate(wm,np.ones((29,29),np.uint8)),extra),skd)
     base=f32.copy();base[known==0]=np.nan
     tmp=im.copy()
     # replace unknown with local mean so the relaxation sees valid data only
     fillsrc=f32.copy();unk=(known==0)
     fillsrc[unk]=0
     up=fill_hole(fillsrc,unk.astype(np.uint8))
+    # make the fill meet its surroundings exactly: the mismatch measured on the known pixels hugging the unknown area is spread (Laplace) across it
+    band=((cv2.dilate(unk.astype(np.uint8),np.ones((21,21),np.uint8))>0)&(~unk)).astype(np.uint8)
+    resb=(f32-up)*band[...,None]
+    resx=fill_hole(resb,(1-band).astype(np.uint8))
+    up=up+resx*(unk[...,None].astype(np.float32)*0+1)*np.clip(cv2.GaussianBlur(unk.astype(np.float32),(0,0),12)*1.0,0,1)[...,None]
+    # (older ring step below only polishes what is left)
     # make the fill meet its surroundings exactly: diffuse the mismatch measured on a thin ring of known pixels inwards
     ring=((cv2.dilate(hole,np.ones((31,31),np.uint8))>0)&(hole==0)&(known>0)).astype(np.float32)
     res=(f32-up)*ring[...,None]
@@ -133,8 +139,8 @@ for k,f in enumerate(fs):
     g=rng.normal(0,1.0,(H,W)).astype(np.float32);g=cv2.GaussianBlur(g,(0,0),0.8)*2.4
     up=up+g[...,None]
     dtw=cv2.distanceTransform((wm==0).astype(np.uint8),cv2.DIST_L2,5)
-    wcore=np.maximum((dtw<=7).astype(np.float32),(extra>0).astype(np.float32))
-    wsoft=np.maximum(wcore,np.clip((26-dtw)/19.0,0,1)*(hole>0))
+    wcore=np.maximum((dtw<=13).astype(np.float32),(extra>0).astype(np.float32))
+    wsoft=np.maximum(wcore,np.clip((34-dtw)/21.0,0,1)*(hole>0))
     soft=cv2.GaussianBlur(wsoft,(0,0),3.0)[...,None]
     out=f32*(1-soft)+up*soft
     hm=cv2.GaussianBlur(sk.astype(np.float32),(0,0),1.2)[...,None]
