@@ -17,17 +17,3 @@ services:
       - ./certs:/certs
       # finished videos, music library and shared presets are stored in the office share:
       - /srv/dev-disk-by-uuid-07745e93-67d6-4171-93e2-f78f05f3f77e/Office/ShirtReels:/data
-
-  # talks to Google for the "AI video" tab. The API key stays here (file .env), never in the web page.
-  ai-proxy:
-    image: python:3.12-alpine
-    container_name: shirt-reel-ai
-    restart: unless-stopped
-    command: ["python", "-u", "/app/server.py"]
-    environment:
-      # read from the file .env next to this docker-compose.yml (see .env.example)
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      AI_DAILY_LIMIT: ${AI_DAILY_LIMIT:-30}
-      AI_DAILY_IMAGE_LIMIT: ${AI_DAILY_IMAGE_LIMIT:-100}
-    volumes:
-      - ./ai-proxy:/app:ro

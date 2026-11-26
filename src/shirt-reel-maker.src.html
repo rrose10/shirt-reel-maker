@@ -157,6 +157,10 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
 .tab.on{background:var(--ink);color:var(--bg)}
 .focuscv{width:min(100%,200px);aspect-ratio:9/16;height:auto;border:1px solid var(--line);border-radius:12px;cursor:crosshair;background:var(--field);touch-action:none;display:block}
 .fname{font-weight:700;font-size:13.5px;overflow-wrap:anywhere;margin:12px 0 2px}
+.thumb.act{outline:2px solid var(--ink);outline-offset:1px}
+.thumb .k{position:absolute;left:3px;bottom:3px;font-size:10px;font-weight:700;background:#000a;color:#fff;border-radius:6px;padding:0 5px;line-height:15px}
+.thumb .tick{position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:800;line-height:18px;text-align:center}
+.mkcv{max-width:100%;height:auto;display:block;touch-action:none}
 .hide{display:none!important}
 </style>
 </head>
@@ -184,7 +188,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       <button class="tab on" id="tabShirt" type="button" role="tab" aria-selected="true">Shirt mockups</button>
       <button class="tab" id="tabImage" type="button" role="tab" aria-selected="false">Single image + music</button>
       <button class="tab" id="tabTpl" type="button" role="tab" aria-selected="false">Video template</button>
-      <button class="tab" id="tabAi" type="button" role="tab" aria-selected="false">AI video</button>
+      <button class="tab" id="tabMk" type="button" role="tab" aria-selected="false">Image marketing</button>
     </div>
     <ol class="steps2" id="steps" aria-label="Steps"></ol>
   </div>
@@ -520,31 +524,43 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
     </section>
   </div>
 
-  <div id="modeAi" class="hide">
+  <div id="modeMk" class="hide">
     <main class="work">
-      <aside class="panel files">
-        <h2>1 · Your design</h2>
-        <p class="hint">Transparent PNG. The AI puts it on a shirt, so check the letters carefully afterwards.</p>
-        <label class="drop" id="aiDropD"><strong>Add a PNG design</strong><span>Drop a file or click to browse</span><input id="aiFileD" type="file" accept="image/png,image/webp"></label>
-        <div class="thumbs" id="aiThD"></div>
-        <h2 style="margin-top:14px">Or your own mockup photo</h2>
-        <p class="hint">Already have the design on a shirt? Add it here and skip step 2.</p>
-        <label class="drop" id="aiDropM"><strong>Add a mockup photo</strong><span>JPG, PNG or WebP</span><input id="aiFileM" type="file" accept="image/png,image/jpeg,image/webp"></label>
+      <aside class="panel files" aria-labelledby="h-mkm">
+        <h2 id="h-mkm">Mockups <span class="count" id="mkCntM">0</span></h2>
+        <p class="hint">Tap the shirts and mugs you want. Tap again to untick. Tap a ticked one to edit it.</p>
+        <div class="chips" id="mkKinds"></div>
+        <div class="row" style="margin-top:8px"><button class="btn" id="mkAll" type="button" style="padding:3px 10px">Tick all shown</button><button class="btn" id="mkNone" type="button" style="padding:3px 10px">Untick all</button></div>
+        <div class="thumbs" id="mkLib"></div>
+        <p class="hint" id="mkLibNote" style="margin-top:-8px"></p>
+        <div class="ctl" style="margin-top:0"><label for="mkOwnKind">My own mockup is a</label><select id="mkOwnKind"><option value="shirt">Shirt</option><option value="mug">Mug</option></select></div>
+        <label class="drop" id="mkDropM" style="margin-top:8px"><strong>Add your own mockup</strong><span>Drop files or click to browse · JPG, PNG or WebP</span><input id="mkFileM" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
+        <h2 id="h-mkd" style="margin-top:20px">PNG designs <span class="count" id="mkCntD">0</span></h2>
+        <p class="hint">Transparent PNGs. Each design goes on every ticked mockup.</p>
+        <label class="drop" id="mkDropD"><strong>Add PNG designs</strong><span>Drop files or click to browse</span><input id="mkFileD" type="file" accept="image/png,image/webp" multiple></label>
+        <div class="thumbs" id="mkListD"></div>
       </aside>
-      <section class="panel" style="flex:1;min-width:0">
-        <h2>2 · Mockup photo</h2>
-        <div class="ctl"><label for="aiWho">Who wears it, and where</label><input id="aiWho" type="text" value="a young woman in a bright urban garden, casual TikTok selfie style" style="width:100%"></div>
-        <div class="ctl"><label for="aiShirt">Shirt</label><input id="aiShirt" type="text" value="black oversized cotton t-shirt" style="width:100%"></div>
-        <div class="row" style="margin-top:8px"><button class="btn primary" id="aiMakeImg" type="button">Make mockup photo</button><span class="status" id="aiImgS" style="margin:0"></span></div>
-        <img id="aiImgOut" alt="" style="display:none;max-height:420px;max-width:100%;border-radius:12px;margin-top:10px;border:1px solid var(--line)">
-        <h2 style="margin-top:18px">3 · Video</h2>
-        <div class="ctl"><label for="aiPrompt">What happens in the video</label><textarea id="aiPrompt" rows="5" style="width:100%"></textarea></div>
-        <div class="row"><div class="ctl" style="margin:0"><label for="aiRes">Quality</label><select id="aiRes"><option value="720p">720p (default)</option><option value="1080p">1080p</option></select></div>
-        <div class="ctl" style="margin:0"><label for="aiAsp">Shape</label><select id="aiAsp"><option value="9:16">9:16 vertical</option><option value="16:9">16:9 wide</option></select></div></div>
-        <div class="row" style="margin-top:10px"><button class="btn primary" id="aiMakeVid" type="button">Make AI video</button><span class="status" id="aiVidS" style="margin:0"></span></div>
-        <p class="hint" id="aiNote" style="margin-top:8px">Every photo and video is paid from the Google account on the NAS. A video takes a few minutes.</p>
-        <div id="aiVidBox" style="display:none;margin-top:10px"><video id="aiVid" controls playsinline style="max-height:520px;max-width:100%;border-radius:12px"></video>
-          <div class="row" style="margin-top:8px"><a class="btn" id="aiDl" download="ai-video.mp4">Download</a><span class="status" id="aiSaveS" style="margin:0"></span></div></div>
+
+      <section class="panel" aria-labelledby="h-mkp">
+        <h2 id="h-mkp">Place the print</h2>
+        <p class="hint" id="mkHint">Tick a mockup and add a design. Drag the design to move it, the corners to resize, the top dot to turn it.</p>
+        <div class="stage"><canvas id="mkCv" width="560" height="560" class="mkcv" aria-label="Mockup preview"></canvas></div>
+        <div class="fname" id="mkName"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-mkl">
+        <h2 id="h-mkl">Look</h2>
+        <div class="ctl"><label for="mkW">Size <output id="mkWO">34</output></label><input id="mkW" type="range" min="4" max="95" value="34"></div>
+        <div class="ctl"><label for="mkRot">Turn <output id="mkRotO">0</output></label><input id="mkRot" type="range" min="-180" max="180" value="0"></div>
+        <div class="ctl"><label for="mkSh">Fabric light and shade <output id="mkShO">70</output></label><input id="mkSh" type="range" min="0" max="100" value="70"></div>
+        <div class="ctl"><label for="mkWr">Wrap round (mugs) <output id="mkWrO">0</output></label><input id="mkWr" type="range" min="0" max="100" value="0"></div>
+        <div class="ctl"><label for="mkOp">Ink strength <output id="mkOpO">100</output></label><input id="mkOp" type="range" min="20" max="100" value="100"></div>
+        <div class="row" style="margin-top:12px"><button class="btn" id="mkCenter" type="button">Centre it</button><button class="btn" id="mkCopy" type="button">Use for all ticked mockups of this kind</button></div>
+        <h2 style="margin-top:22px">Download JPEG</h2>
+        <div class="ctl"><label for="mkSize">Picture size</label><select id="mkSize"><option value="0">Same as the mockup</option><option value="2000" selected>2000 px (long side)</option><option value="1500">1500 px</option><option value="1080">1080 px</option></select></div>
+        <div class="ctl"><label for="mkQ">JPEG quality <output id="mkQO">92</output></label><input id="mkQ" type="range" min="60" max="100" value="92"></div>
+        <div class="row" style="margin-top:12px"><button class="btn primary" id="mkDl1" type="button">Download this picture</button><button class="btn" id="mkDlAll" type="button">Download all (ZIP)</button></div>
+        <div class="status" id="mkS"></div>
       </section>
     </main>
   </div>
@@ -1067,8 +1083,9 @@ function setMode(m){
   $("modeShirt").classList.toggle("hide",m!=="shirt");
   $("modeImage").classList.toggle("hide",m!=="image");
   $("modeTpl").classList.toggle("hide",m!=="tpl");
-  $("modeAi").classList.toggle("hide",m!=="ai");
-  [["tabShirt","shirt"],["tabImage","image"],["tabTpl","tpl"],["tabAi","ai"]].forEach(function(x){$(x[0]).classList.toggle("on",m===x[1]);$(x[0]).setAttribute("aria-selected",String(m===x[1]))});
+  $("modeMk").classList.toggle("hide",m!=="mk");
+  [["tabShirt","shirt"],["tabImage","image"],["tabTpl","tpl"],["tabMk","mk"]].forEach(function(x){$(x[0]).classList.toggle("on",m===x[1]);$(x[0]).setAttribute("aria-selected",String(m===x[1]))});
+  $("sampleBtn").style.display=m==="mk"?"none":"";
   stopMusic();if(m==="image")drawFocus();
   if(m==="tpl"){if(!TP.vid&&TP.list.length&&!TP.loading){TP.loading=true;tplLoadId(TP.list[0].id).then(function(){TP.loading=false;$("tTpl").value=TP.loaded;tRender()})}tRender()}
   else{TP.play=false;$("tPlay").textContent="Play"}
@@ -1077,7 +1094,7 @@ function setMode(m){
 $("tabShirt").onclick=function(){setMode("shirt")};
 $("tabImage").onclick=function(){setMode("image")};
 $("tabTpl").onclick=function(){setMode("tpl")};
-$("tabAi").onclick=function(){setMode("ai");aiStatus()};
+$("tabMk").onclick=function(){setMode("mk");mkOpen()};
 
 /* ---------- single image + music ---------- */
 var I=null,M={motion:"studio",zoom:1.5,fit:"blur",bg:"#111111",res:1080,hsize:1,hstyle:"point1",hact:"smooth",ms:1,mx:0,my:0,asp:"916"};
@@ -1885,7 +1902,7 @@ setTimeout(updateSteps,0);
 function updateSteps(){
   var ol=$("steps"),img=!$("modeImage").classList.contains("hide"),st,imgs_=typeof imgs==="undefined"||!imgs?[]:imgs,res2=typeof results2==="undefined"||!results2?[]:results2;
   var tpl=typeof mode!=="undefined"&&mode==="tpl";
-  if(typeof mode!=="undefined"&&mode==="ai"){st=[["Add design",typeof AI!=="undefined"&&!!(AI.design||AI.mock)],["Mockup photo",typeof AI!=="undefined"&&!!AI.mock],["Make video",typeof AI!=="undefined"&&!!AI.done]]}
+  if(typeof mode!=="undefined"&&mode==="mk"){st=[["Pick mockups",typeof MK!=="undefined"&&MK.mocks.some(function(m){return m.sel})],["Add designs",typeof MK!=="undefined"&&MK.designs.length>0],["Place the print",typeof MK!=="undefined"&&MK.touched],["Download",typeof MK!=="undefined"&&MK.dl]]}
   else if(tpl){st=[["Pick template",!!(typeof TP!=="undefined"&&TP.vid)],["Add designs",typeof tdesigns!=="undefined"&&tdesigns.length>0],["Make videos",typeof results3!=="undefined"&&results3.length>0]]}
   else if(img){st=[["Add images",imgs_.length>0],["Pick a style",styleTouched],["Make video",res2.length>0]]}
   else{st=[["Add shirt + design",blanks.length>0&&designs.length>0],["Place the print",placedTouched],["Pick a style",styleTouched],["Make video",results.length>0]]}
@@ -2168,85 +2185,249 @@ function tplRimClean(id,w,h,P,r){
 }
 // hand alpha at plate resolution, from the skin colour of the plate (see tplSkinAlpha); the supplied cut-out only decides in deep shadow. Paints the hands into TP.hand
 
-/* ---------- AI video: Google Gemini through the small proxy on the NAS (the API key never reaches the browser) ---------- */
-var AI={design:null,mock:null,done:false,busy:false};
-function aiSay(id,t,bad){var e=$(id);e.textContent=t||"";e.style.color=bad?"#c0392b":""}
-function aiFileToB64(file,maxSide,type){
-  return new Promise(function(res,rej){
-    var u=URL.createObjectURL(file),im=new Image();
-    im.onload=function(){
-      var k=Math.min(1,maxSide/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement("canvas");
-      c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);
-      var x=c.getContext("2d");if(type==="image/jpeg"){x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height)}
-      x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);
-      var d=c.toDataURL(type,.92);res({mime:type,data:d.split(",")[1],url:d});
-    };
-    im.onerror=function(){URL.revokeObjectURL(u);rej(new Error("Could not read this image"))};im.src=u;
+/* ---------- Image marketing: PNG designs on shirt and mug photos, downloaded as JPEG ---------- */
+var MK={mocks:[],designs:[],cur:null,curD:null,kind:"all",touched:false,dl:false,libDone:false,busy:false,uid:0};
+var MKD={shirt:{x:.5,y:.4,w:.34,rot:0,op:1,sh:.7,wr:0},mug:{x:.5,y:.5,w:.3,rot:0,op:1,sh:.6,wr:.35}};
+var mkCv=$("mkCv"),mkX=mkCv.getContext("2d"),mkGeo=null,mkDrag=null;
+function mkC(w,h){var c=document.createElement("canvas");c.width=Math.max(1,w);c.height=Math.max(1,h);return c}
+function mkSay(t,bad){var e=$("mkS");e.textContent=t||"";e.style.color=bad?"#c0392b":""}
+function mkImg(url){return new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im)};im.onerror=function(){rej(new Error("Could not open this picture"))};im.src=url})}
+function mkCopyPl(k){return JSON.parse(JSON.stringify(MKD[k]||MKD.shirt))}
+function mkCur(){return MK.mocks.find(function(m){return m.id===MK.cur})||null}
+function mkDes(){return MK.designs.find(function(d){return d.id===MK.curD})||MK.designs[0]||null}
+function mkEnsure(m){
+  if(m.img)return Promise.resolve(m.img);
+  return mkImg(m.url).then(function(im){m.img=im;return im});
+}
+function mkOpen(){
+  if(!MK.libDone){
+    MK.libDone=true;
+    fetch("mockups/list.json",{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(l){
+      l.forEach(function(it){MK.mocks.push({id:"l"+(MK.uid++),name:it.name||it.file,kind:it.kind==="mug"?"mug":"shirt",url:"mockups/"+it.file,own:false,sel:false,img:null,pl:mkCopyPl(it.kind==="mug"?"mug":"shirt")})});
+      mkLists();
+    }).catch(function(){mkLists()});
+  }
+  mkLists();mkDraw();updateSteps();
+}
+function mkLists(){
+  var host=$("mkLib");host.innerHTML="";
+  var vis=MK.mocks.filter(function(m){return MK.kind==="all"||m.kind===MK.kind});
+  vis.forEach(function(m){
+    var b=document.createElement("div");b.className="thumb"+(m.sel?" sel":"")+(MK.cur===m.id?" act":"");b.style.width="78px";b.style.height="78px";b.title=m.name;b.tabIndex=0;
+    b.style.backgroundImage="url('"+m.url+"')";b.style.backgroundSize="cover";b.style.backgroundPosition="center";
+    var k=document.createElement("span");k.className="k";k.textContent=m.kind==="mug"?"Mug":"Shirt";b.appendChild(k);
+    if(m.sel){var t=document.createElement("span");t.className="tick";t.textContent="✓";b.appendChild(t)}
+    if(m.own){var x=document.createElement("button");x.className="x";x.type="button";x.textContent="×";x.setAttribute("aria-label","Remove");x.onclick=function(e){e.stopPropagation();MK.mocks=MK.mocks.filter(function(q){return q!==m});if(MK.cur===m.id)MK.cur=null;mkPickCur();mkLists();mkDraw();updateSteps()};b.appendChild(x)}
+    b.onclick=function(){mkTap(m)};b.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();mkTap(m)}};
+    host.appendChild(b);
+  });
+  $("mkCntM").textContent=MK.mocks.filter(function(m){return m.sel}).length;
+  $("mkLibNote").textContent=MK.mocks.length?"":"The shared library is empty here. Add your own mockups below.";
+  var dh=$("mkListD");dh.innerHTML="";
+  MK.designs.forEach(function(d){
+    var b=document.createElement("div");b.className="thumb chk"+(MK.curD===d.id?" sel":"");b.tabIndex=0;b.title=d.name;
+    var im=document.createElement("img");im.src=d.url;im.alt=d.name;b.appendChild(im);
+    var x=document.createElement("button");x.className="x";x.type="button";x.textContent="×";x.setAttribute("aria-label","Remove");x.onclick=function(e){e.stopPropagation();MK.designs=MK.designs.filter(function(q){return q!==d});if(MK.curD===d.id)MK.curD=MK.designs[0]?MK.designs[0].id:null;mkLists();mkDraw();updateSteps()};b.appendChild(x);
+    b.onclick=function(){MK.curD=d.id;mkLists();mkDraw()};
+    dh.appendChild(b);
+  });
+  $("mkCntD").textContent=MK.designs.length;
+  Array.prototype.forEach.call($("mkKinds").querySelectorAll(".chip"),function(c){c.classList.toggle("on",c.getAttribute("data-v")===MK.kind)});
+}
+function mkPickCur(){if(!MK.cur){var f=MK.mocks.find(function(m){return m.sel});MK.cur=f?f.id:null}}
+function mkTap(m){
+  if(m.sel&&MK.cur!==m.id){MK.cur=m.id}
+  else if(m.sel&&MK.cur===m.id){m.sel=false;MK.cur=null;mkPickCur()}
+  else{m.sel=true;MK.cur=m.id}
+  mkLists();mkSync();mkDraw();updateSteps();
+}
+[["all","All"],["shirt","Shirts"],["mug","Mugs"]].forEach(function(k){
+  var b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("data-v",k[0]);b.textContent=k[1];
+  b.onclick=function(){MK.kind=k[0];mkLists()};$("mkKinds").appendChild(b);
+});
+$("mkAll").onclick=function(){MK.mocks.forEach(function(m){if(MK.kind==="all"||m.kind===MK.kind)m.sel=true});mkPickCur();if(!MK.cur){var f=MK.mocks.find(function(m){return m.sel});if(f)MK.cur=f.id}mkLists();mkSync();mkDraw();updateSteps()};
+$("mkNone").onclick=function(){MK.mocks.forEach(function(m){if(MK.kind==="all"||m.kind===MK.kind)m.sel=false});if(MK.cur&&!(mkCur()&&mkCur().sel))MK.cur=null;mkPickCur();mkLists();mkSync();mkDraw();updateSteps()};
+function mkWire(zone,input,fn){
+  input.onchange=function(){Array.prototype.slice.call(input.files).forEach(fn);input.value=""};
+  ["dragenter","dragover"].forEach(function(ev){zone.addEventListener(ev,function(e){e.preventDefault();zone.classList.add("over")})});
+  ["dragleave","drop"].forEach(function(ev){zone.addEventListener(ev,function(e){e.preventDefault();zone.classList.remove("over")})});
+  zone.addEventListener("drop",function(e){Array.prototype.slice.call(e.dataTransfer.files).forEach(fn)});
+}
+mkWire($("mkDropM"),$("mkFileM"),function(f){
+  if(!/^image\//.test(f.type))return;
+  var k=$("mkOwnKind").value,m={id:"o"+(MK.uid++),name:f.name.replace(/\.[^.]+$/,""),kind:k,url:URL.createObjectURL(f),own:true,sel:true,img:null,pl:mkCopyPl(k)};
+  mkEnsure(m).then(function(){MK.mocks.push(m);MK.cur=m.id;mkLists();mkSync();mkDraw();updateSteps()}).catch(function(e){mkSay(e.message,1)});
+});
+mkWire($("mkDropD"),$("mkFileD"),function(f){
+  if(!/^image\//.test(f.type))return;
+  var u=URL.createObjectURL(f);
+  mkImg(u).then(function(im){var d={id:"d"+(MK.uid++),name:f.name.replace(/\.[^.]+$/,""),url:u,img:im,w:im.naturalWidth,h:im.naturalHeight,wc:null};MK.designs.push(d);if(!MK.curD)MK.curD=d.id;mkLists();mkDraw();updateSteps()}).catch(function(e){mkSay(e.message,1)});
+});
+
+/* cylinder wrap of the design (mugs): the sides squeeze in like a printed curved surface */
+function mkWrapped(d,wr,maxW){
+  var sw=Math.max(8,Math.min(d.w,maxW)),sh=Math.max(8,Math.round(sw*d.h/d.w)),key=wr.toFixed(3)+"|"+sw;
+  if(d.wc&&d.wk===key)return d.wc;
+  var src=mkC(sw,sh),sx=src.getContext("2d");sx.imageSmoothingQuality="high";sx.drawImage(d.img,0,0,sw,sh);
+  var out=src;
+  if(wr>.001){
+    var A=wr*1.25,sinA=Math.sin(A);out=mkC(sw,sh);var ox=out.getContext("2d");ox.imageSmoothingQuality="high";
+    for(var j=0;j<sw;j++){
+      var xp=2*(j+.5)/sw-1,xs=Math.asin(xp*sinA)/A,u=(xs+1)/2,c=Math.min(sw-1,Math.max(0,u*sw-.5));
+      ox.drawImage(src,c,0,1.2,sh,j,0,1,sh);
+    }
+  }
+  d.wc=out;d.wk=key;return out;
+}
+/* put design d on mockup m into canvas cv at scale sc; returns the geometry of the design (canvas pixels) */
+function mkCompose(m,d,cv,sc){
+  var ow=m.img.naturalWidth,oh=m.img.naturalHeight,W=Math.round(ow*sc),H=Math.round(oh*sc);
+  cv.width=W;cv.height=H;var x=cv.getContext("2d",{willReadFrequently:true});x.fillStyle="#fff";x.fillRect(0,0,W,H);x.imageSmoothingQuality="high";x.drawImage(m.img,0,0,W,H);
+  if(!d)return null;
+  var pl=m.pl,dw=pl.w*W,dh=dw*d.h/d.w,cx=pl.x*W,cy=pl.y*H,r=pl.rot*Math.PI/180;
+  var ex=Math.abs(Math.cos(r))*dw/2+Math.abs(Math.sin(r))*dh/2,ey=Math.abs(Math.sin(r))*dw/2+Math.abs(Math.cos(r))*dh/2;
+  var bx0=Math.max(0,Math.floor(cx-ex-2)),by0=Math.max(0,Math.floor(cy-ey-2)),bx1=Math.min(W,Math.ceil(cx+ex+2)),by1=Math.min(H,Math.ceil(cy+ey+2)),LW=bx1-bx0,LH=by1-by0;
+  var geo={cx:cx,cy:cy,dw:dw,dh:dh,r:r};
+  if(LW<2||LH<2)return geo;
+  var wcv=mkWrapped(d,pl.wr,Math.min(1600,Math.ceil(dw*1.4))),L=mkC(LW,LH),lx=L.getContext("2d",{willReadFrequently:true});lx.imageSmoothingQuality="high";
+  lx.translate(cx-bx0,cy-by0);lx.rotate(r);lx.drawImage(wcv,-dw/2,-dh/2,dw,dh);
+  if(pl.sh>0){
+    var ld=lx.getImageData(0,0,LW,LH),md=x.getImageData(bx0,by0,LW,LH),P=ld.data,Q=md.data,n=LW*LH,i,hist=new Uint32Array(256),cnt=0;
+    for(i=0;i<n;i+=3){if(P[i*4+3]>200){var lm=(Q[i*4]*.299+Q[i*4+1]*.587+Q[i*4+2]*.114)|0;hist[lm]++;cnt++}}
+    if(cnt>50){
+      var acc=0,lref=1;for(i=255;i>=0;i--){acc+=hist[i];if(acc>=cnt*.15){lref=Math.max(i,24);break}}   // brightest tenth of the area under the print = unshaded fabric
+      var s=pl.sh;
+      for(i=0;i<n;i++){
+        if(P[i*4+3]===0)continue;
+        var lum=Q[i*4]*.299+Q[i*4+1]*.587+Q[i*4+2]*.114,f=lum/lref;f=f<.3?.3:f>1.12?1.12:f;
+        var g=1-s+s*f;P[i*4]*=g;P[i*4+1]*=g;P[i*4+2]*=g;
+      }
+      lx.setTransform(1,0,0,1,0,0);lx.putImageData(ld,0,0);
+    }
+  }
+  x.globalAlpha=pl.op;x.drawImage(L,bx0,by0);x.globalAlpha=1;
+  return geo;
+}
+var mkPrevBase=null;
+function mkDraw(){
+  var m=mkCur(),d=mkDes();
+  if(!m){
+    mkCv.width=560;mkCv.height=420;mkX.fillStyle=getComputedStyle(document.body).getPropertyValue("--field")||"#eee";mkX.fillRect(0,0,560,420);
+    mkX.fillStyle="#888";mkX.font="600 15px sans-serif";mkX.textAlign="center";mkX.fillText("Tick a mockup on the left to start",280,215);
+    $("mkName").textContent="";mkGeo=null;return;
+  }
+  mkEnsure(m).then(function(){
+    if(mkCur()!==m)return;
+    var sc=Math.min(1,760/Math.max(m.img.naturalWidth,m.img.naturalHeight));
+    mkGeo=mkCompose(m,d,mkCv,sc);
+    if(mkGeo)mkHandles(mkGeo);
+    $("mkName").textContent=m.name+(d?"  ·  "+d.name:"  ·  add a design to see it here");
+  }).catch(function(e){mkSay(e.message,1)});
+}
+function mkHandles(g){
+  var x=mkX,k=mkCv.width/560;x.save();x.translate(g.cx,g.cy);x.rotate(g.r);
+  x.strokeStyle="#fff";x.lineWidth=3*k;x.setLineDash([]);x.strokeRect(-g.dw/2,-g.dh/2,g.dw,g.dh);
+  x.strokeStyle="#111";x.lineWidth=1.5*k;x.setLineDash([6*k,5*k]);x.strokeRect(-g.dw/2,-g.dh/2,g.dw,g.dh);x.setLineDash([]);
+  var hp=[[-1,-1],[1,-1],[1,1],[-1,1]];
+  hp.forEach(function(p){x.beginPath();x.arc(p[0]*g.dw/2,p[1]*g.dh/2,7*k,0,7);x.fillStyle="#fff";x.fill();x.strokeStyle="#111";x.lineWidth=1.5*k;x.stroke()});
+  x.beginPath();x.moveTo(0,-g.dh/2);x.lineTo(0,-g.dh/2-24*k);x.strokeStyle="#fff";x.lineWidth=2*k;x.stroke();
+  x.beginPath();x.arc(0,-g.dh/2-24*k,7*k,0,7);x.fillStyle="#fff";x.fill();x.strokeStyle="#111";x.lineWidth=1.5*k;x.stroke();
+  x.restore();
+}
+function mkPt(e){var r=mkCv.getBoundingClientRect();return {x:(e.clientX-r.left)*mkCv.width/r.width,y:(e.clientY-r.top)*mkCv.height/r.height}}
+mkCv.addEventListener("pointerdown",function(e){
+  var m=mkCur();if(!m||!mkGeo||!mkDes())return;
+  var p=mkPt(e),g=mkGeo,k=mkCv.width/560,dx=p.x-g.cx,dy=p.y-g.cy,c=Math.cos(-g.r),s=Math.sin(-g.r),lx=dx*c-dy*s,ly=dx*s+dy*c,mode=null;
+  if(Math.hypot(lx,ly+g.dh/2+24*k)<=14*k)mode="rot";
+  else if(Math.abs(Math.abs(lx)-g.dw/2)<=14*k&&Math.abs(Math.abs(ly)-g.dh/2)<=14*k)mode="size";
+  else if(Math.abs(lx)<=g.dw/2&&Math.abs(ly)<=g.dh/2)mode="move";
+  if(!mode)return;
+  mkDrag={mode:mode,sx:p.x,sy:p.y,x0:m.pl.x,y0:m.pl.y,w0:m.pl.w,d0:Math.hypot(dx,dy)||1};
+  mkCv.setPointerCapture(e.pointerId);e.preventDefault();
+});
+mkCv.addEventListener("pointermove",function(e){
+  var m=mkCur(),g=mkGeo;if(!m||!g)return;var p=mkPt(e);
+  if(!mkDrag){
+    var k=mkCv.width/560,dx=p.x-g.cx,dy=p.y-g.cy,c=Math.cos(-g.r),s=Math.sin(-g.r),lx=dx*c-dy*s,ly=dx*s+dy*c;
+    mkCv.style.cursor=(Math.hypot(lx,ly+g.dh/2+24*k)<=14*k)?"grab":(Math.abs(Math.abs(lx)-g.dw/2)<=14*k&&Math.abs(Math.abs(ly)-g.dh/2)<=14*k)?"nwse-resize":(Math.abs(lx)<=g.dw/2&&Math.abs(ly)<=g.dh/2)?"move":"default";return;
+  }
+  var D=mkDrag;
+  if(D.mode==="move"){m.pl.x=Math.min(1.2,Math.max(-.2,D.x0+(p.x-D.sx)/mkCv.width));m.pl.y=Math.min(1.2,Math.max(-.2,D.y0+(p.y-D.sy)/mkCv.height))}
+  else if(D.mode==="size"){m.pl.w=Math.min(.95,Math.max(.04,D.w0*Math.hypot(p.x-g.cx,p.y-g.cy)/D.d0))}
+  else{var a=Math.atan2(p.y-g.cy,p.x-g.cx)*180/Math.PI+90;a=((a+540)%360)-180;if(Math.abs(a)<4)a=0;m.pl.rot=Math.round(a)}
+  MK.touched=true;mkSync();mkDraw();
+});
+["pointerup","pointercancel"].forEach(function(ev){mkCv.addEventListener(ev,function(){if(mkDrag){mkDrag=null;updateSteps()}})});
+function mkSync(){
+  var m=mkCur();if(!m)return;var p=m.pl;
+  $("mkW").value=Math.round(p.w*100);$("mkWO").textContent=Math.round(p.w*100);
+  $("mkRot").value=p.rot;$("mkRotO").textContent=p.rot;
+  $("mkSh").value=Math.round(p.sh*100);$("mkShO").textContent=Math.round(p.sh*100);
+  $("mkWr").value=Math.round(p.wr*100);$("mkWrO").textContent=Math.round(p.wr*100);
+  $("mkOp").value=Math.round(p.op*100);$("mkOpO").textContent=Math.round(p.op*100);
+}
+[["mkW","w",.01],["mkRot","rot",1],["mkSh","sh",.01],["mkWr","wr",.01],["mkOp","op",.01]].forEach(function(a){
+  $(a[0]).oninput=function(){var m=mkCur();if(!m)return;m.pl[a[1]]=this.value*a[2];if(a[1]==="rot")m.pl.rot=+this.value;MK.touched=true;$(a[0]+"O").textContent=this.value;mkDraw();updateSteps()};
+});
+$("mkQ").oninput=function(){$("mkQO").textContent=this.value};
+$("mkCenter").onclick=function(){var m=mkCur();if(!m)return;var b=MKD[m.kind];m.pl.x=b.x;m.pl.y=b.y;MK.touched=true;mkDraw();updateSteps()};
+$("mkCopy").onclick=function(){
+  var m=mkCur();if(!m)return;var n=0;
+  MK.mocks.forEach(function(o){if(o!==m&&o.sel&&o.kind===m.kind){o.pl=JSON.parse(JSON.stringify(m.pl));n++}});
+  mkSay(n?"Copied to "+n+" more "+(m.kind==="mug"?"mug":"shirt")+(n>1?"s":"")+".":"Tick more "+(m.kind==="mug"?"mugs":"shirts")+" first.");
+};
+/* JPEG files and a plain ZIP (stored, no compression: JPEGs do not shrink) */
+function mkSafe(s){return (s||"picture").replace(/[^\w\-. ]+/g,"_").replace(/\s+/g," ").trim().slice(0,60)||"picture"}
+function mkBlob(m,d){
+  return mkEnsure(m).then(function(){
+    var cap=+$("mkSize").value,ow=m.img.naturalWidth,oh=m.img.naturalHeight,sc=cap>0?Math.min(1,cap/Math.max(ow,oh)):1,c=mkC(8,8);
+    mkCompose(m,d,c,sc);
+    return new Promise(function(res){c.toBlob(res,"image/jpeg",$("mkQ").value/100)});
   });
 }
-async function aiPost(path,body){
-  var r=await fetch("ai/"+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),j={};
-  try{j=await r.json()}catch(e){}
-  if(!r.ok)throw new Error(j.error||("The NAS answered "+r.status+" (is the AI proxy running?)"));
-  return j;
+var mkCrcT=null;
+function mkCrc(u8){
+  if(!mkCrcT){mkCrcT=new Uint32Array(256);for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;mkCrcT[n]=c>>>0}}
+  var c2=0xFFFFFFFF;for(var i=0;i<u8.length;i++)c2=mkCrcT[(c2^u8[i])&255]^(c2>>>8);return (c2^0xFFFFFFFF)>>>0;
 }
-async function aiStatus(){
-  try{
-    var r=await fetch("ai/status",{cache:"no-store"}),j=await r.json();
-    $("aiNote").textContent=j.configured?"Every photo and video is paid from the Google account on the NAS. A video takes a few minutes. Videos today: "+j.videosToday+" of "+j.dailyLimit+".":"The NAS has no Google API key yet. Put it in the .env file and restart (see README).";
-  }catch(e){$("aiNote").textContent="AI video only works from the NAS link (the page must be opened from the NAS, with the AI proxy running)."}
+function mkZip(files){   // files: [{name,data:Uint8Array}]
+  var parts=[],cen=[],off=0,enc=new TextEncoder(),dt=new Date(),dd=((dt.getFullYear()-1980)<<9)|((dt.getMonth()+1)<<5)|dt.getDate(),tt=(dt.getHours()<<11)|(dt.getMinutes()<<5)|(dt.getSeconds()>>1);
+  files.forEach(function(f){
+    var nm=enc.encode(f.name),crc=mkCrc(f.data),h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,tt,true);h.setUint16(12,dd,true);h.setUint32(14,crc,true);h.setUint32(18,f.data.length,true);h.setUint32(22,f.data.length,true);h.setUint16(26,nm.length,true);h.setUint16(28,0,true);
+    parts.push(h.buffer,nm,f.data);
+    var c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,tt,true);c.setUint16(14,dd,true);c.setUint32(16,crc,true);c.setUint32(20,f.data.length,true);c.setUint32(24,f.data.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+    cen.push(c.buffer,nm);off+=30+nm.length+f.data.length;
+  });
+  var csz=0;cen.forEach(function(p){csz+=p.byteLength||p.length});
+  var e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,csz,true);e.setUint32(16,off,true);
+  return new Blob(parts.concat(cen,[e.buffer]),{type:"application/zip"});
 }
-async function aiSetDesign(f){
-  try{
-    var o=await aiFileToB64(f,2048,"image/png");AI.design=o;
-    $("aiThD").innerHTML="";var im=new Image();im.src=o.url;im.style.cssText="max-width:120px;max-height:120px;background:#888;border-radius:8px";$("aiThD").appendChild(im);
-    updateSteps();
-  }catch(e){aiSay("aiImgS",e.message,1)}
-}
-async function aiSetMock(f){
-  try{
-    var o=await aiFileToB64(f,1600,"image/jpeg");AI.mock=o;$("aiImgOut").src=o.url;$("aiImgOut").style.display="";aiSay("aiImgS","Using your own mockup photo.");updateSteps();
-  }catch(e){aiSay("aiImgS",e.message,1)}
-}
-function aiWire(zone,input,fn){
-  input.onchange=function(){if(input.files[0])fn(input.files[0]);input.value=""};
-  zone.addEventListener("dragover",function(e){e.preventDefault()});
-  zone.addEventListener("drop",function(e){e.preventDefault();if(e.dataTransfer.files[0])fn(e.dataTransfer.files[0])});
-}
-aiWire($("aiDropD"),$("aiFileD"),aiSetDesign);aiWire($("aiDropM"),$("aiFileM"),aiSetMock);
-$("aiPrompt").value="UGC-style vertical video. The person in the photo smiles at the camera and turns slightly to show off the front of the t-shirt, then glances down at the print and back up. Handheld phone camera feel, natural daylight, gentle movement. The print on the shirt must stay exactly as in the photo: same letters, same colours, no changes.";
-$("aiMakeImg").onclick=async function(){
-  if(AI.busy)return;if(!AI.design){aiSay("aiImgS","Add your PNG design first.",1);return}
-  AI.busy=true;$("aiMakeImg").disabled=true;aiSay("aiImgS","Making the photo… about a minute.");
-  try{
-    var prompt="Photo of "+$("aiWho").value+", wearing a "+$("aiShirt").value+". The attached image is the design. Print it on the front chest of the shirt exactly as it is: every letter, shape and colour unchanged, nothing added, nothing cropped, sitting naturally on the fabric with the folds and light of the shirt. Vertical 9:16 smartphone photo, realistic, sharp.";
-    var j=await aiPost("image",{prompt:prompt,images:[{mime:AI.design.mime,data:AI.design.data}],aspect_ratio:"9:16"});
-    AI.mock={mime:j.mime,data:j.data};$("aiImgOut").src="data:"+j.mime+";base64,"+j.data;$("aiImgOut").style.display="";
-    aiSay("aiImgS","Done. Check that the design is correct, then make the video (or press this again for another photo).");
-  }catch(e){aiSay("aiImgS",e.message,1)}
-  AI.busy=false;$("aiMakeImg").disabled=false;updateSteps();aiStatus();
+function mkSave(blob,name){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000)}
+$("mkDl1").onclick=function(){
+  var m=mkCur(),d=mkDes();if(MK.busy)return;
+  if(!m){mkSay("Tick a mockup first.",1);return}if(!d){mkSay("Add a PNG design first.",1);return}
+  MK.busy=true;mkSay("Making the picture…");
+  mkBlob(m,d).then(function(b){mkSave(b,mkSafe(m.name)+"__"+mkSafe(d.name)+".jpg");MK.dl=true;mkSay("Saved "+mkSafe(m.name)+"__"+mkSafe(d.name)+".jpg ("+Math.round(b.size/1024)+" KB)");updateSteps()}).catch(function(e){mkSay(e.message,1)}).then(function(){MK.busy=false});
 };
-$("aiMakeVid").onclick=async function(){
-  if(AI.busy)return;if(!AI.mock){aiSay("aiVidS","Make or add a mockup photo first.",1);return}
-  AI.busy=true;$("aiMakeVid").disabled=true;aiSay("aiVidS","Sending to Google…");$("aiVidBox").style.display="none";
+$("mkDlAll").onclick=async function(){
+  if(MK.busy)return;var ms=MK.mocks.filter(function(m){return m.sel});
+  if(!ms.length){mkSay("Tick at least one mockup first.",1);return}if(!MK.designs.length){mkSay("Add a PNG design first.",1);return}
+  MK.busy=true;var files=[],used={},tot=ms.length*MK.designs.length,n=0;
   try{
-    var j=await aiPost("video",{prompt:$("aiPrompt").value,image:{mime:AI.mock.mime,data:AI.mock.data},aspect_ratio:$("aiAsp").value,resolution:$("aiRes").value});
-    var t0=Date.now(),st;
-    for(;;){
-      await new Promise(function(r){setTimeout(r,4000)});
-      var r=await fetch("ai/job/"+j.job,{cache:"no-store"});st=await r.json();
-      if(st.state==="done")break;
-      if(st.state==="error")throw new Error(st.error||"Video failed");
-      aiSay("aiVidS","Making the video… "+Math.round((Date.now()-t0)/1000)+" s (usually 2–5 minutes). You can keep this tab open.");
+    for(var i=0;i<ms.length;i++)for(var j=0;j<MK.designs.length;j++){
+      mkSay("Making picture "+(++n)+" of "+tot+"…");await new Promise(function(r){setTimeout(r,0)});
+      var b=await mkBlob(ms[i],MK.designs[j]),nm=mkSafe(ms[i].name)+"__"+mkSafe(MK.designs[j].name),q=nm;
+      while(used[q])q=nm+"_"+(++used[nm]);used[q]=used[q]||1;
+      files.push({name:q+".jpg",data:new Uint8Array(await b.arrayBuffer())});
     }
-    var fr=await fetch("ai/job/"+j.job+"/file"),blob=await fr.blob(),url=URL.createObjectURL(blob);
-    $("aiVid").src=url;$("aiDl").href=url;$("aiVidBox").style.display="";AI.done=true;aiSay("aiVidS","Done.");
-    nasSaveVideo({name:"ai-video.mp4",blob:blob},function(t){aiSay("aiSaveS",t)});
-  }catch(e){aiSay("aiVidS",e.message,1)}
-  AI.busy=false;$("aiMakeVid").disabled=false;updateSteps();aiStatus();
+    mkSave(mkZip(files),"marketing-images.zip");MK.dl=true;mkSay("Saved marketing-images.zip with "+files.length+" pictures.");updateSteps();
+  }catch(e){mkSay(e.message,1)}
+  MK.busy=false;
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-4"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-1"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -2772,6 +2953,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-4</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-1</div>
 </body>
 </html>
