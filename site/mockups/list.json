@@ -1,1 +1,4 @@
-[]
+[
+ {"file":"hoodie-white.jpg","name":"White hoodie","kind":"shirt","pl":{"x":0.5,"y":0.52,"w":0.4}},
+ {"file":"hoodie-black.jpg","name":"Black hoodie","kind":"shirt","pl":{"x":0.5,"y":0.52,"w":0.4}}
+]

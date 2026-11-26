@@ -2243,7 +2243,7 @@ function mkOpen(){
   if(!MK.libDone){
     MK.libDone=true;
     fetch("mockups/list.json",{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(l){
-      l.forEach(function(it){MK.mocks.push({id:"l"+(MK.uid++),name:it.name||it.file,kind:it.kind==="mug"?"mug":"shirt",url:"mockups/"+it.file,own:false,sel:false,img:null,pl:mkCopyPl(it.kind==="mug"?"mug":"shirt")})});
+      l.forEach(function(it){MK.mocks.push({id:"l"+(MK.uid++),name:it.name||it.file,kind:it.kind==="mug"?"mug":"shirt",url:"mockups/"+it.file,own:false,sel:false,img:null,pl:Object.assign(mkCopyPl(it.kind==="mug"?"mug":"shirt"),it.pl||{}),def:it.pl||null})});
       mkLists();
     }).catch(function(){mkLists()});
   }
@@ -2428,7 +2428,7 @@ function mkReset(keys){var m=mkCur();if(!m)return;keys.forEach(function(k){m.pl[
 $("mkRstW").onclick=function(){var m=mkCur();mkReset(["cv","wv","ph","pv","sk"]);if(m){m.pl.wr=MKD[m.kind].wr;mkSpread();mkSync();mkDraw()}};
 $("mkRstB").onclick=function(){mkReset(["bl","op"])};
 $("mkQ").oninput=function(){$("mkQO").textContent=this.value};
-$("mkCenter").onclick=function(){var m=mkCur();if(!m)return;var b=MKD[m.kind];m.pl.x=b.x;m.pl.y=b.y;MK.touched=true;mkSpread();mkDraw();updateSteps()};
+$("mkCenter").onclick=function(){var m=mkCur();if(!m)return;var b=m.def||MKD[m.kind];m.pl.x=b.x;m.pl.y=b.y;MK.touched=true;mkSpread();mkDraw();updateSteps()};
 $("mkGuides").onchange=function(){mkDraw()};
 function mkSpread(){
   var m=mkCur();if(!m||!$("mkApplyAll").checked)return;
@@ -2486,7 +2486,7 @@ $("mkDlAll").onclick=async function(){
   MK.busy=false;
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-4"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-5"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -3012,6 +3012,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-4</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-5</div>
 </body>
 </html>
