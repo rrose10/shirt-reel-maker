@@ -548,6 +548,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
       <section class="panel ctlcol sticky" aria-label="Picture settings">
         <div class="ptabs" role="tablist">
           <button class="ptab on" type="button" data-pane="mk-print">Print</button>
+          <button class="ptab" type="button" data-pane="mk-crop">Crop</button>
           <button class="ptab" type="button" data-pane="mk-warp">Warp</button>
           <button class="ptab" type="button" data-pane="mk-look">Look</button>
           <button class="ptab" type="button" data-pane="mk-save">Save</button>
@@ -559,6 +560,16 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
             <label class="check"><input type="checkbox" id="mkGuides" checked> Show guides</label>
             <label class="check"><input type="checkbox" id="mkApplyAll" checked> Use this placement on every mockup of the same kind</label>
             <div class="row" style="margin-top:12px"><button class="btn" id="mkCenter" type="button" style="padding:4px 12px">Centre the print</button></div>
+          </div>
+          <div class="pane" id="mk-crop">
+            <div class="sub2" style="margin-top:0;border-top:0;padding-top:0">Crop the mockup</div>
+            <p class="hint" style="margin:-4px 0 4px">Cuts the shirt or mug photo down to the part you want. Your print stays on the same spot of the fabric.</p>
+            <div class="ctl"><label for="mkCrA">Shape</label><select id="mkCrA"><option value="0">Original shape</option><option value="1">Square 1:1</option><option value="0.8">Portrait 4:5</option><option value="0.75">Portrait 3:4</option><option value="0.667">Portrait 2:3</option><option value="0.5625">Tall 9:16</option><option value="1.778">Wide 16:9</option></select></div>
+            <div class="ctl"><label for="mkCrZ">Zoom in (100 = none) <output id="mkCrZO">100</output></label><input id="mkCrZ" type="range" min="100" max="400" value="100"></div>
+            <div class="ctl"><label for="mkCrX">Move left ↔ right <output id="mkCrXO">50</output></label><input id="mkCrX" type="range" min="0" max="100" value="50"></div>
+            <div class="ctl"><label for="mkCrY">Move up ↔ down <output id="mkCrYO">50</output></label><input id="mkCrY" type="range" min="0" max="100" value="50"></div>
+            <div class="row" style="margin-top:10px"><button class="btn" id="mkRstC" type="button" style="padding:4px 12px">Reset crop</button></div>
+            <p class="hint" style="margin:8px 0 0">The crop belongs to the mockup you picked. Each mockup keeps its own.</p>
           </div>
           <div class="pane" id="mk-warp">
             <div class="sub2" style="margin-top:0;border-top:0;padding-top:0">Warp the design</div>
@@ -2231,6 +2242,11 @@ var mkCv=$("mkCv"),mkX=mkCv.getContext("2d"),mkGeo=null,mkDrag=null;
 function mkC(w,h){var c=document.createElement("canvas");c.width=Math.max(1,w);c.height=Math.max(1,h);return c}
 function mkSay(t,bad){var e=$("mkS");e.textContent=t||"";e.style.color=bad?"#c0392b":""}
 function mkImg(url){return new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im)};im.onerror=function(){rej(new Error("Could not open this picture"))};im.src=url})}
+function mkRect(m){
+  var c=m.crop||(m.crop={a:0,z:1,x:.5,y:.5}),iw=m.img.naturalWidth,ih=m.img.naturalHeight,bw=iw,bh=ih;
+  if(c.a>0){if(iw/ih>c.a){bw=ih*c.a}else{bh=iw/c.a}}
+  var w=bw/c.z,h=bh/c.z;return {sx:(iw-w)*c.x,sy:(ih-h)*c.y,sw:w,sh:h};
+}
 function mkCopyPl(k){return JSON.parse(JSON.stringify(MKD[k]||MKD.shirt))}
 function mkCur(){return MK.mocks.find(function(m){return m.id===MK.cur})||null}
 function mkDes(){return MK.designs.find(function(d){return d.id===MK.curD})||MK.designs[0]||null}
@@ -2322,8 +2338,8 @@ function mkWrapped(d,pl,maxW){
 }
 /* put design d on mockup m into canvas cv at scale sc; returns the geometry of the design (canvas pixels) */
 function mkCompose(m,d,cv,sc){
-  var ow=m.img.naturalWidth,oh=m.img.naturalHeight,W=Math.round(ow*sc),H=Math.round(oh*sc);
-  cv.width=W;cv.height=H;var x=cv.getContext("2d",{willReadFrequently:true});x.fillStyle="#fff";x.fillRect(0,0,W,H);x.imageSmoothingQuality="high";x.drawImage(m.img,0,0,W,H);
+  var R=mkRect(m),ow=R.sw,oh=R.sh,W=Math.max(2,Math.round(ow*sc)),H=Math.max(2,Math.round(oh*sc));
+  cv.width=W;cv.height=H;var x=cv.getContext("2d",{willReadFrequently:true});x.fillStyle="#fff";x.fillRect(0,0,W,H);x.imageSmoothingQuality="high";x.drawImage(m.img,R.sx,R.sy,R.sw,R.sh,0,0,W,H);
   if(!d)return null;
   var pl=m.pl,dw=pl.w*W,dh=dw*d.h/d.w,cx=pl.x*W,cy=pl.y*H,r=pl.rot*Math.PI/180;
   var wp=mkWrapped(d,pl,Math.min(1600,Math.ceil(dw*1.4))),wcv=wp.c,dwE=dw*wp.ef,dhE=dh*wp.ef,rb=pl.bl>0?pl.bl*(W/2000):0,pb=Math.ceil(rb*3)+2;
@@ -2366,7 +2382,7 @@ function mkDraw(){
   }
   mkEnsure(m).then(function(){
     if(mkCur()!==m)return;
-    var sc=Math.min(1,760/Math.max(m.img.naturalWidth,m.img.naturalHeight));
+    var R0=mkRect(m),sc=Math.min(1,760/Math.max(R0.sw,R0.sh));
     mkGeo=mkCompose(m,d,mkCv,sc);
     if(mkGeo&&$("mkGuides").checked)mkHandles(mkGeo);
     $("mkName").textContent=m.name+(d?"  ·  "+d.name:"  ·  add a design to see it here");
@@ -2413,16 +2429,31 @@ function mkSync(){
   $("mkSh").value=Math.round(p.sh*100);$("mkShO").textContent=Math.round(p.sh*100);
   $("mkWr").value=Math.round(p.wr*100);$("mkWrO").textContent=Math.round(p.wr*100);
   $("mkOp").value=Math.round(p.op*100);$("mkOpO").textContent=Math.round(p.op*100);
+  var c=m.crop||{a:0,z:1,x:.5,y:.5};
+  $("mkCrA").value=String(c.a);$("mkCrZ").value=Math.round(c.z*100);$("mkCrZO").textContent=Math.round(c.z*100);
+  $("mkCrX").value=Math.round(c.x*100);$("mkCrXO").textContent=Math.round(c.x*100);$("mkCrY").value=Math.round(c.y*100);$("mkCrYO").textContent=Math.round(c.y*100);
   [["mkBl","bl",1],["mkCv2","cv",100],["mkWv","wv",100],["mkPh","ph",100],["mkPv","pv",100],["mkSk","sk",100]].forEach(function(a){var v=Math.round((p[a[1]]||0)*a[2]);$(a[0]).value=v;$(a[0]+"O").textContent=v});
 }
 [["mkW","w",.01],["mkRot","rot",1],["mkSh","sh",.01],["mkWr","wr",.01],["mkOp","op",.01],["mkBl","bl",1],["mkCv2","cv",.01],["mkWv","wv",.01],["mkPh","ph",.01],["mkPv","pv",.01],["mkSk","sk",.01]].forEach(function(a){
   $(a[0]).oninput=function(){var m=mkCur();if(!m)return;m.pl[a[1]]=this.value*a[2];if(a[1]==="rot")m.pl.rot=+this.value;MK.touched=true;mkSpread();$(a[0]+"O").textContent=this.value;mkDraw();updateSteps()};
 });
+function mkSetCrop(m,nc){   // change the crop and move the print so it stays on the same spot of the fabric
+  if(!m.img)return;
+  var o=mkRect(m);m.crop=nc;var n=mkRect(m),p=m.pl,cx=o.sx+p.x*o.sw,cy=o.sy+p.y*o.sh,wp=p.w*o.sw;
+  p.x=(cx-n.sx)/n.sw;p.y=(cy-n.sy)/n.sh;p.w=Math.min(.95,Math.max(.04,wp/n.sw));
+  mkSync();mkDraw();
+}
+function mkCropNow(){var m=mkCur();if(!m)return null;return m.crop||{a:0,z:1,x:.5,y:.5}}
+$("mkCrA").onchange=function(){var m=mkCur(),c=mkCropNow();if(!m)return;mkSetCrop(m,{a:parseFloat(this.value),z:c.z,x:c.x,y:c.y})};
+[["mkCrZ","z",.01],["mkCrX","x",.01],["mkCrY","y",.01]].forEach(function(a){
+  $(a[0]).oninput=function(){var m=mkCur(),c=mkCropNow();if(!m)return;var nc={a:c.a,z:c.z,x:c.x,y:c.y};nc[a[1]]=this.value*a[2];mkSetCrop(m,nc)};
+});
+$("mkRstC").onclick=function(){var m=mkCur();if(!m)return;mkSetCrop(m,{a:0,z:1,x:.5,y:.5})};
 function mkReset(keys){var m=mkCur();if(!m)return;keys.forEach(function(k){m.pl[k]=0});if(keys.indexOf("op")>=0)m.pl.op=1;mkSpread();mkSync();mkDraw()}
 $("mkRstW").onclick=function(){var m=mkCur();mkReset(["cv","wv","ph","pv","sk"]);if(m){m.pl.wr=MKD[m.kind].wr;mkSpread();mkSync();mkDraw()}};
 $("mkRstB").onclick=function(){mkReset(["bl","op"])};
 $("mkQ").oninput=function(){$("mkQO").textContent=this.value};
-$("mkCenter").onclick=function(){var m=mkCur();if(!m)return;var b=m.def||MKD[m.kind];m.pl.x=b.x;m.pl.y=b.y;MK.touched=true;mkSpread();mkDraw();updateSteps()};
+$("mkCenter").onclick=function(){var m=mkCur();if(!m)return;var b=m.def||MKD[m.kind],cr=m.crop&&(m.crop.a>0||m.crop.z>1);m.pl.x=cr?.5:b.x;m.pl.y=cr?.5:b.y;MK.touched=true;mkSpread();mkDraw();updateSteps()};
 $("mkGuides").onchange=function(){mkDraw()};
 function mkSpread(){
   var m=mkCur();if(!m||!$("mkApplyAll").checked)return;
@@ -2433,7 +2464,7 @@ $("mkApplyAll").onchange=mkSpread;
 function mkSafe(s){return (s||"picture").replace(/[^\w\-. ]+/g,"_").replace(/\s+/g," ").trim().slice(0,60)||"picture"}
 function mkBlob(m,d){
   return mkEnsure(m).then(function(){
-    var cap=+$("mkSize").value,ow=m.img.naturalWidth,oh=m.img.naturalHeight,sc=cap>0?Math.min(1,cap/Math.max(ow,oh)):1,c=mkC(8,8);
+    var R0=mkRect(m),cap=+$("mkSize").value,ow=R0.sw,oh=R0.sh,sc=cap>0?Math.min(1,cap/Math.max(ow,oh)):1,c=mkC(8,8);
     mkCompose(m,d,c,sc);
     return new Promise(function(res){c.toBlob(res,"image/jpeg",$("mkQ").value/100)});
   });
@@ -2480,7 +2511,7 @@ $("mkDlAll").onclick=async function(){
   MK.busy=false;
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-7"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-8"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -3006,6 +3037,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-7</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-8</div>
 </body>
 </html>
