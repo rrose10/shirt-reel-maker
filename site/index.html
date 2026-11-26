@@ -527,21 +527,22 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
   <div id="modeMk" class="hide">
     <main class="work">
       <aside class="panel files" aria-labelledby="h-mkm">
-        <h2 id="h-mkm">Mockups <span class="count" id="mkCntM">0</span></h2>
-        <p class="hint">Tap the mockups you want to use. Tap a ticked one to edit it, tap again to untick.</p>
-        <div class="thumbs" id="mkLib" style="margin-top:12px"></div>
-        <p class="hint" id="mkLibNote" style="margin-top:-8px"></p>
-        <div class="ctl" style="margin-top:0"><label for="mkOwnKind">My own mockup is a</label><select id="mkOwnKind"><option value="shirt">Shirt</option><option value="mug">Mug</option></select></div>
+        <h2 id="h-mkm">1. Mockup</h2>
+        <p class="hint">Pick a ready shirt or mug photo. Or untick the box and use only your own mockup.</p>
+        <div class="ctl" style="margin-top:0"><label for="mkSel">Mockup</label><select id="mkSel"><option value="">Loading…</option></select></div>
+        <label class="check"><input type="checkbox" id="mkUseLib" checked> Use the ready mockups</label>
+        <div class="ctl" style="margin-top:14px"><label for="mkOwnKind">My own mockup is a</label><select id="mkOwnKind"><option value="shirt">Shirt</option><option value="mug">Mug</option></select></div>
         <label class="drop" id="mkDropM" style="margin-top:8px"><strong>Add your own mockup</strong><span>Drop files or click to browse · JPG, PNG or WebP</span><input id="mkFileM" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
-        <h2 id="h-mkd" style="margin-top:20px">PNG designs <span class="count" id="mkCntD">0</span></h2>
-        <p class="hint">Transparent PNGs. Each design goes on every ticked mockup.</p>
+        <div class="row" id="mkOwnRow" style="margin-top:8px;display:none"><button class="btn" id="mkRmOwn" type="button" style="padding:4px 12px">Remove this mockup</button></div>
+        <h2 id="h-mkd" style="margin-top:20px">2. PNG designs <span class="count" id="mkCntD">0</span></h2>
+        <p class="hint">Transparent PNGs. Each design goes on the mockup.</p>
         <label class="drop" id="mkDropD"><strong>Add PNG designs</strong><span>Drop files or click to browse</span><input id="mkFileD" type="file" accept="image/png,image/webp" multiple></label>
         <div class="thumbs" id="mkListD"></div>
       </aside>
 
       <section class="panel" aria-labelledby="h-mkp">
         <h2 id="h-mkp">Place the print</h2>
-        <p class="hint" id="mkHint">Tick a mockup and add a design. Drag the design to move it, the corners to resize, the top dot to turn it.</p>
+        <p class="hint" id="mkHint">Pick a mockup and add a design. Drag the design to move it, the corners to resize, the top dot to turn it.</p>
         <div class="stage"><canvas id="mkCv" width="560" height="560" class="mkcv" aria-label="Mockup preview"></canvas></div>
         <div class="fname" id="mkName"></div>
       </section>
@@ -558,7 +559,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
             <div class="ctl" style="margin-top:0"><label for="mkW">Size <output id="mkWO">34</output></label><input id="mkW" type="range" min="4" max="95" value="34"></div>
             <div class="ctl"><label for="mkRot">Rotation <output id="mkRotO">0</output></label><input id="mkRot" type="range" min="-180" max="180" value="0"></div>
             <label class="check"><input type="checkbox" id="mkGuides" checked> Show guides</label>
-            <label class="check"><input type="checkbox" id="mkApplyAll" checked> Use this placement on every ticked mockup of the same kind</label>
+            <label class="check"><input type="checkbox" id="mkApplyAll" checked> Use this placement on every mockup of the same kind</label>
             <div class="row" style="margin-top:12px"><button class="btn" id="mkCenter" type="button" style="padding:4px 12px">Centre the print</button></div>
           </div>
           <div class="pane" id="mk-warp">
@@ -584,7 +585,7 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
           <div class="pane" id="mk-save">
             <div class="ctl" style="margin-top:0"><label for="mkSize">Picture size</label><select id="mkSize"><option value="0">Same as the mockup</option><option value="2000" selected>2000 px (long side)</option><option value="1500">1500 px</option><option value="1080">1080 px</option></select></div>
             <div class="ctl"><label for="mkQ">JPEG quality <output id="mkQO">92</output></label><input id="mkQ" type="range" min="60" max="100" value="92"></div>
-            <p class="hint" style="margin:8px 0 0">"Download all" makes one JPEG for every ticked mockup and every design, in one ZIP.</p>
+            <p class="hint" style="margin:8px 0 0">"Download all" makes one JPEG for every mockup in the list and every design, in one ZIP.</p>
           </div>
         </div>
         <div class="exportbar">
@@ -1942,7 +1943,7 @@ setTimeout(updateSteps,0);
 function updateSteps(){
   var ol=$("steps"),img=!$("modeImage").classList.contains("hide"),st,imgs_=typeof imgs==="undefined"||!imgs?[]:imgs,res2=typeof results2==="undefined"||!results2?[]:results2;
   var tpl=typeof mode!=="undefined"&&mode==="tpl";
-  if(typeof mode!=="undefined"&&mode==="mk"){st=[["Pick mockups",typeof MK!=="undefined"&&MK.mocks.some(function(m){return m.sel})],["Add designs",typeof MK!=="undefined"&&MK.designs.length>0],["Place the print",typeof MK!=="undefined"&&MK.touched],["Download",typeof MK!=="undefined"&&MK.dl]]}
+  if(typeof mode!=="undefined"&&mode==="mk"){st=[["Pick a mockup",typeof MK!=="undefined"&&mkVisible().length>0],["Add designs",typeof MK!=="undefined"&&MK.designs.length>0],["Place the print",typeof MK!=="undefined"&&MK.touched],["Download",typeof MK!=="undefined"&&MK.dl]]}
   else if(tpl){st=[["Pick template",!!(typeof TP!=="undefined"&&TP.vid)],["Add designs",typeof tdesigns!=="undefined"&&tdesigns.length>0],["Make videos",typeof results3!=="undefined"&&results3.length>0]]}
   else if(img){st=[["Add images",imgs_.length>0],["Pick a style",styleTouched],["Make video",res2.length>0]]}
   else{st=[["Add shirt + design",blanks.length>0&&designs.length>0],["Place the print",placedTouched],["Pick a style",styleTouched],["Make video",results.length>0]]}
@@ -2243,26 +2244,24 @@ function mkOpen(){
   if(!MK.libDone){
     MK.libDone=true;
     fetch("mockups/list.json",{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(l){
-      l.forEach(function(it){MK.mocks.push({id:"l"+(MK.uid++),name:it.name||it.file,kind:it.kind==="mug"?"mug":"shirt",url:"mockups/"+it.file,own:false,sel:false,img:null,pl:Object.assign(mkCopyPl(it.kind==="mug"?"mug":"shirt"),it.pl||{}),def:it.pl||null})});
+      l.forEach(function(it){MK.mocks.push({id:"l"+(MK.uid++),name:it.name||it.file,kind:it.kind==="mug"?"mug":"shirt",url:"mockups/"+it.file,own:false,img:null,pl:Object.assign(mkCopyPl(it.kind==="mug"?"mug":"shirt"),it.pl||{}),def:it.pl||null})});
       mkLists();
     }).catch(function(){mkLists()});
   }
   mkLists();mkDraw();updateSteps();
 }
 function mkLists(){
-  var host=$("mkLib");host.innerHTML="";
-  var vis=MK.mocks.filter(function(m){return MK.kind==="all"||m.kind===MK.kind});
-  vis.forEach(function(m){
-    var b=document.createElement("div");b.className="thumb"+(m.sel?" sel":"")+(MK.cur===m.id?" act":"");b.style.width="78px";b.style.height="78px";b.title=m.name;b.tabIndex=0;
-    b.style.backgroundImage="url('"+m.url+"')";b.style.backgroundSize="cover";b.style.backgroundPosition="center";
-    var k=document.createElement("span");k.className="k";k.textContent=m.kind==="mug"?"Mug":"Shirt";b.appendChild(k);
-    if(m.sel){var t=document.createElement("span");t.className="tick";t.textContent="✓";b.appendChild(t)}
-    if(m.own){var x=document.createElement("button");x.className="x";x.type="button";x.textContent="×";x.setAttribute("aria-label","Remove");x.onclick=function(e){e.stopPropagation();MK.mocks=MK.mocks.filter(function(q){return q!==m});if(MK.cur===m.id)MK.cur=null;mkPickCur();mkLists();mkDraw();updateSteps()};b.appendChild(x)}
-    b.onclick=function(){mkTap(m)};b.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();mkTap(m)}};
-    host.appendChild(b);
+  var sel=$("mkSel"),vis=mkVisible();sel.innerHTML="";
+  if(!vis.length){var o0=document.createElement("option");o0.value="";o0.textContent=MK.libDone&&!MK.mocks.length?"No ready mockups yet. Add your own below.":"Add your own mockup below";sel.appendChild(o0)}
+  [[false,"Ready mockups"],[true,"My mockups"]].forEach(function(g){
+    var ms=vis.filter(function(m){return m.own===g[0]});if(!ms.length)return;
+    var og=document.createElement("optgroup");og.label=g[1];
+    ms.forEach(function(m){var o=document.createElement("option");o.value=m.id;o.textContent=m.name+" ("+(m.kind==="mug"?"mug":"shirt")+")";og.appendChild(o)});
+    sel.appendChild(og);
   });
-  $("mkCntM").textContent=MK.mocks.filter(function(m){return m.sel}).length;
-  $("mkLibNote").textContent=MK.mocks.length?"":"The shared library is empty here. Add your own mockups below.";
+  if(!vis.some(function(m){return m.id===MK.cur}))MK.cur=vis[0]?vis[0].id:null;
+  sel.value=MK.cur||"";
+  var cm=mkCur();$("mkOwnRow").style.display=cm&&cm.own?"":"none";
   var dh=$("mkListD");dh.innerHTML="";
   MK.designs.forEach(function(d){
     var b=document.createElement("div");b.className="thumb chk"+(MK.curD===d.id?" sel":"");b.tabIndex=0;b.title=d.name;
@@ -2273,13 +2272,10 @@ function mkLists(){
   });
   $("mkCntD").textContent=MK.designs.length;
 }
-function mkPickCur(){if(!MK.cur){var f=MK.mocks.find(function(m){return m.sel});MK.cur=f?f.id:null}}
-function mkTap(m){
-  if(m.sel&&MK.cur!==m.id){MK.cur=m.id}
-  else if(m.sel&&MK.cur===m.id){m.sel=false;MK.cur=null;mkPickCur()}
-  else{m.sel=true;MK.cur=m.id}
-  mkLists();mkSync();mkDraw();updateSteps();
-}
+function mkVisible(){return MK.mocks.filter(function(m){return m.own||$("mkUseLib").checked})}
+$("mkSel").onchange=function(){MK.cur=this.value||null;mkLists();mkSync();mkDraw();updateSteps()};
+$("mkUseLib").onchange=function(){mkLists();mkSync();mkDraw();updateSteps()};
+$("mkRmOwn").onclick=function(){var m=mkCur();if(!m||!m.own)return;MK.mocks=MK.mocks.filter(function(q){return q!==m});MK.cur=null;mkLists();mkSync();mkDraw();updateSteps()};
 function mkWire(zone,input,fn){
   input.onchange=function(){Array.prototype.slice.call(input.files).forEach(fn);input.value=""};
   ["dragenter","dragover"].forEach(function(ev){zone.addEventListener(ev,function(e){e.preventDefault();zone.classList.add("over")})});
@@ -2288,7 +2284,7 @@ function mkWire(zone,input,fn){
 }
 mkWire($("mkDropM"),$("mkFileM"),function(f){
   if(!/^image\//.test(f.type))return;
-  var k=$("mkOwnKind").value,m={id:"o"+(MK.uid++),name:f.name.replace(/\.[^.]+$/,""),kind:k,url:URL.createObjectURL(f),own:true,sel:true,img:null,pl:mkCopyPl(k)};
+  var k=$("mkOwnKind").value,m={id:"o"+(MK.uid++),name:f.name.replace(/\.[^.]+$/,""),kind:k,url:URL.createObjectURL(f),own:true,img:null,pl:mkCopyPl(k)};
   mkEnsure(m).then(function(){MK.mocks.push(m);MK.cur=m.id;mkLists();mkSync();mkDraw();updateSteps()}).catch(function(e){mkSay(e.message,1)});
 });
 mkWire($("mkDropD"),$("mkFileD"),function(f){
@@ -2367,7 +2363,7 @@ function mkDraw(){
   var m=mkCur(),d=mkDes();
   if(!m){
     mkCv.width=560;mkCv.height=420;mkX.fillStyle=getComputedStyle(document.body).getPropertyValue("--field")||"#eee";mkX.fillRect(0,0,560,420);
-    mkX.fillStyle="#888";mkX.font="600 15px sans-serif";mkX.textAlign="center";mkX.fillText("Tick a mockup on the left to start",280,215);
+    mkX.fillStyle="#888";mkX.font="600 15px sans-serif";mkX.textAlign="center";mkX.fillText("Pick or add a mockup on the left to start",280,215);
     $("mkName").textContent="";mkGeo=null;return;
   }
   mkEnsure(m).then(function(){
@@ -2432,7 +2428,7 @@ $("mkCenter").onclick=function(){var m=mkCur();if(!m)return;var b=m.def||MKD[m.k
 $("mkGuides").onchange=function(){mkDraw()};
 function mkSpread(){
   var m=mkCur();if(!m||!$("mkApplyAll").checked)return;
-  MK.mocks.forEach(function(o){if(o!==m&&o.sel&&o.kind===m.kind)o.pl=JSON.parse(JSON.stringify(m.pl))});
+  MK.mocks.forEach(function(o){if(o!==m&&(o.own||$("mkUseLib").checked)&&o.kind===m.kind)o.pl=JSON.parse(JSON.stringify(m.pl))});
 }
 $("mkApplyAll").onchange=mkSpread;
 /* JPEG files and a plain ZIP (stored, no compression: JPEGs do not shrink) */
@@ -2466,13 +2462,13 @@ function mkZip(files){   // files: [{name,data:Uint8Array}]
 function mkSave(blob,name){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000)}
 $("mkDl1").onclick=function(){
   var m=mkCur(),d=mkDes();if(MK.busy)return;
-  if(!m){mkSay("Tick a mockup first.",1);return}if(!d){mkSay("Add a PNG design first.",1);return}
+  if(!m){mkSay("Pick a mockup first.",1);return}if(!d){mkSay("Add a PNG design first.",1);return}
   MK.busy=true;mkSay("Making the picture…");
   mkBlob(m,d).then(function(b){mkSave(b,mkSafe(m.name)+"__"+mkSafe(d.name)+".jpg");MK.dl=true;mkSay("Saved "+mkSafe(m.name)+"__"+mkSafe(d.name)+".jpg ("+Math.round(b.size/1024)+" KB)");updateSteps()}).catch(function(e){mkSay(e.message,1)}).then(function(){MK.busy=false});
 };
 $("mkDlAll").onclick=async function(){
-  if(MK.busy)return;var ms=MK.mocks.filter(function(m){return m.sel});
-  if(!ms.length){mkSay("Tick at least one mockup first.",1);return}if(!MK.designs.length){mkSay("Add a PNG design first.",1);return}
+  if(MK.busy)return;var ms=mkVisible();
+  if(!ms.length){mkSay("Pick a mockup first.",1);return}if(!MK.designs.length){mkSay("Add a PNG design first.",1);return}
   MK.busy=true;var files=[],used={},tot=ms.length*MK.designs.length,n=0;
   try{
     for(var i=0;i<ms.length;i++)for(var j=0;j<MK.designs.length;j++){
@@ -2486,7 +2482,7 @@ $("mkDlAll").onclick=async function(){
   MK.busy=false;
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-5"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-6"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -3012,6 +3008,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-5</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-6</div>
 </body>
 </html>
