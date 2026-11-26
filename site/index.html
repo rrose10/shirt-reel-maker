@@ -236,12 +236,13 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
         </div>
         <div class="pane" id="sp-warp">
           <div class="sub2" style="margin-top:0">Warp the design</div>
-          <p class="hint" style="margin:-4px 0 4px">Bend and tilt the print to match the shirt. 0 = no change.</p>
+          <p class="hint" style="margin:-4px 0 4px">Bend and tilt the print to match the shirt or mug. 0 = no change. "Wrap round" curves the print round a mug.</p>
           <div class="ctl"><label for="dCurve">Curve (arch ↔ smile) <output id="dCurveO">0</output></label><input id="dCurve" type="range" min="-100" max="100" value="0"></div>
           <div class="ctl"><label for="dWave">Wave <output id="dWaveO">0</output></label><input id="dWave" type="range" min="-100" max="100" value="0"></div>
           <div class="ctl"><label for="dPersH">Perspective: left ↔ right <output id="dPersHO">0</output></label><input id="dPersH" type="range" min="-100" max="100" value="0"></div>
           <div class="ctl"><label for="dPersV">Perspective: top ↔ bottom <output id="dPersVO">0</output></label><input id="dPersV" type="range" min="-100" max="100" value="0"></div>
           <div class="ctl"><label for="dSkew">Skew (lean) <output id="dSkewO">0</output></label><input id="dSkew" type="range" min="-100" max="100" value="0"></div>
+          <div class="ctl"><label for="dWrap">Wrap round (mugs) <output id="dWrapO">0</output></label><input id="dWrap" type="range" min="0" max="100" value="0"></div>
           <div class="row" style="margin-top:10px"><button class="btn" id="dwReset" type="button" style="padding:4px 12px">Reset warp</button></div>
           <div class="sub2">Blur &amp; opacity</div>
           <div class="ctl"><label for="dBlur">Blur design <output id="dBlurO">0</output></label><input id="dBlur" type="range" min="0" max="100" value="0"></div>
@@ -623,19 +624,24 @@ If you want to offset all timestamps of a track such that the first one is zero,
 var DUR=10;
 var $=function(id){return document.getElementById(id)};
 if(window.LOGO_MARK){$("brandMark").src=window.LOGO_MARK;var fi=document.createElement("link");fi.rel="icon";fi.type="image/png";fi.href=window.LOGO_ICON;document.head.appendChild(fi)}
-var S={motion:"studio",zoom:1.6,focus:"design",fit:"blur",bg:"#efefef",res:1080,applyAll:true,guides:true,fabric:true,shade:.65,warp:.5,dCurve:0,dWave:0,dPersH:0,dPersV:0,dSkew:0,dBlur:0,dOp:1,hsize:1,hstyle:"point1",hact:"smooth",ms:1,mx:0,my:0,asp:"916"};
+var S={motion:"studio",zoom:1.6,focus:"design",fit:"blur",bg:"#efefef",res:1080,applyAll:true,guides:true,fabric:true,shade:.65,warp:.5,dCurve:0,dWave:0,dPersH:0,dPersV:0,dSkew:0,dWrap:0,dBlur:0,dOp:1,hsize:1,hstyle:"point1",hact:"smooth",ms:1,mx:0,my:0,asp:"916"};
 
 /* ---------- design warp: curve, wave, perspective, skew (applied to the print itself) ---------- */
 var WPAD=.45,WEF=1+2*WPAD;
-function hasDWarp(){return !!(S.dCurve||S.dWave||S.dPersH||S.dPersV||S.dSkew)}
-function dwKey(){return [S.dCurve,S.dWave,S.dPersH,S.dPersV,S.dSkew,S.dBlur,S.dOp].join(",")}
+function hasDWarp(){return !!(S.dCurve||S.dWave||S.dPersH||S.dPersV||S.dSkew||S.dWrap)}
+function dwKey(){return [S.dCurve,S.dWave,S.dPersH,S.dPersV,S.dSkew,S.dWrap,S.dBlur,S.dOp].join(",")}
 function warpedFor(d){
   if(!hasDWarp())return null;
-  var k=[S.dCurve,S.dWave,S.dPersH,S.dPersV,S.dSkew].join(",");if(d._wk===k&&d._wc)return d._wc;
+  var k=[S.dCurve,S.dWave,S.dPersH,S.dPersV,S.dSkew,S.dWrap].join(",");if(d._wk===k&&d._wc)return d._wc;
   var sw=Math.max(8,Math.round(Math.min(d.w,1000))),sh=Math.max(8,Math.round(sw*d.h/d.w));
   var CW=Math.round(sw*WEF),CH=Math.round(sh*WEF),px=(CW-sw)/2,py=(CH-sh)/2,i,j;
   var T=document.createElement("canvas");T.width=CW;T.height=CH;var tc=T.getContext("2d");tc.imageSmoothingEnabled=true;tc.imageSmoothingQuality="high";
   var src=document.createElement("canvas");src.width=sw;src.height=sh;var sc2=src.getContext("2d");sc2.imageSmoothingQuality="high";sc2.drawImage(d.img,0,0,sw,sh);
+  if(S.dWrap>.001){   // mug wrap: squeeze the print toward the left and right edges like a cylinder
+    var wA=S.dWrap*1.25,wS=Math.sin(wA),w2=document.createElement("canvas");w2.width=sw;w2.height=sh;var wx=w2.getContext("2d");wx.imageSmoothingQuality="high";
+    for(var wj=0;wj<sw;wj++){var xp=2*(wj+.5)/sw-1,xs=Math.asin(xp*wS)/wA,wc=Math.min(sw-1,Math.max(0,(xs+1)/2*sw-.5));wx.drawImage(src,wc,0,1.2,sh,wj,0,1,sh)}
+    src=w2;
+  }
   for(i=0;i<sw;i++){
     var u=(i+.5)/sw,x=2*u-1,sc=Math.max(.15,1+S.dPersH*.55*x);
     var yo=S.dCurve*.32*sh*(x*x-1/3)+S.dWave*.09*sh*Math.sin(u*Math.PI*4);
@@ -940,10 +946,10 @@ $("fabric").onchange=function(){S.fabric=this.checked;drawEditor()};
 $("shade").oninput=function(){S.shade=this.value/100;$("shadeO").textContent=this.value+"%";touch()};
 $("warp").oninput=function(){S.warp=this.value/100;$("warpO").textContent=this.value+"%";touch()};
 
-[["dCurve","dCurveO"],["dWave","dWaveO"],["dPersH","dPersHO"],["dPersV","dPersVO"],["dSkew","dSkewO"]].forEach(function(a){
+[["dCurve","dCurveO"],["dWave","dWaveO"],["dPersH","dPersHO"],["dPersV","dPersVO"],["dSkew","dSkewO"],["dWrap","dWrapO"]].forEach(function(a){
   $(a[0]).oninput=function(){S[a[0]]=this.value/100;$(a[1]).textContent=this.value;touch();drawEditor()};
 });
-$("dwReset").onclick=function(){["dCurve","dWave","dPersH","dPersV","dSkew"].forEach(function(k){var e=$(k);e.value=0;e.dispatchEvent(new Event("input",{bubbles:true}))})};
+$("dwReset").onclick=function(){["dCurve","dWave","dPersH","dPersV","dSkew","dWrap"].forEach(function(k){var e=$(k);e.value=0;e.dispatchEvent(new Event("input",{bubbles:true}))})};
 $("dBlur").oninput=function(){S.dBlur=this.value/100;$("dBlurO").textContent=(this.value/5).toFixed(1).replace(/\.0$/,"")+" px";touch();drawEditor()};
 $("dOp").oninput=function(){S.dOp=this.value/100;$("dOpO").textContent=this.value+"%";touch();drawEditor()};
 $("dsReset").onclick=function(){[["dBlur",0],["dOp",100]].forEach(function(a){var e=$(a[0]);e.value=a[1];e.dispatchEvent(new Event("input",{bubbles:true}))})};
@@ -1667,10 +1673,10 @@ $("autoFitBtn").onclick=function(){
 
 /* ---------- presets + remembering the last settings ---------- */
 var PS_MAP={
-  shirt:{motion:["motion","change"],zoom:["zoom","input"],focus:["focus","change"],fit:["fit","change"],bg:["bgc","input"],res:["res","change"],asp:["asp","change"],fabric:["fabric","change"],shade:["shade","input",100],warp:["warp","input",100],dCurve:["dCurve","input",100],dWave:["dWave","input",100],dPersH:["dPersH","input",100],dPersV:["dPersV","input",100],dSkew:["dSkew","input",100],dBlur:["dBlur","input",100],dOp:["dOp","input",100],hsize:["hsize","input",100],hact:["hact","change"],hstyle:["hstyle","change"],ms:["mscale","input",100],mx:["mx","input",100],my:["my","input",100]},
+  shirt:{motion:["motion","change"],zoom:["zoom","input"],focus:["focus","change"],fit:["fit","change"],bg:["bgc","input"],res:["res","change"],asp:["asp","change"],fabric:["fabric","change"],shade:["shade","input",100],warp:["warp","input",100],dCurve:["dCurve","input",100],dWave:["dWave","input",100],dPersH:["dPersH","input",100],dPersV:["dPersV","input",100],dSkew:["dSkew","input",100],dWrap:["dWrap","input",100],dBlur:["dBlur","input",100],dOp:["dOp","input",100],hsize:["hsize","input",100],hact:["hact","change"],hstyle:["hstyle","change"],ms:["mscale","input",100],mx:["mx","input",100],my:["my","input",100]},
   image:{motion:["iMotion","change"],zoom:["iZoom","input"],fit:["iFit","change"],bg:["iBgc","input"],res:["iRes","change"],asp:["iAsp","change"],hsize:["ihsize","input",100],hact:["ihact","change"],hstyle:["ihstyle","change"],ms:["imscale","input",100],mx:["imx","input",100],my:["imy","input",100]}
 };
-var PS_ORDER=["motion","fit","bg","res","asp","focus","fabric","shade","warp","dCurve","dWave","dPersH","dPersV","dSkew","dBlur","dOp","hact","hstyle","hsize","zoom","ms","mx","my"];
+var PS_ORDER=["motion","fit","bg","res","asp","focus","fabric","shade","warp","dCurve","dWave","dPersH","dPersV","dSkew","dWrap","dBlur","dOp","hact","hstyle","hsize","zoom","ms","mx","my"];
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}
 function psCapture(kind){
@@ -2511,7 +2517,7 @@ $("mkDlAll").onclick=async function(){
   MK.busy=false;
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-8"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-9"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -3037,6 +3043,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-8</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-9</div>
 </body>
 </html>
