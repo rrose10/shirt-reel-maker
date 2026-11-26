@@ -548,26 +548,51 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
         <div class="fname" id="mkName"></div>
       </section>
 
-      <section class="panel" aria-labelledby="h-mkl">
-        <h2 id="h-mkl">Look</h2>
-        <div class="ctl"><label for="mkW">Size <output id="mkWO">34</output></label><input id="mkW" type="range" min="4" max="95" value="34"></div>
-        <div class="ctl"><label for="mkRot">Turn <output id="mkRotO">0</output></label><input id="mkRot" type="range" min="-180" max="180" value="0"></div>
-        <div class="ctl"><label for="mkSh">Fabric light and shade <output id="mkShO">70</output></label><input id="mkSh" type="range" min="0" max="100" value="70"></div>
-        <div class="ctl"><label for="mkWr">Wrap round (mugs) <output id="mkWrO">0</output></label><input id="mkWr" type="range" min="0" max="100" value="0"></div>
-        <div class="ctl"><label for="mkOp">Opacity <output id="mkOpO">100</output></label><input id="mkOp" type="range" min="5" max="100" value="100"></div>
-        <div class="ctl"><label for="mkBl">Gaussian blur <output id="mkBlO">0</output></label><input id="mkBl" type="range" min="0" max="40" value="0"></div>
-        <h2 style="margin-top:20px">Warp</h2>
-        <div class="ctl"><label for="mkCv2">Curve <output id="mkCv2O">0</output></label><input id="mkCv2" type="range" min="-100" max="100" value="0"></div>
-        <div class="ctl"><label for="mkWv">Wave <output id="mkWvO">0</output></label><input id="mkWv" type="range" min="-100" max="100" value="0"></div>
-        <div class="ctl"><label for="mkPh">Perspective left–right <output id="mkPhO">0</output></label><input id="mkPh" type="range" min="-100" max="100" value="0"></div>
-        <div class="ctl"><label for="mkPv">Perspective up–down <output id="mkPvO">0</output></label><input id="mkPv" type="range" min="-100" max="100" value="0"></div>
-        <div class="ctl"><label for="mkSk">Skew <output id="mkSkO">0</output></label><input id="mkSk" type="range" min="-100" max="100" value="0"></div>
-        <div class="row" style="margin-top:12px"><button class="btn" id="mkCenter" type="button">Centre it</button><button class="btn" id="mkRst" type="button">Reset warp and blur</button><button class="btn" id="mkCopy" type="button">Use for all ticked mockups of this kind</button></div>
-        <h2 style="margin-top:22px">Download JPEG</h2>
-        <div class="ctl"><label for="mkSize">Picture size</label><select id="mkSize"><option value="0">Same as the mockup</option><option value="2000" selected>2000 px (long side)</option><option value="1500">1500 px</option><option value="1080">1080 px</option></select></div>
-        <div class="ctl"><label for="mkQ">JPEG quality <output id="mkQO">92</output></label><input id="mkQ" type="range" min="60" max="100" value="92"></div>
-        <div class="row" style="margin-top:12px"><button class="btn primary" id="mkDl1" type="button">Download this picture</button><button class="btn" id="mkDlAll" type="button">Download all (ZIP)</button></div>
-        <div class="status" id="mkS"></div>
+      <section class="panel ctlcol sticky" aria-label="Picture settings">
+        <div class="ptabs" role="tablist">
+          <button class="ptab on" type="button" data-pane="mk-print">Print</button>
+          <button class="ptab" type="button" data-pane="mk-warp">Warp</button>
+          <button class="ptab" type="button" data-pane="mk-look">Look</button>
+          <button class="ptab" type="button" data-pane="mk-save">Save</button>
+        </div>
+        <div class="panes">
+          <div class="pane on" id="mk-print">
+            <div class="ctl" style="margin-top:0"><label for="mkW">Size <output id="mkWO">34</output></label><input id="mkW" type="range" min="4" max="95" value="34"></div>
+            <div class="ctl"><label for="mkRot">Rotation <output id="mkRotO">0</output></label><input id="mkRot" type="range" min="-180" max="180" value="0"></div>
+            <label class="check"><input type="checkbox" id="mkGuides" checked> Show guides</label>
+            <label class="check"><input type="checkbox" id="mkApplyAll" checked> Use this placement on every ticked mockup of the same kind</label>
+            <div class="row" style="margin-top:12px"><button class="btn" id="mkCenter" type="button" style="padding:4px 12px">Centre the print</button></div>
+          </div>
+          <div class="pane" id="mk-warp">
+            <div class="sub2" style="margin-top:0;border-top:0;padding-top:0">Warp the design</div>
+            <p class="hint" style="margin:-4px 0 4px">Bend and tilt the print to match the shirt or mug. 0 = no change.</p>
+            <div class="ctl"><label for="mkCv2">Curve (arch ↔ smile) <output id="mkCv2O">0</output></label><input id="mkCv2" type="range" min="-100" max="100" value="0"></div>
+            <div class="ctl"><label for="mkWv">Wave <output id="mkWvO">0</output></label><input id="mkWv" type="range" min="-100" max="100" value="0"></div>
+            <div class="ctl"><label for="mkPh">Perspective: left ↔ right <output id="mkPhO">0</output></label><input id="mkPh" type="range" min="-100" max="100" value="0"></div>
+            <div class="ctl"><label for="mkPv">Perspective: top ↔ bottom <output id="mkPvO">0</output></label><input id="mkPv" type="range" min="-100" max="100" value="0"></div>
+            <div class="ctl"><label for="mkSk">Skew (lean) <output id="mkSkO">0</output></label><input id="mkSk" type="range" min="-100" max="100" value="0"></div>
+            <div class="ctl"><label for="mkWr">Wrap round (mugs) <output id="mkWrO">0</output></label><input id="mkWr" type="range" min="0" max="100" value="0"></div>
+            <div class="row" style="margin-top:10px"><button class="btn" id="mkRstW" type="button" style="padding:4px 12px">Reset warp</button></div>
+          </div>
+          <div class="pane" id="mk-look">
+            <div class="sub2" style="margin-top:0;border-top:0;padding-top:0">Blur &amp; opacity</div>
+            <div class="ctl"><label for="mkBl">Gaussian blur <output id="mkBlO">0</output></label><input id="mkBl" type="range" min="0" max="40" value="0"></div>
+            <div class="ctl"><label for="mkOp">Opacity <output id="mkOpO">100</output></label><input id="mkOp" type="range" min="5" max="100" value="100"></div>
+            <div class="row" style="margin-top:10px"><button class="btn" id="mkRstB" type="button" style="padding:4px 12px">Reset blur &amp; opacity</button></div>
+            <div class="sub2">Fabric</div>
+            <div class="ctl"><label for="mkSh">Fabric light and shade <output id="mkShO">70</output></label><input id="mkSh" type="range" min="0" max="100" value="70"></div>
+            <p class="hint" style="margin:4px 0 0">Lets the folds and shadows of the shirt or mug show through the print.</p>
+          </div>
+          <div class="pane" id="mk-save">
+            <div class="ctl" style="margin-top:0"><label for="mkSize">Picture size</label><select id="mkSize"><option value="0">Same as the mockup</option><option value="2000" selected>2000 px (long side)</option><option value="1500">1500 px</option><option value="1080">1080 px</option></select></div>
+            <div class="ctl"><label for="mkQ">JPEG quality <output id="mkQO">92</output></label><input id="mkQ" type="range" min="60" max="100" value="92"></div>
+            <p class="hint" style="margin:8px 0 0">"Download all" makes one JPEG for every ticked mockup and every design, in one ZIP.</p>
+          </div>
+        </div>
+        <div class="exportbar">
+          <div class="row"><button class="btn primary" id="mkDl1" type="button">Download this picture</button><button class="btn" id="mkDlAll" type="button">Download all (ZIP)</button></div>
+          <div class="status" id="mkS"></div>
+        </div>
       </section>
     </main>
   </div>
@@ -2348,7 +2373,7 @@ function mkDraw(){
     if(mkCur()!==m)return;
     var sc=Math.min(1,760/Math.max(m.img.naturalWidth,m.img.naturalHeight));
     mkGeo=mkCompose(m,d,mkCv,sc);
-    if(mkGeo)mkHandles(mkGeo);
+    if(mkGeo&&$("mkGuides").checked)mkHandles(mkGeo);
     $("mkName").textContent=m.name+(d?"  ·  "+d.name:"  ·  add a design to see it here");
   }).catch(function(e){mkSay(e.message,1)});
 }
@@ -2383,7 +2408,7 @@ mkCv.addEventListener("pointermove",function(e){
   if(D.mode==="move"){m.pl.x=Math.min(1.2,Math.max(-.2,D.x0+(p.x-D.sx)/mkCv.width));m.pl.y=Math.min(1.2,Math.max(-.2,D.y0+(p.y-D.sy)/mkCv.height))}
   else if(D.mode==="size"){m.pl.w=Math.min(.95,Math.max(.04,D.w0*Math.hypot(p.x-g.cx,p.y-g.cy)/D.d0))}
   else{var a=Math.atan2(p.y-g.cy,p.x-g.cx)*180/Math.PI+90;a=((a+540)%360)-180;if(Math.abs(a)<4)a=0;m.pl.rot=Math.round(a)}
-  MK.touched=true;mkSync();mkDraw();
+  MK.touched=true;mkSpread();mkSync();mkDraw();
 });
 ["pointerup","pointercancel"].forEach(function(ev){mkCv.addEventListener(ev,function(){if(mkDrag){mkDrag=null;updateSteps()}})});
 function mkSync(){
@@ -2396,16 +2421,19 @@ function mkSync(){
   [["mkBl","bl",1],["mkCv2","cv",100],["mkWv","wv",100],["mkPh","ph",100],["mkPv","pv",100],["mkSk","sk",100]].forEach(function(a){var v=Math.round((p[a[1]]||0)*a[2]);$(a[0]).value=v;$(a[0]+"O").textContent=v});
 }
 [["mkW","w",.01],["mkRot","rot",1],["mkSh","sh",.01],["mkWr","wr",.01],["mkOp","op",.01],["mkBl","bl",1],["mkCv2","cv",.01],["mkWv","wv",.01],["mkPh","ph",.01],["mkPv","pv",.01],["mkSk","sk",.01]].forEach(function(a){
-  $(a[0]).oninput=function(){var m=mkCur();if(!m)return;m.pl[a[1]]=this.value*a[2];if(a[1]==="rot")m.pl.rot=+this.value;MK.touched=true;$(a[0]+"O").textContent=this.value;mkDraw();updateSteps()};
+  $(a[0]).oninput=function(){var m=mkCur();if(!m)return;m.pl[a[1]]=this.value*a[2];if(a[1]==="rot")m.pl.rot=+this.value;MK.touched=true;mkSpread();$(a[0]+"O").textContent=this.value;mkDraw();updateSteps()};
 });
-$("mkRst").onclick=function(){var m=mkCur();if(!m)return;["cv","wv","ph","pv","sk","bl"].forEach(function(k){m.pl[k]=0});mkSync();mkDraw()};
+function mkReset(keys){var m=mkCur();if(!m)return;keys.forEach(function(k){m.pl[k]=0});if(keys.indexOf("op")>=0)m.pl.op=1;mkSpread();mkSync();mkDraw()}
+$("mkRstW").onclick=function(){var m=mkCur();mkReset(["cv","wv","ph","pv","sk"]);if(m){m.pl.wr=MKD[m.kind].wr;mkSpread();mkSync();mkDraw()}};
+$("mkRstB").onclick=function(){mkReset(["bl","op"])};
 $("mkQ").oninput=function(){$("mkQO").textContent=this.value};
-$("mkCenter").onclick=function(){var m=mkCur();if(!m)return;var b=MKD[m.kind];m.pl.x=b.x;m.pl.y=b.y;MK.touched=true;mkDraw();updateSteps()};
-$("mkCopy").onclick=function(){
-  var m=mkCur();if(!m)return;var n=0;
-  MK.mocks.forEach(function(o){if(o!==m&&o.sel&&o.kind===m.kind){o.pl=JSON.parse(JSON.stringify(m.pl));n++}});
-  mkSay(n?"Copied to "+n+" more "+(m.kind==="mug"?"mug":"shirt")+(n>1?"s":"")+".":"Tick more "+(m.kind==="mug"?"mugs":"shirts")+" first.");
-};
+$("mkCenter").onclick=function(){var m=mkCur();if(!m)return;var b=MKD[m.kind];m.pl.x=b.x;m.pl.y=b.y;MK.touched=true;mkSpread();mkDraw();updateSteps()};
+$("mkGuides").onchange=function(){mkDraw()};
+function mkSpread(){
+  var m=mkCur();if(!m||!$("mkApplyAll").checked)return;
+  MK.mocks.forEach(function(o){if(o!==m&&o.sel&&o.kind===m.kind)o.pl=JSON.parse(JSON.stringify(m.pl))});
+}
+$("mkApplyAll").onchange=mkSpread;
 /* JPEG files and a plain ZIP (stored, no compression: JPEGs do not shrink) */
 function mkSafe(s){return (s||"picture").replace(/[^\w\-. ]+/g,"_").replace(/\s+/g," ").trim().slice(0,60)||"picture"}
 function mkBlob(m,d){
@@ -2457,7 +2485,7 @@ $("mkDlAll").onclick=async function(){
   MK.busy=false;
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-2"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-3"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -2983,6 +3011,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-2</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-3</div>
 </body>
 </html>
