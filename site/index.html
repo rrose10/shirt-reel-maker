@@ -528,11 +528,9 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
     <main class="work">
       <aside class="panel files" aria-labelledby="h-mkm">
         <h2 id="h-mkm">1. Mockup</h2>
-        <p class="hint">Pick a ready shirt or mug photo. Or untick the box and use only your own mockup.</p>
+        <p class="hint">Pick a ready shirt or mug photo. To use your own, choose "Empty" and add it below.</p>
         <div class="ctl" style="margin-top:0"><label for="mkSel">Mockup</label><select id="mkSel"><option value="">Loading…</option></select></div>
-        <label class="check"><input type="checkbox" id="mkUseLib" checked> Use the ready mockups</label>
-        <div class="ctl" style="margin-top:14px"><label for="mkOwnKind">My own mockup is a</label><select id="mkOwnKind"><option value="shirt">Shirt</option><option value="mug">Mug</option></select></div>
-        <label class="drop" id="mkDropM" style="margin-top:8px"><strong>Add your own mockup</strong><span>Drop files or click to browse · JPG, PNG or WebP</span><input id="mkFileM" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
+                <label class="drop" id="mkDropM" style="margin-top:8px"><strong>Add your own mockup</strong><span>Drop files or click to browse · JPG, PNG or WebP</span><input id="mkFileM" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
         <div class="row" id="mkOwnRow" style="margin-top:8px;display:none"><button class="btn" id="mkRmOwn" type="button" style="padding:4px 12px">Remove this mockup</button></div>
         <h2 id="h-mkd" style="margin-top:20px">2. PNG designs <span class="count" id="mkCntD">0</span></h2>
         <p class="hint">Transparent PNGs. Each design goes on the mockup.</p>
@@ -1943,7 +1941,7 @@ setTimeout(updateSteps,0);
 function updateSteps(){
   var ol=$("steps"),img=!$("modeImage").classList.contains("hide"),st,imgs_=typeof imgs==="undefined"||!imgs?[]:imgs,res2=typeof results2==="undefined"||!results2?[]:results2;
   var tpl=typeof mode!=="undefined"&&mode==="tpl";
-  if(typeof mode!=="undefined"&&mode==="mk"){st=[["Pick a mockup",typeof MK!=="undefined"&&mkVisible().length>0],["Add designs",typeof MK!=="undefined"&&MK.designs.length>0],["Place the print",typeof MK!=="undefined"&&MK.touched],["Download",typeof MK!=="undefined"&&MK.dl]]}
+  if(typeof mode!=="undefined"&&mode==="mk"){st=[["Pick a mockup",typeof MK!=="undefined"&&MK.cur!=null],["Add designs",typeof MK!=="undefined"&&MK.designs.length>0],["Place the print",typeof MK!=="undefined"&&MK.touched],["Download",typeof MK!=="undefined"&&MK.dl]]}
   else if(tpl){st=[["Pick template",!!(typeof TP!=="undefined"&&TP.vid)],["Add designs",typeof tdesigns!=="undefined"&&tdesigns.length>0],["Make videos",typeof results3!=="undefined"&&results3.length>0]]}
   else if(img){st=[["Add images",imgs_.length>0],["Pick a style",styleTouched],["Make video",res2.length>0]]}
   else{st=[["Add shirt + design",blanks.length>0&&designs.length>0],["Place the print",placedTouched],["Pick a style",styleTouched],["Make video",results.length>0]]}
@@ -2245,21 +2243,22 @@ function mkOpen(){
     MK.libDone=true;
     fetch("mockups/list.json",{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(l){
       l.forEach(function(it){MK.mocks.push({id:"l"+(MK.uid++),name:it.name||it.file,kind:it.kind==="mug"?"mug":"shirt",url:"mockups/"+it.file,own:false,img:null,pl:Object.assign(mkCopyPl(it.kind==="mug"?"mug":"shirt"),it.pl||{}),def:it.pl||null})});
-      mkLists();
+      if(!MK.cur&&MK.mocks.length)MK.cur=MK.mocks[0].id;
+      mkLists();mkSync();mkDraw();updateSteps();
     }).catch(function(){mkLists()});
   }
   mkLists();mkDraw();updateSteps();
 }
 function mkLists(){
   var sel=$("mkSel"),vis=mkVisible();sel.innerHTML="";
-  if(!vis.length){var o0=document.createElement("option");o0.value="";o0.textContent=MK.libDone&&!MK.mocks.length?"No ready mockups yet. Add your own below.":"Add your own mockup below";sel.appendChild(o0)}
+  var o0=document.createElement("option");o0.value="";o0.textContent="— Empty (add my own mockup below) —";sel.appendChild(o0);
   [[false,"Ready mockups"],[true,"My mockups"]].forEach(function(g){
     var ms=vis.filter(function(m){return m.own===g[0]});if(!ms.length)return;
     var og=document.createElement("optgroup");og.label=g[1];
     ms.forEach(function(m){var o=document.createElement("option");o.value=m.id;o.textContent=m.name+" ("+(m.kind==="mug"?"mug":"shirt")+")";og.appendChild(o)});
     sel.appendChild(og);
   });
-  if(!vis.some(function(m){return m.id===MK.cur}))MK.cur=vis[0]?vis[0].id:null;
+  if(!vis.some(function(m){return m.id===MK.cur}))MK.cur=null;
   sel.value=MK.cur||"";
   var cm=mkCur();$("mkOwnRow").style.display=cm&&cm.own?"":"none";
   var dh=$("mkListD");dh.innerHTML="";
@@ -2272,10 +2271,9 @@ function mkLists(){
   });
   $("mkCntD").textContent=MK.designs.length;
 }
-function mkVisible(){return MK.mocks.filter(function(m){return m.own||$("mkUseLib").checked})}
+function mkVisible(){return MK.mocks}
 $("mkSel").onchange=function(){MK.cur=this.value||null;mkLists();mkSync();mkDraw();updateSteps()};
-$("mkUseLib").onchange=function(){mkLists();mkSync();mkDraw();updateSteps()};
-$("mkRmOwn").onclick=function(){var m=mkCur();if(!m||!m.own)return;MK.mocks=MK.mocks.filter(function(q){return q!==m});MK.cur=null;mkLists();mkSync();mkDraw();updateSteps()};
+$("mkRmOwn").onclick=function(){var m=mkCur();if(!m||!m.own)return;MK.mocks=MK.mocks.filter(function(q){return q!==m});MK.cur=null;MK.dflt=false;mkLists();mkSync();mkDraw();updateSteps()};
 function mkWire(zone,input,fn){
   input.onchange=function(){Array.prototype.slice.call(input.files).forEach(fn);input.value=""};
   ["dragenter","dragover"].forEach(function(ev){zone.addEventListener(ev,function(e){e.preventDefault();zone.classList.add("over")})});
@@ -2284,7 +2282,7 @@ function mkWire(zone,input,fn){
 }
 mkWire($("mkDropM"),$("mkFileM"),function(f){
   if(!/^image\//.test(f.type))return;
-  var k=$("mkOwnKind").value,m={id:"o"+(MK.uid++),name:f.name.replace(/\.[^.]+$/,""),kind:k,url:URL.createObjectURL(f),own:true,img:null,pl:mkCopyPl(k)};
+  var k=/mug|cup/i.test(f.name)?"mug":"shirt",m={id:"o"+(MK.uid++),name:f.name.replace(/\.[^.]+$/,""),kind:k,url:URL.createObjectURL(f),own:true,img:null,pl:mkCopyPl(k)};
   mkEnsure(m).then(function(){MK.mocks.push(m);MK.cur=m.id;mkLists();mkSync();mkDraw();updateSteps()}).catch(function(e){mkSay(e.message,1)});
 });
 mkWire($("mkDropD"),$("mkFileD"),function(f){
@@ -2428,7 +2426,7 @@ $("mkCenter").onclick=function(){var m=mkCur();if(!m)return;var b=m.def||MKD[m.k
 $("mkGuides").onchange=function(){mkDraw()};
 function mkSpread(){
   var m=mkCur();if(!m||!$("mkApplyAll").checked)return;
-  MK.mocks.forEach(function(o){if(o!==m&&(o.own||$("mkUseLib").checked)&&o.kind===m.kind)o.pl=JSON.parse(JSON.stringify(m.pl))});
+  MK.mocks.forEach(function(o){if(o!==m&&o.kind===m.kind)o.pl=JSON.parse(JSON.stringify(m.pl))});
 }
 $("mkApplyAll").onchange=mkSpread;
 /* JPEG files and a plain ZIP (stored, no compression: JPEGs do not shrink) */
@@ -2482,7 +2480,7 @@ $("mkDlAll").onclick=async function(){
   MK.busy=false;
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-6"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-7"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -3008,6 +3006,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-6</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-7</div>
 </body>
 </html>
