@@ -528,10 +528,8 @@ select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid var(--lin
     <main class="work">
       <aside class="panel files" aria-labelledby="h-mkm">
         <h2 id="h-mkm">Mockups <span class="count" id="mkCntM">0</span></h2>
-        <p class="hint">Tap the shirts and mugs you want. Tap again to untick. Tap a ticked one to edit it.</p>
-        <div class="chips" id="mkKinds"></div>
-        <div class="row" style="margin-top:8px"><button class="btn" id="mkAll" type="button" style="padding:3px 10px">Tick all shown</button><button class="btn" id="mkNone" type="button" style="padding:3px 10px">Untick all</button></div>
-        <div class="thumbs" id="mkLib"></div>
+        <p class="hint">Tap the mockups you want to use. Tap a ticked one to edit it, tap again to untick.</p>
+        <div class="thumbs" id="mkLib" style="margin-top:12px"></div>
         <p class="hint" id="mkLibNote" style="margin-top:-8px"></p>
         <div class="ctl" style="margin-top:0"><label for="mkOwnKind">My own mockup is a</label><select id="mkOwnKind"><option value="shirt">Shirt</option><option value="mug">Mug</option></select></div>
         <label class="drop" id="mkDropM" style="margin-top:8px"><strong>Add your own mockup</strong><span>Drop files or click to browse · JPG, PNG or WebP</span><input id="mkFileM" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
@@ -2264,7 +2262,6 @@ function mkLists(){
     dh.appendChild(b);
   });
   $("mkCntD").textContent=MK.designs.length;
-  Array.prototype.forEach.call($("mkKinds").querySelectorAll(".chip"),function(c){c.classList.toggle("on",c.getAttribute("data-v")===MK.kind)});
 }
 function mkPickCur(){if(!MK.cur){var f=MK.mocks.find(function(m){return m.sel});MK.cur=f?f.id:null}}
 function mkTap(m){
@@ -2273,12 +2270,6 @@ function mkTap(m){
   else{m.sel=true;MK.cur=m.id}
   mkLists();mkSync();mkDraw();updateSteps();
 }
-[["all","All"],["shirt","Shirts"],["mug","Mugs"]].forEach(function(k){
-  var b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("data-v",k[0]);b.textContent=k[1];
-  b.onclick=function(){MK.kind=k[0];mkLists()};$("mkKinds").appendChild(b);
-});
-$("mkAll").onclick=function(){MK.mocks.forEach(function(m){if(MK.kind==="all"||m.kind===MK.kind)m.sel=true});mkPickCur();if(!MK.cur){var f=MK.mocks.find(function(m){return m.sel});if(f)MK.cur=f.id}mkLists();mkSync();mkDraw();updateSteps()};
-$("mkNone").onclick=function(){MK.mocks.forEach(function(m){if(MK.kind==="all"||m.kind===MK.kind)m.sel=false});if(MK.cur&&!(mkCur()&&mkCur().sel))MK.cur=null;mkPickCur();mkLists();mkSync();mkDraw();updateSteps()};
 function mkWire(zone,input,fn){
   input.onchange=function(){Array.prototype.slice.call(input.files).forEach(fn);input.value=""};
   ["dragenter","dragover"].forEach(function(ev){zone.addEventListener(ev,function(e){e.preventDefault();zone.classList.add("over")})});
@@ -2485,7 +2476,7 @@ $("mkDlAll").onclick=async function(){
   MK.busy=false;
 };
 
-setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-3"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
+setInterval(function(){var t=document.getElementById("buildTag");if(t)t.textContent="build hands-v9 · match-5 · mk-4"+(TP&&TP.dbg?" · "+TP.dbg:"")},700);
 function tplHandPaint(tr,s,kw,kh,hx0,hy0,hw,hh){
   // works at the resolution of the supplied cut-out (half the plate): four times fewer pixels to read back and loop over; the result is stretched smoothly onto the print box
   var hx=TP.hx,mx2=TP.mx2,k3=TP.layer.width/kw,none=false;
@@ -3011,6 +3002,6 @@ refresh();requestAnimationFrame(frame);requestAnimationFrame(frame2);
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(x){if(x.nodeType===1){if(x.matches&&x.matches("output"))enhance(x);scan(x)}})})}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
-<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-3</div>
+<div id="buildTag" style="position:fixed;right:8px;bottom:4px;font:10px/1 monospace;color:#8a93a3;opacity:.85;pointer-events:none;z-index:9999">build hands-v9 · match-5 · mk-4</div>
 </body>
 </html>
